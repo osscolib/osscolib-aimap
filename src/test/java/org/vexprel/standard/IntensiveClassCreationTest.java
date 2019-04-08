@@ -1,4 +1,6 @@
-package com.github.danielfernandez.bytecodetest;
+package org.vexprel.standard;
+
+import org.vexprel.model.User;
 
 public class IntensiveClassCreationTest {
 
@@ -8,7 +10,7 @@ public class IntensiveClassCreationTest {
         final long s0 = System.nanoTime();
 
         for (int i = 0; i < 1000; i++) {
-            GetterExecutor userNameExecutor = ExecutorFactory.buildGetterExecutor(User.class, "surname");
+            StandardExpressionAction actiokn = ByteCodeGenUtils.buildObjectPropertyAction(User.class, "surname");
         }
 
         final long e0 = System.nanoTime();

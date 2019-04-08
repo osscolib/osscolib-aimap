@@ -3,11 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.danielfernandez</groupId>
-    <artifactId>bytecodetests</artifactId>
+    <artifactId>vexprel</artifactId>
     <version>ci</version>
     <packaging>jar</packaging>
 
-    <name>bytecodetests</name>
+    <name>vexprel</name>
 
     <build>
         <plugins>
@@ -72,6 +72,12 @@
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy</artifactId>
             <version>${byte-buddy.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ognl</groupId>
+            <artifactId>ognl</artifactId>
+            <version>3.2.10</version>
         </dependency>
 
         <dependency>

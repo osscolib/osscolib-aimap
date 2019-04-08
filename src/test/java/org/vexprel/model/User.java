@@ -1,4 +1,4 @@
-package com.github.danielfernandez.bytecodetest;
+package org.vexprel.model;
 
 public class User {
 
