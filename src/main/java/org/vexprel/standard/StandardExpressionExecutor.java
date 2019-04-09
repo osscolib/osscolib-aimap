@@ -3,12 +3,18 @@ package org.vexprel.standard;
 import org.vexprel.Expression;
 import org.vexprel.context.ExpressionContext;
 import org.vexprel.exptarget.ExpressionTarget;
+import org.vexprel.standard.action.StandardExpressionAction;
+import org.vexprel.standard.action.StandardExpressionActionFactory;
+import org.vexprel.standard.step.StandardExpressionStep;
 
 class StandardExpressionExecutor {
 
+    private final StandardExpressionActionFactory expressionActionFactory;
 
-    StandardExpressionExecutor() {
+
+    StandardExpressionExecutor(final StandardExpressionActionFactory expressionActionFactory) {
         super();
+        this.expressionActionFactory = expressionActionFactory;
     }
 
 
@@ -37,10 +43,11 @@ class StandardExpressionExecutor {
         Object current = target.getTargetObject();
 
         for (int i = 0; i < steps.length; i++) {
-            
+            final StandardExpressionAction action = this.expressionActionFactory.build(steps[i], current.getClass());
+            current = action.execute(current);
         }
 
-        return null;
+        return current;
     }
 
 }

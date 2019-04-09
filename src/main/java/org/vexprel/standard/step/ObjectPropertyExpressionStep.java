@@ -1,4 +1,4 @@
-package org.vexprel.standard;
+package org.vexprel.standard.step;
 
 public class ObjectPropertyExpressionStep implements StandardExpressionStep {
 

@@ -2,8 +2,8 @@ package org.vexprel;
 
 import org.vexprel.context.EmptyExpressionContext;
 import org.vexprel.context.ExpressionContext;
-import org.vexprel.exptarget.ExpressionTarget;
 import org.vexprel.exptarget.DefaultExpressionTarget;
+import org.vexprel.exptarget.ExpressionTarget;
 
 public interface ExpressionProcessor {
 

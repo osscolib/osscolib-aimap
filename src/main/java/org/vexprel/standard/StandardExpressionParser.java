@@ -3,6 +3,8 @@ package org.vexprel.standard;
 import java.util.ArrayList;
 
 import org.vexprel.Expression;
+import org.vexprel.standard.step.ObjectPropertyExpressionStep;
+import org.vexprel.standard.step.StandardExpressionStep;
 
 class StandardExpressionParser {
 

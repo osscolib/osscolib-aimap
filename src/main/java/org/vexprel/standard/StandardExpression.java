@@ -1,6 +1,7 @@
 package org.vexprel.standard;
 
 import org.vexprel.Expression;
+import org.vexprel.standard.step.StandardExpressionStep;
 
 public class StandardExpression implements Expression {
 

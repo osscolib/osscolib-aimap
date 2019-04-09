@@ -22,6 +22,8 @@ public class VexprelTest {
 
         System.out.println(expression2);
 
+        System.out.println(expressionProcessor.execute(expression, user));
+
     }
 
 

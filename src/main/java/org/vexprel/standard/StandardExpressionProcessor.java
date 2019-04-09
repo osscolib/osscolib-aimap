@@ -4,6 +4,7 @@ import org.vexprel.Expression;
 import org.vexprel.ExpressionProcessor;
 import org.vexprel.context.ExpressionContext;
 import org.vexprel.exptarget.ExpressionTarget;
+import org.vexprel.standard.action.ByteCodeGenStandardExpressionActionFactory;
 
 public class StandardExpressionProcessor implements ExpressionProcessor {
 
@@ -14,7 +15,7 @@ public class StandardExpressionProcessor implements ExpressionProcessor {
     public StandardExpressionProcessor() {
         super();
         this.parser = new StandardExpressionParser();
-        this.executor = new StandardExpressionExecutor();
+        this.executor = new StandardExpressionExecutor(new ByteCodeGenStandardExpressionActionFactory(true));
     }
 
 
