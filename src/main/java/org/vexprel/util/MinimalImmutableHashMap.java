@@ -2,7 +2,11 @@ package org.vexprel.util;
 
 import java.util.Arrays;
 
+import org.vexprel.standard.action.ByteCodeGenStandardExpressionActionFactory;
+
 public class MinimalImmutableHashMap<K,V> {
+
+    private static final Entry[] EMPTY_ENTRIES = new Entry[0];
 
     private final Node root;
 
@@ -10,7 +14,7 @@ public class MinimalImmutableHashMap<K,V> {
 
     public static MinimalImmutableHashMap build(final int maxNodeSize) {
         final Node root =
-                new EntriesNode(Integer.MIN_VALUE, Integer.MAX_VALUE, maxNodeSize, EntriesNode.EMPTY_ENTRIES);
+                EntriesNode.build(Integer.MIN_VALUE, Integer.MAX_VALUE, maxNodeSize, EMPTY_ENTRIES);
         return new MinimalImmutableHashMap(root);
     }
 
@@ -161,31 +165,33 @@ public class MinimalImmutableHashMap<K,V> {
     }
 
 
-    private static final class EntriesNode implements Node {
-
-        private static final Entry[] EMPTY_ENTRIES = new Entry[0];
-
-        private final int lowLimit;
-        private final int highLimit;
-        private final int maxNodeSize;
-        private final Entry[] entries;
+    private interface EntriesNode extends Node {
 
 
-        private EntriesNode(
-                final int lowLimit, final int highLimit,
-                final int maxNodeSize,
-                final Entry[] entries) {
-            super();
-            this.lowLimit = lowLimit;
-            this.highLimit = highLimit;
-            this.maxNodeSize = maxNodeSize;
-            this.entries = entries;
+        static Node build(final int lowLimit, final int highLimit,
+                          final int maxNodeSize) {
+            return new ZeroEntriesNode(lowLimit, highLimit, maxNodeSize);
+        }
+
+
+
+        static Node build(final int lowLimit, final int highLimit,
+                          final int maxNodeSize, final Entry entry) {
+            return new OneEntryNode(lowLimit, highLimit, maxNodeSize, entry);
         }
 
 
 
         static Node build(final int lowLimit, final int highLimit,
                           final int maxNodeSize, final Entry[] entries) {
+
+            if (entries.length == 0) {
+                return build(lowLimit, highLimit, maxNodeSize);
+            }
+
+            if (entries.length == 1) {
+                return build(lowLimit, highLimit, maxNodeSize, entries[0]);
+            }
 
             if (entries.length > maxNodeSize) {
                 // We have reached the maximum amount of hashes that can be contained in an EntriesNode, so
@@ -232,9 +238,33 @@ public class MinimalImmutableHashMap<K,V> {
             }
 
 
-            return new EntriesNode(lowLimit, highLimit, maxNodeSize, entries);
+            return new MultiEntriesNode(lowLimit, highLimit, maxNodeSize, entries);
 
         }
+
+
+    }
+
+
+    private static final class MultiEntriesNode implements EntriesNode {
+
+        private final int lowLimit;
+        private final int highLimit;
+        private final int maxNodeSize;
+        private final Entry[] entries;
+
+
+        private MultiEntriesNode(
+                final int lowLimit, final int highLimit,
+                final int maxNodeSize,
+                final Entry[] entries) {
+            super();
+            this.lowLimit = lowLimit;
+            this.highLimit = highLimit;
+            this.maxNodeSize = maxNodeSize;
+            this.entries = entries;
+        }
+
 
 
         @Override
@@ -336,7 +366,7 @@ public class MinimalImmutableHashMap<K,V> {
 
             if (this.entries.length == 1) {
                 // We are empty now!
-                return EntriesNode.build(this.lowLimit, this.highLimit, this.maxNodeSize, EMPTY_ENTRIES);
+                return EntriesNode.build(this.lowLimit, this.highLimit, this.maxNodeSize);
             }
 
             final Entry[] newEntries = new Entry[this.entries.length - 1];
@@ -354,16 +384,203 @@ public class MinimalImmutableHashMap<K,V> {
                 strBuilder.append(' ');
             }
             strBuilder.append(String.format("[%11d | %11d]", this.lowLimit, this.highLimit));
-            if (this.entries.length == 0) {
-                strBuilder.append(" { }");
-            } else {
-                strBuilder.append(" {\n");
-                for (int i = 0; i < this.entries.length; i++) {
-                    this.entries[i].prettyPrint(strBuilder, indent + 2);
-                    strBuilder.append('\n');
-                }
-                strBuilder.append("}");
+            strBuilder.append(" {\n");
+            for (int i = 0; i < this.entries.length; i++) {
+                this.entries[i].prettyPrint(strBuilder, indent + 2);
+                strBuilder.append('\n');
             }
+            for (int i = 0; i < indent; i++) {
+                strBuilder.append(' ');
+            }
+            strBuilder.append("}");
+        }
+
+
+    }
+
+
+    private static final class ZeroEntriesNode implements EntriesNode {
+
+        private final int lowLimit;
+        private final int highLimit;
+        private final int maxNodeSize;
+
+
+        private ZeroEntriesNode(final int lowLimit, final int highLimit, final int maxNodeSize) {
+            super();
+            this.lowLimit = lowLimit;
+            this.highLimit = highLimit;
+            this.maxNodeSize = maxNodeSize;
+        }
+
+
+        @Override
+        public int lowLimit() {
+            return this.lowLimit;
+        }
+
+        @Override
+        public int highLimit() {
+            return this.highLimit;
+        }
+
+        @Override
+        public int totalEntries() {
+            return 0;
+        }
+
+
+        @Override
+        public Object get(final int keyHash, final Object key) {
+            return null;
+        }
+
+
+        @Override
+        public Node put(final int keyHash, final Object key, final Object value) {
+
+            if (keyHash < this.lowLimit || keyHash > this.highLimit) {
+                return this;
+            }
+
+            final Entry newEntry = SingleEntry.build(key, value);
+            return EntriesNode.build(this.lowLimit, this.highLimit, this.maxNodeSize, newEntry);
+
+        }
+
+
+
+        @Override
+        public Node remove(final int keyHash, final Object key) {
+            return this;
+        }
+
+
+        @Override
+        public void prettyPrint(final StringBuilder strBuilder, final int indent) {
+            for (int i = 0; i < indent; i++) {
+                strBuilder.append(' ');
+            }
+            strBuilder.append(String.format("[%11d | %11d] {}", this.lowLimit, this.highLimit));
+        }
+
+
+    }
+
+
+    private static final class OneEntryNode implements EntriesNode {
+
+        private final int lowLimit;
+        private final int highLimit;
+        private final int maxNodeSize;
+        private final Entry entry;
+
+
+        private OneEntryNode(
+                final int lowLimit, final int highLimit,
+                final int maxNodeSize,
+                final Entry entry) {
+            super();
+            this.lowLimit = lowLimit;
+            this.highLimit = highLimit;
+            this.maxNodeSize = maxNodeSize;
+            this.entry = entry;
+        }
+
+
+        @Override
+        public int lowLimit() {
+            return this.lowLimit;
+        }
+
+        @Override
+        public int highLimit() {
+            return this.highLimit;
+        }
+
+        @Override
+        public int totalEntries() {
+            return 1;
+        }
+
+
+        @Override
+        public Object get(final int keyHash, final Object key) {
+
+            if (keyHash != this.entry.entryHash()) {
+                return null;
+            }
+            return this.entry.get(key);
+
+        }
+
+
+        @Override
+        public Node put(final int keyHash, final Object key, final Object value) {
+
+            if (keyHash < this.lowLimit || keyHash > this.highLimit) {
+                return this;
+            }
+
+            if (this.entry.entryHash() == keyHash) {
+                final Entry newEntry = this.entry.put(keyHash, key, value);
+                return EntriesNode.build(this.lowLimit, this.highLimit, this.maxNodeSize, newEntry);
+            }
+
+            final Entry newEntry = SingleEntry.build(key, value);
+            final Entry[] newEntries = new Entry[] { this.entry, this.entry };
+            if (this.entry.entryHash() < keyHash) {
+                newEntries[1] = newEntry;
+            } else {
+                newEntries[0] = newEntry;
+            }
+
+            // This build call might actually return a TreeNode if we have now gone over the max size threshold
+            return EntriesNode.build(this.lowLimit, this.highLimit, this.maxNodeSize, newEntries);
+
+        }
+
+
+
+        @Override
+        public Node remove(final int keyHash, final Object key) {
+
+            if (keyHash != this.entry.entryHash()) {
+                // Not found
+                return this;
+            }
+
+            final Entry newEntry = this.entry.remove(key);
+
+            if (newEntry == this.entry) {
+                // Not found (hash found but not key)
+                return this;
+            }
+
+            if (newEntry != null) {
+                return EntriesNode.build(this.lowLimit, this.highLimit, this.maxNodeSize, newEntry);
+            }
+
+            // newEntry is null, and so we need to actually remove it
+
+            return EntriesNode.build(this.lowLimit, this.highLimit, this.maxNodeSize);
+
+        }
+
+
+        @Override
+        public void prettyPrint(final StringBuilder strBuilder, final int indent) {
+            for (int i = 0; i < indent; i++) {
+                strBuilder.append(' ');
+            }
+            strBuilder.append(String.format("[%11d | %11d]", this.lowLimit, this.highLimit));
+            strBuilder.append(" {\n");
+            this.entry.prettyPrint(strBuilder, indent + 2);
+            strBuilder.append('\n');
+            for (int i = 0; i < indent; i++) {
+                strBuilder.append(' ');
+            }
+            strBuilder.append("}");
         }
 
 
@@ -393,8 +610,8 @@ public class MinimalImmutableHashMap<K,V> {
 
 
         static Node build(final int lowLimit, final int highLimit,
-                              final int containedHashEntries, final int maxNodeSize,
-                              final Node[] nodes) {
+                          final int containedHashEntries, final int maxNodeSize,
+                          final Node[] nodes) {
 
             if (containedHashEntries <= maxNodeSize) {
                 // We have gone under the threshold, so we should condense this back into an EntriesNode
@@ -402,9 +619,20 @@ public class MinimalImmutableHashMap<K,V> {
                 final Entry[] newEntries = new Entry[containedHashEntries];
                 int offset = 0;
                 for (int i = 0; i < nodes.length; i++) {
-                    final EntriesNode entriesNode = (EntriesNode) nodes[i];
-                    System.arraycopy(entriesNode.entries, 0, newEntries, offset, entriesNode.entries.length);
-                    offset += entriesNode.entries.length;
+                    final Node node = nodes[i];
+                    if (node instanceof ZeroEntriesNode) {
+                        // No entries to be added
+                        continue;
+                    } else if (node instanceof OneEntryNode) {
+                        // Node contains a single entry
+                        newEntries[offset] = ((OneEntryNode)node).entry;
+                        offset++;
+                    } else {
+                        // Node is a MultiEntriesNode, containing more than 1 entry
+                        final MultiEntriesNode entriesNode = (MultiEntriesNode) node;
+                        System.arraycopy(entriesNode.entries, 0, newEntries, offset, entriesNode.entries.length);
+                        offset += entriesNode.entries.length;
+                    }
                 }
 
                 return EntriesNode.build(lowLimit, highLimit, maxNodeSize, newEntries);
@@ -491,7 +719,7 @@ public class MinimalImmutableHashMap<K,V> {
             int pos = binarySearchHashCodeInNodes(this.nodes, keyHash);
             if (pos < 0) {
                 // This should never happen
-                return null;
+                return this;
             }
 
             final Node newNode = this.nodes[pos].remove(keyHash, key);
@@ -500,14 +728,16 @@ public class MinimalImmutableHashMap<K,V> {
                 return this;
             }
 
+            // Note that no implementation of Node can return null after remove
+
             final Node[] newNodes = Arrays.copyOf(this.nodes, this.nodes.length);
             newNodes[pos] = newNode;
 
-            final int newContainedHashEntries =
+            final int newTotalEntries =
                     (this.totalEntries - this.nodes[pos].totalEntries()) + newNode.totalEntries();
 
             // This build call might actually return an EntriesNode if we have now gone under the max size threshold
-            return TreeNode.build(this.lowLimit, this.highLimit, newContainedHashEntries, this.maxNodeSize, newNodes);
+            return TreeNode.build(this.lowLimit, this.highLimit, newTotalEntries, this.maxNodeSize, newNodes);
 
         }
 
@@ -524,6 +754,9 @@ public class MinimalImmutableHashMap<K,V> {
                 for (int i = 0; i < this.nodes.length; i++) {
                     this.nodes[i].prettyPrint(strBuilder, indent + 2);
                     strBuilder.append('\n');
+                }
+                for (int i = 0; i < indent; i++) {
+                    strBuilder.append(' ');
                 }
                 strBuilder.append("}");
             }
@@ -693,6 +926,9 @@ public class MinimalImmutableHashMap<K,V> {
                 this.entries[i].prettyPrint(strBuilder, indent + 2);
                 strBuilder.append('\n');
             }
+            for (int i = 0; i < indent; i++) {
+                strBuilder.append(' ');
+            }
             strBuilder.append("}");
         }
 
@@ -703,7 +939,7 @@ public class MinimalImmutableHashMap<K,V> {
 
     public static void main(String[] args) {
 
-        MinimalImmutableHashMap<String,Object> m = MinimalImmutableHashMap.build(10);
+        MinimalImmutableHashMap<String,Object> m = MinimalImmutableHashMap.build(2);
 
         System.out.println();
         System.out.println(m.prettyPrint());
@@ -720,122 +956,142 @@ public class MinimalImmutableHashMap<K,V> {
 
         m = m.put("iFlloworld", 52);
 
-//        System.out.println();
-//        System.out.println(m.prettyPrint());
-//
-//        m = m.put("j'lloworld", 31);
-//
-//        System.out.println();
-//        System.out.println(m.prettyPrint());
-//
-//        m = m.put("lloworld", 99);
-//
-//        System.out.println();
-//        System.out.println(m.prettyPrint());
-//
-//        m = m.put("IFllo", 423);
-//
-//        System.out.println();
-//        System.out.println(m.prettyPrint());
-//
-//        m = m.put("n.oworld", 941);
-//
-//        System.out.println();
-//        System.out.println(m.prettyPrint());
-//
-//        m = m.put("Aloha", 3413);
-//
-//        System.out.println();
-//        System.out.println(m.prettyPrint());
-//
-//        m = m.put("IFllo", 987);
-//
-//        System.out.println();
-//        System.out.println(m.prettyPrint());
-//
-//        m = m.put("Hello", 23142);
-//
-//        System.out.println();
-//        System.out.println(m.prettyPrint());
-//
-//        System.out.println();
-//        System.out.println(m.get("IFllo"));
-//        System.out.println(m.get("lloworld"));
-//        System.out.println(m.get("Hello"));
-//        System.out.println(m.get("Aloha"));
-//
-//        m = m.remove("Hello");
-//
-//        System.out.println();
-//        System.out.println(m.prettyPrint());
-//
-//        m = m.remove("IFllo");
-//
-//        System.out.println();
-//        System.out.println(m.prettyPrint());
-//
-//        m = m.remove("IFllo");
-//
-//        System.out.println();
-//        System.out.println(m.prettyPrint());
-//
-//        m = m.remove("Aloha");
-//
-//        System.out.println();
-//        System.out.println(m.prettyPrint());
-//
-//        MinimalImmutableHashMap<String,Object> m2 = m.remove("iFlloworld");
-//
-//        System.out.println();
-//        System.out.println(m2.prettyPrint());
-//
-//        System.out.println();
-//        System.out.println(m.prettyPrint());
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.put("j'lloworld", 31);
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.put("lloworld", 99);
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.put("IFllo", 423);
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.put("n.oworld", 941);
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.put("Aloha", 3413);
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.put("IFllo", 987);
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.put("Hello", 23142);
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.put("Ola", 2341233);
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.put("Hola", 2341233);
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
 
 
-//        testComputeLimits(0, 900, 5);
-//        testComputeLimits(0, 903, 5);
-//        testComputeLimits(0, 904, 5);
-//        testComputeLimits(0, 905, 5);
-//        testComputeLimits(0, 906, 5);
-//        testComputeLimits(Integer.MIN_VALUE, Integer.MAX_VALUE, 5);
-//        testComputeLimits(Integer.MIN_VALUE + 1, Integer.MAX_VALUE - 1, 5);
+        System.out.println();
+        System.out.println(m.get("IFllo"));
+        System.out.println(m.get("lloworld"));
+        System.out.println(m.get("Hello"));
+        System.out.println(m.get("Aloha"));
 
-//        testComputeLimits(Integer.MIN_VALUE, Integer.MAX_VALUE, 1);
-//        testComputeLimits(Integer.MIN_VALUE, Integer.MAX_VALUE, 2);
-//        testComputeLimits(Integer.MIN_VALUE, Integer.MAX_VALUE, 3);
-//        testComputeLimits(Integer.MIN_VALUE, Integer.MAX_VALUE, 4);
-//        testComputeLimits(Integer.MIN_VALUE, Integer.MAX_VALUE, 100);
-//
-//
-//        testComputeLimits(2104533979, 2147483647, 100);
+        m = m.remove("Hello");
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.remove("IFllo");
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.remove("IFllo");
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.remove("Aloha");
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.remove("j'lloworld");
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.remove("iFlloworld");
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.remove("Ola");
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.remove("helloworld");
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.remove("lloworld");
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.remove("n.oworld");
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.remove("Hola");
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+
+
+        final long s0 = System.nanoTime();
+
+        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName(), "active");
+        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName() + "user_1", "active");
+        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName() + "name_2", "active");
+        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName() + "options_3", "active");
+        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName() + "isEnabled_4", "active");
+        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName() + "totalCount_5", "active");
+        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName() + "allProps_6", "active");
+        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName() + "surname_7", "active");
+        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName() + "address_8", "active");
+        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName() + "zip_9", "active");
+        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName() + "state_10", "active");
+
+        final long e0 = System.nanoTime();
+
+        System.out.println("TIME: " + (e0 -s0));
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
 
     }
 
 
-
-    private static void testComputeLimits(final int lowLimit, final int highLimit, final int maxNodeSize) {
-
-        long rangePerNode = computeRangePerNode(lowLimit, highLimit, maxNodeSize);
-
-        System.out.println(rangePerNode);
-        System.out.println("--------------");
-
-        long newLowLimit, newHighLimit;
-        for (int i = 0; i < maxNodeSize; i++) {
-
-            newLowLimit = (long)lowLimit + (i * rangePerNode);
-            newHighLimit = newLowLimit + rangePerNode - 1;
-            if (newHighLimit > highLimit) {
-                // This can only happen for the last node
-                newHighLimit = (long)highLimit;
-            }
-
-            System.out.println(newLowLimit + " - " + newHighLimit + " = " + ((newHighLimit - newLowLimit) + 1));
-
-        }
-        System.out.println("--------------");
-
-    }
 
 }
