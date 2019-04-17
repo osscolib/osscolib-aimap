@@ -2,12 +2,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.danielfernandez</groupId>
-    <artifactId>vexprel</artifactId>
+    <groupId>org.osscolib</groupId>
+    <artifactId>osscolib-aimap</artifactId>
     <version>0.0.1.BUILD-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>vexprel</name>
+    <name>osscolib-aimap</name>
 
     <build>
         <plugins>
@@ -37,17 +37,10 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <byte-buddy.version>1.9.3</byte-buddy.version>
         <junit.version>4.12</junit.version>
     </properties>
 	
     <dependencies>
-
-        <dependency>
-            <groupId>net.bytebuddy</groupId>
-            <artifactId>byte-buddy</artifactId>
-            <version>${byte-buddy.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>junit</groupId>

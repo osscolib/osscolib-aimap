@@ -1,8 +1,8 @@
-package org.vexprel.util.atomicindexedmap;
+package org.osscolib.aimap;
 
 import java.util.Map;
 
-import org.vexprel.util.atomicindexedmap.AtomicIndexedMap.Slot;
+import org.osscolib.aimap.AtomicIndexedMap.Slot;
 
 final class SlotBuilder {
 

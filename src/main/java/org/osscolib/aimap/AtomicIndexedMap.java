@@ -1,4 +1,4 @@
-package org.vexprel.util.atomicindexedmap;
+package org.osscolib.aimap;
 
 import java.util.List;
 import java.util.Map;

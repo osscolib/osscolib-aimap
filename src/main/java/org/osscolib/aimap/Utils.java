@@ -1,7 +1,7 @@
-package org.vexprel.util.atomicindexedmap;
+package org.osscolib.aimap;
 
-import org.vexprel.util.atomicindexedmap.AtomicIndexedMap.Node;
-import org.vexprel.util.atomicindexedmap.AtomicIndexedMap.Slot;
+import org.osscolib.aimap.AtomicIndexedMap.Node;
+import org.osscolib.aimap.AtomicIndexedMap.Slot;
 
 final class Utils {
 

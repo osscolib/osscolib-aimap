@@ -1,10 +1,10 @@
-package org.vexprel.util.atomicindexedmap;
+package org.osscolib.aimap;
 
 import java.util.Arrays;
 import java.util.Map;
 
-import org.vexprel.util.atomicindexedmap.AtomicIndexedMap.Node;
-import org.vexprel.util.atomicindexedmap.AtomicIndexedMap.Visitor;
+import org.osscolib.aimap.AtomicIndexedMap.Node;
+import org.osscolib.aimap.AtomicIndexedMap.Visitor;
 
 final class BranchNode<K,V> implements Node<K,V> {
 

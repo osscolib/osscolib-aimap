@@ -1,10 +1,10 @@
-package org.vexprel.util.atomicindexedmap;
+package org.osscolib.aimap;
 
 import java.util.Arrays;
 import java.util.Map;
 
-import org.vexprel.util.atomicindexedmap.AtomicIndexedMap.Slot;
-import org.vexprel.util.atomicindexedmap.AtomicIndexedMap.Visitor;
+import org.osscolib.aimap.AtomicIndexedMap.Slot;
+import org.osscolib.aimap.AtomicIndexedMap.Visitor;
 
 final class MultiValueSlot<K,V> implements Slot<K,V> {
 

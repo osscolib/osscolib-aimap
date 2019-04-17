@@ -1,6 +1,4 @@
-package org.vexprel.util.atomicindexedmap;
-
-import org.vexprel.standard.action.ByteCodeGenStandardExpressionActionFactory;
+package org.osscolib.aimap;
 
 public class AtomicIndexedMapTest {
 
@@ -136,28 +134,6 @@ public class AtomicIndexedMapTest {
         System.out.println();
         System.out.println(m.prettyPrint());
 
-
-
-        final long s0 = System.nanoTime();
-
-        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName(), "active");
-        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName() + "user_1", "active");
-        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName() + "name_2", "active");
-        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName() + "options_3", "active");
-        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName() + "isEnabled_4", "active");
-        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName() + "totalCount_5", "active");
-        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName() + "allProps_6", "active");
-        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName() + "surname_7", "active");
-        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName() + "address_8", "active");
-        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName() + "zip_9", "active");
-        m = m.put(ByteCodeGenStandardExpressionActionFactory.class.getName() + "state_10", "active");
-
-        final long e0 = System.nanoTime();
-
-        System.out.println("TIME: " + (e0 -s0));
-
-        System.out.println();
-        System.out.println(m.prettyPrint());
 
 
     }
