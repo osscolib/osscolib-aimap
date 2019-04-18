@@ -21,28 +21,113 @@ package org.osscolib.aimap;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 public final class AtomicIndexedMap<K,V> {
 
-    private final Node root;
+    private final static int DEFAULT_MAX_SLOTS_PER_NODE = 10;
+    private final static int DEFAULT_LOWEST_INDEX = Integer.MIN_VALUE;
+    private final static int DEFAULT_HIGHEST_INDEX = Integer.MAX_VALUE;
+    private final static HashCodeFunction DEFAULT_INDEX_FUNCTION = new HashCodeFunction();
+
+    private final static AtomicIndexedMap DEFAULT_INSTANCE;
+
+    private final Node<K,V> root;
+    private final Function<? super K,Integer> indexFunction;
+    private final int lowestIndex;
+    private final int highestIndex;
+    private final int maxSlotsPerNode;
 
 
-    public static AtomicIndexedMap build(final int maxSlotsPerNode) {
+
+
+    static {
         final Node root =
-                NodeBuilder.build(Integer.MIN_VALUE, Integer.MAX_VALUE, maxSlotsPerNode, Utils.emptySlots());
-        return new AtomicIndexedMap(root);
+                NodeBuilder.build(
+                        DEFAULT_LOWEST_INDEX, DEFAULT_HIGHEST_INDEX, DEFAULT_MAX_SLOTS_PER_NODE, Utils.emptySlots());
+        DEFAULT_INSTANCE =
+                new AtomicIndexedMap(
+                        DEFAULT_LOWEST_INDEX, DEFAULT_HIGHEST_INDEX, DEFAULT_INDEX_FUNCTION,
+                        DEFAULT_MAX_SLOTS_PER_NODE, root);
     }
 
 
-    private AtomicIndexedMap(final Node root) {
+    public static <K,V> AtomicIndexedMap<K,V> build() {
+        return DEFAULT_INSTANCE;
+    }
+
+
+
+
+    private AtomicIndexedMap(
+            final int lowestIndex, final int highestIndex, final Function<? super K,Integer> indexFunction,
+            final int maxSlotsPerNode, final Node<K,V> root) {
         super();
+        this.lowestIndex = lowestIndex;
+        this.highestIndex = highestIndex;
+        this.indexFunction = indexFunction;
+        this.maxSlotsPerNode = maxSlotsPerNode;
         this.root = root;
     }
 
 
-    protected int computeIndex(final K key) {
-        return key.hashCode();
+    public AtomicIndexedMap<K,V> withMaxSlotsPerNode(final int maxSlotsPerNode) {
+
+        if (this.root.getSlotCount() != 0) {
+            throw new IllegalStateException("Cannot change configuration once the map is in use");
+        }
+
+        final Node<K,V> newRoot =
+                NodeBuilder.build(this.lowestIndex, this.highestIndex, maxSlotsPerNode, Utils.emptySlots());
+        return new AtomicIndexedMap(
+                this.lowestIndex, this.highestIndex, this.indexFunction, maxSlotsPerNode, newRoot);
+
     }
+
+
+    public AtomicIndexedMap<K,V> withIndexing(
+            final int lowestIndex, final int highestIndex, final Function<? super K,Integer> indexFunction) {
+
+        if (this.root.getSlotCount() != 0) {
+            throw new IllegalStateException("Cannot change configuration once the map is in use");
+        }
+
+        final Node<K,V> newRoot =
+                NodeBuilder.build(lowestIndex, highestIndex, this.maxSlotsPerNode, Utils.emptySlots());
+        return new AtomicIndexedMap(
+                lowestIndex, highestIndex, indexFunction, this.maxSlotsPerNode, newRoot);
+
+    }
+
+
+
+
+    public int getLowestIndex() {
+        return this.lowestIndex;
+    }
+
+
+    public int getHighestIndex() {
+        return this.highestIndex;
+    }
+
+    public Function<? super K, Integer> getIndexFunction() {
+        return this.indexFunction;
+    }
+
+
+
+    private int computeIndex(final K key) {
+        final int idx = this.indexFunction.apply(key);
+        if (this.lowestIndex > idx || this.highestIndex < idx) {
+            throw new IllegalStateException(
+                    String.format(
+                            "Map has bad indexing specification. A key was assigned index %d but " +
+                            "established limits are %d to %d", idx, this.lowestIndex, this.highestIndex));
+        }
+        return idx;
+    }
+
 
 
     public V get(final K key) {
@@ -64,7 +149,8 @@ public final class AtomicIndexedMap<K,V> {
         if (this.root == newRoot) {
             return this;
         }
-        return new AtomicIndexedMap<>(newRoot);
+        return new AtomicIndexedMap<>(
+                this.lowestIndex, this.highestIndex, this.indexFunction, this.maxSlotsPerNode, newRoot);
     }
 
 
@@ -77,16 +163,26 @@ public final class AtomicIndexedMap<K,V> {
         if (this.root == newRoot) {
             return this;
         }
-        return new AtomicIndexedMap<>(newRoot);
+        return new AtomicIndexedMap<>(
+                this.lowestIndex, this.highestIndex, this.indexFunction, this.maxSlotsPerNode, newRoot);
     }
 
 
     String prettyPrint() {
-        final Visitor visitor = new PrettyPrintVisitor();
+        final Visitor<K,V> visitor = new PrettyPrintVisitor();
         visitor.visitRoot(this.root);
         return visitor.toString();
     }
 
+
+    private static class HashCodeFunction implements Function<Object,Integer> {
+
+        @Override
+        public Integer apply(final Object k) {
+            return k.hashCode();
+        }
+
+    }
 
 
 

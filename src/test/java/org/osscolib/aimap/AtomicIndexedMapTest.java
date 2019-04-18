@@ -6,7 +6,11 @@ public class AtomicIndexedMapTest {
 
     public static void main(String[] args) {
 
-        AtomicIndexedMap<String,Object> m = AtomicIndexedMap.build(2);
+        AtomicIndexedMap<String,Object> m =
+                AtomicIndexedMap
+                        .<String,Object>build()
+                        .withMaxSlotsPerNode(2)
+                        .withIndexing(0, 2, key -> Math.abs(key.hashCode() % 3));
 
         System.out.println();
         System.out.println(m.prettyPrint());
