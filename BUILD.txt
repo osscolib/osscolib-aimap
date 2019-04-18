@@ -1,0 +1,35 @@
+
+ Building osscolib-aimap
+ -----------------------
+ 
+ To build unbescape you will need Maven 2. You can get it at:
+ 
+     http://maven.apache.org
+
+ Build and install the project executing, from the unbescape
+ project root folder:
+ 
+     mvn clean:clean install
+     
+ And you will get a fresh target/osscolib-aimap-{version}.jar file.
+ You will also get it installed in your local repository at:
+ 
+     $M2_REPO/org/osscolib/osscolib-aimap/{version}/osscolib-aimap-{version}.jar
+
+
+
+ Generating Javadoc for osscolib-aimap
+ -------------------------------------
+ 
+ If you wish to generate the javadoc for osscolib-aimap, execute this from the
+ osscolib-aimap root folder:
+ 
+     mvn javadoc:javadoc
+     
+ This will generate the javadoc documentation in HTML format in:
+ 
+     target/site/apidocs
+ 
+
+
+ 
