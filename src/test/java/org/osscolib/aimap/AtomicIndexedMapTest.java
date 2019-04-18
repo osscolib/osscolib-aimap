@@ -4,7 +4,6 @@ public class AtomicIndexedMapTest {
 
 
 
-
     public static void main(String[] args) {
 
         AtomicIndexedMap<String,Object> m = AtomicIndexedMap.build(2);
@@ -133,8 +132,6 @@ public class AtomicIndexedMapTest {
 
         System.out.println();
         System.out.println(m.prettyPrint());
-
-
 
     }
 

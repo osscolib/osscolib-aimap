@@ -2,11 +2,11 @@
  Building osscolib-aimap
  -----------------------
  
- To build unbescape you will need Maven 2. You can get it at:
+ To build osscolib-aimap you will need Maven 2. You can get it at:
  
      http://maven.apache.org
 
- Build and install the project executing, from the unbescape
+ Build and install the project executing, from the osscolib-aimap
  project root folder:
  
      mvn clean:clean install
