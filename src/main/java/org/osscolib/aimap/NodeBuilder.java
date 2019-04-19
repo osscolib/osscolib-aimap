@@ -19,8 +19,8 @@
  */
 package org.osscolib.aimap;
 
-import org.osscolib.aimap.AtomicIndexedMap.Node;
-import org.osscolib.aimap.AtomicIndexedMap.Slot;
+import org.osscolib.aimap.IndexedMap.Node;
+import org.osscolib.aimap.IndexedMap.Slot;
 
 final class NodeBuilder {
 

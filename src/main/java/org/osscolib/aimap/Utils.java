@@ -19,15 +19,15 @@
  */
 package org.osscolib.aimap;
 
-import org.osscolib.aimap.AtomicIndexedMap.Node;
-import org.osscolib.aimap.AtomicIndexedMap.Slot;
+import org.osscolib.aimap.IndexedMap.Node;
+import org.osscolib.aimap.IndexedMap.Slot;
 
 final class Utils {
 
     // If size is under this threshold, a sequential search probably performs better
     private static final int SEQUENTIAL_SEARCH_THRESHOLD = 8;
 
-    private static final Slot[] EMPTY_SLOTS = new AtomicIndexedMap.Slot[0];
+    private static final Slot[] EMPTY_SLOTS = new Slot[0];
 
     static <K,V> Slot<K,V>[] emptySlots() {
         return EMPTY_SLOTS;

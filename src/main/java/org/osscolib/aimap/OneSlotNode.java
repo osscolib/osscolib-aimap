@@ -22,9 +22,9 @@ package org.osscolib.aimap;
 import java.util.Collections;
 import java.util.Map;
 
-import org.osscolib.aimap.AtomicIndexedMap.Node;
-import org.osscolib.aimap.AtomicIndexedMap.Slot;
-import org.osscolib.aimap.AtomicIndexedMap.Visitor;
+import org.osscolib.aimap.IndexedMap.Node;
+import org.osscolib.aimap.IndexedMap.Slot;
+import org.osscolib.aimap.IndexedMap.Visitor;
 
 final class OneSlotNode<K,V> implements Node<K,V> {
 
@@ -73,7 +73,7 @@ final class OneSlotNode<K,V> implements Node<K,V> {
 
 
     @Override
-    public V get(final int index, final K key) {
+    public V get(final int index, final Object key) {
 
         if (index != this.slot.getIndex()) {
             return null;
@@ -111,7 +111,7 @@ final class OneSlotNode<K,V> implements Node<K,V> {
 
 
     @Override
-    public Node<K,V> remove(final int index, final K key) {
+    public Node<K,V> remove(final int index, final Object key) {
 
         if (index != this.slot.getIndex()) {
             // Not found

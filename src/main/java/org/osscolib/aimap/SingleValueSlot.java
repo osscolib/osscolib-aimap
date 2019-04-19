@@ -22,8 +22,8 @@ package org.osscolib.aimap;
 import java.util.Collections;
 import java.util.Map;
 
-import org.osscolib.aimap.AtomicIndexedMap.Slot;
-import org.osscolib.aimap.AtomicIndexedMap.Visitor;
+import org.osscolib.aimap.IndexedMap.Slot;
+import org.osscolib.aimap.IndexedMap.Visitor;
 
 final class SingleValueSlot<K,V> implements Slot<K,V> {
 
@@ -50,7 +50,7 @@ final class SingleValueSlot<K,V> implements Slot<K,V> {
 
 
     @Override
-    public V get(final K key) {
+    public V get(final Object key) {
         if (this.entry.getKey().equals(key)) {
             return this.entry.getValue();
         }
@@ -78,7 +78,7 @@ final class SingleValueSlot<K,V> implements Slot<K,V> {
 
 
     @Override
-    public Slot<K,V> remove(final K key) {
+    public Slot<K,V> remove(final Object key) {
         if (!this.entry.getKey().equals(key)) {
             return this;
         }

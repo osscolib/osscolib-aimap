@@ -22,9 +22,9 @@ package org.osscolib.aimap;
 import java.util.List;
 import java.util.Map;
 
-import org.osscolib.aimap.AtomicIndexedMap.Node;
-import org.osscolib.aimap.AtomicIndexedMap.Slot;
-import org.osscolib.aimap.AtomicIndexedMap.Visitor;
+import org.osscolib.aimap.IndexedMap.Node;
+import org.osscolib.aimap.IndexedMap.Slot;
+import org.osscolib.aimap.IndexedMap.Visitor;
 
 final class PrettyPrintVisitor<K,V> implements Visitor<K,V> {
 

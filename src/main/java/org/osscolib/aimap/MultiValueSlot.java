@@ -22,8 +22,8 @@ package org.osscolib.aimap;
 import java.util.Arrays;
 import java.util.Map;
 
-import org.osscolib.aimap.AtomicIndexedMap.Slot;
-import org.osscolib.aimap.AtomicIndexedMap.Visitor;
+import org.osscolib.aimap.IndexedMap.Slot;
+import org.osscolib.aimap.IndexedMap.Visitor;
 
 final class MultiValueSlot<K,V> implements Slot<K,V> {
 
@@ -51,7 +51,7 @@ final class MultiValueSlot<K,V> implements Slot<K,V> {
 
 
     @Override
-    public V get(final K key) {
+    public V get(final Object key) {
         for (int i = 0; i < this.entries.length; i++) {
             if (this.entries[i].getKey().equals(key)) {
                 return this.entries[i].getValue();
@@ -91,7 +91,7 @@ final class MultiValueSlot<K,V> implements Slot<K,V> {
 
 
     @Override
-    public Slot<K,V> remove(final K key) {
+    public Slot<K,V> remove(final Object key) {
         int pos = -1;
         for (int i = 0; i < this.entries.length; i++) {
             if (this.entries[i].getKey().equals(key)) {

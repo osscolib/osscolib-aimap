@@ -21,7 +21,7 @@ package org.osscolib.aimap;
 
 import java.util.Map;
 
-import org.osscolib.aimap.AtomicIndexedMap.Slot;
+import org.osscolib.aimap.IndexedMap.Slot;
 
 final class SlotBuilder {
 
