@@ -25,7 +25,7 @@ import java.util.function.Function;
 
 public final class AtomicIndexedMap<K,V> {
 
-    private final static int DEFAULT_MAX_SLOTS_PER_NODE = 10;
+    private final static int DEFAULT_MAX_SLOTS_PER_NODE = 64;
     private final static int DEFAULT_LOWEST_INDEX = Integer.MIN_VALUE;
     private final static int DEFAULT_HIGHEST_INDEX = Integer.MAX_VALUE;
     private final static HashCodeFunction DEFAULT_INDEX_FUNCTION = new HashCodeFunction();

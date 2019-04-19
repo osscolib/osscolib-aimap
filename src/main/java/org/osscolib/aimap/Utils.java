@@ -24,6 +24,9 @@ import org.osscolib.aimap.AtomicIndexedMap.Slot;
 
 final class Utils {
 
+    // If size is under this threshold, a sequential search probably performs better
+    private static final int SEQUENTIAL_SEARCH_THRESHOLD = 8;
+
     private static final Slot[] EMPTY_SLOTS = new AtomicIndexedMap.Slot[0];
 
     static <K,V> Slot<K,V>[] emptySlots() {
@@ -33,7 +36,21 @@ final class Utils {
 
     static <K,V> int binarySearchIndexInSlots(final Slot<K,V>[] slots, final int index) {
 
-        // TODO when < 5 probably faster to do it sequentially
+        // If under the threshold, try sequential search
+        if (slots.length <= SEQUENTIAL_SEARCH_THRESHOLD) {
+            int idx;
+            for (int i = 0; i < slots.length; i++) {
+                idx = slots[i].getIndex();
+                if (idx > index) {
+                    return -(i + 1);
+                } else if (idx == index) {
+                    return i;
+                }
+            }
+            return -(slots.length + 1);
+        }
+
+        // Over the threshold so binary search it is
 
         int low = 0;
         int high = slots.length - 1;
@@ -68,7 +85,23 @@ final class Utils {
 
     static <K,V> int binarySearchIndexInNodes(final Node<K,V> [] nodes, final int index) {
 
-        // TODO when < 3 probably faster to do it sequentially
+        // If under the threshold, try sequential search
+        if (nodes.length <= SEQUENTIAL_SEARCH_THRESHOLD) {
+            int idxLow, idxHigh, cmp;
+            for (int i = 0; i < nodes.length; i++) {
+                idxLow = nodes[i].getIndexLowLimit();
+                idxHigh = nodes[i].getIndexHighLimit();
+                cmp = (idxHigh < index ? -1 : idxLow > index? 1 : 0);
+                if (cmp > 0) {
+                    return -(i + 1);
+                } else if (cmp == 0) {
+                    return i;
+                }
+            }
+            return -(nodes.length + 1);
+        }
+
+        // Over the threshold so binary search it is
 
         int low = 0;
         int high = nodes.length - 1;
