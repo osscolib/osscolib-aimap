@@ -19,6 +19,9 @@
  */
 package org.osscolib.aimap;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
 import org.osscolib.aimap.IndexedMap.Node;
 import org.osscolib.aimap.IndexedMap.Slot;
 
@@ -140,6 +143,21 @@ final class Utils {
             return divider;
         }
         return divider + 1L;
+    }
+
+
+
+    private static long computeRangePerPosition(final long nodeRange, final long maxNodeSize) {
+        return (nodeRange / maxNodeSize) + (nodeRange % maxNodeSize == 0 ? 0 : 1);
+    }
+
+    static int computePosition(final long lowLimit, final long highLimit, final long maxNodeSize, final long index) {
+
+        final long rangePerPosition =
+                computeRangePerPosition((highLimit - lowLimit) + 1, maxNodeSize);  // nRange could be stored per node
+
+        return (int) ((index - lowLimit) / rangePerPosition);
+
     }
 
 

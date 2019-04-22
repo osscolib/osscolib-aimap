@@ -20,7 +20,7 @@
 package org.osscolib.aimap;
 
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
+import java.util.function.ToIntFunction;
 
 public final class AtomicIndexedMap<K,V> implements IndexedMap<K,V> {
 
@@ -29,12 +29,12 @@ public final class AtomicIndexedMap<K,V> implements IndexedMap<K,V> {
 
 
     AtomicIndexedMap(
-            final int lowestIndex, final int highestIndex, final Function<Object,Integer> indexFunction,
+            final int lowestIndex, final int highestIndex, final ToIntFunction<Object> indexFunction,
             final int maxSlotsPerNode, final Node<K,V> root) {
         super();
         this.innerMap = new AtomicReference<>();
         this.innerMap.set(
-                new FluentIndexedMap<K,V>(lowestIndex, highestIndex, indexFunction, maxSlotsPerNode, root));
+                new FluentIndexedMap<>(lowestIndex, highestIndex, indexFunction, maxSlotsPerNode, root));
     }
 
 
@@ -49,7 +49,7 @@ public final class AtomicIndexedMap<K,V> implements IndexedMap<K,V> {
     }
 
     @Override
-    public Function<Object, Integer> getIndexFunction() {
+    public ToIntFunction<Object> getIndexFunction() {
         return this.innerMap.get().getIndexFunction();
     }
 

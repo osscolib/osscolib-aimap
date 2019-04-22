@@ -21,7 +21,7 @@ package org.osscolib.aimap;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.ToIntFunction;
 
 public interface IndexedMap<K,V> {
 
@@ -39,7 +39,7 @@ public interface IndexedMap<K,V> {
 
     int getLowestIndex();
     int getHighestIndex();
-    Function<Object, Integer> getIndexFunction();
+    ToIntFunction<Object> getIndexFunction();
 
 
     static <K,V> Builder<K,V> build() {
@@ -58,13 +58,13 @@ public interface IndexedMap<K,V> {
         private final static Builder DEFAULT_BUILDER =
                 new Builder(DEFAULT_LOWEST_INDEX, DEFAULT_HIGHEST_INDEX, DEFAULT_INDEX_FUNCTION, DEFAULT_MAX_SLOTS_PER_NODE);
 
-        private final Function<Object,Integer> indexFunction;
+        private final ToIntFunction<Object> indexFunction;
         private final int lowestIndex;
         private final int highestIndex;
         private final int maxSlotsPerNode;
 
 
-        private Builder(final int lowestIndex, final int highestIndex, final Function<Object,Integer> indexFunction,
+        private Builder(final int lowestIndex, final int highestIndex, final ToIntFunction<Object> indexFunction,
                 final int maxSlotsPerNode) {
             super();
             this.lowestIndex = lowestIndex;
@@ -80,7 +80,7 @@ public interface IndexedMap<K,V> {
 
 
         public Builder<K,V> withIndexing(
-                final int lowestIndex, final int highestIndex, final Function<Object,Integer> indexFunction) {
+                final int lowestIndex, final int highestIndex, final ToIntFunction<Object> indexFunction) {
             return new Builder<>(lowestIndex, highestIndex, indexFunction, this.maxSlotsPerNode);
         }
 
@@ -91,11 +91,13 @@ public interface IndexedMap<K,V> {
         }
 
 
-        private static class HashCodeFunction implements Function<Object,Integer> {
+        private static class HashCodeFunction implements ToIntFunction<Object> {
+
             @Override
-            public Integer apply(final Object k) {
+            public int applyAsInt(final Object k) {
                 return k.hashCode();
             }
+
         }
 
     }

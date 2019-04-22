@@ -19,13 +19,13 @@
  */
 package org.osscolib.aimap;
 
-import java.util.function.Function;
+import java.util.function.ToIntFunction;
 
 
 public final class FluentIndexedMap<K,V> implements IndexedMap<K,V> {
 
     private final Node<K,V> root;
-    private final Function<Object,Integer> indexFunction;
+    private final ToIntFunction<Object> indexFunction;
     private final int lowestIndex;
     private final int highestIndex;
     private final int maxSlotsPerNode;
@@ -33,7 +33,7 @@ public final class FluentIndexedMap<K,V> implements IndexedMap<K,V> {
 
 
     FluentIndexedMap(
-            final int lowestIndex, final int highestIndex, final Function<Object,Integer> indexFunction,
+            final int lowestIndex, final int highestIndex, final ToIntFunction<Object> indexFunction,
             final int maxSlotsPerNode, final Node<K,V> root) {
         super();
         this.lowestIndex = lowestIndex;
@@ -57,7 +57,7 @@ public final class FluentIndexedMap<K,V> implements IndexedMap<K,V> {
     }
 
     @Override
-    public Function<Object, Integer> getIndexFunction() {
+    public ToIntFunction<Object> getIndexFunction() {
         return this.indexFunction;
     }
 
@@ -108,7 +108,7 @@ public final class FluentIndexedMap<K,V> implements IndexedMap<K,V> {
 
 
     private int computeIndex(final Object key) {
-        final int idx = this.indexFunction.apply(key);
+        final int idx = this.indexFunction.applyAsInt(key);
         if (this.lowestIndex > idx || this.highestIndex < idx) {
             throw new IllegalStateException(
                     String.format(
