@@ -22,30 +22,31 @@ package org.osscolib.aimap;
 import java.util.Collections;
 import java.util.Map;
 
-import org.osscolib.aimap.IndexedMap.Slot;
+import org.osscolib.aimap.IndexedMap.DataSlot;
 import org.osscolib.aimap.IndexedMap.Visitor;
 
-final class SingleValueSlot<K,V> implements Slot<K,V> {
+final class SingleEntryDataSlot<K,V> implements DataSlot<K,V> {
 
-    private final int index;
     private final Map.Entry<K,V> entry;
 
-    SingleValueSlot(final int index, final Map.Entry<K,V> entry) {
+
+
+
+    SingleEntryDataSlot(final Map.Entry<K,V> entry) {
         super();
-        this.index = index;
         this.entry = entry;
-    }
-
-
-    @Override
-    public int getIndex() {
-        return this.index;
     }
 
 
     @Override
     public int size() {
         return 1;
+    }
+
+
+    @Override
+    public boolean containsKey(final Object key) {
+        return this.entry.getKey().equals(key);
     }
 
 
@@ -59,36 +60,39 @@ final class SingleValueSlot<K,V> implements Slot<K,V> {
 
 
     @Override
-    public Slot<K,V> put(final int index, final Map.Entry<K,V> entries) {
-        if (this.index != index) {
-            throw new IllegalStateException("Cannot put entries with different index in the same slot");
-        }
-        if (this.entry.getKey() == entries.getKey() && this.entry.getValue() == entries.getValue()) {
+    public DataSlot<K,V> put(final Map.Entry<K,V> entry) {
+
+        if (this.entry.getKey() == entry.getKey() && this.entry.getValue() == entry.getValue()) {
             // No need to perform any modifications, we might avoid a rewrite of a tree path!
             return this;
         }
-        if (this.entry.getKey().equals(entries.getKey())) {
+        if (this.entry.getKey().equals(entry.getKey())) {
             // We are replacing the previous value for a new one
-            return SlotBuilder.build(index, entries);
+            return DataSlotBuilder.build(entry);
         }
+        // TODO We should improve this to avoid linear performance depending on the amount of collisions. This was also fixed in HashMap in Java 8 to avoid DoS
         // There is an index collision, but this is a different slot, so we need to go multi value
-        final Map.Entry<K,V>[] newEntries = new Map.Entry[] { this.entry, entries};
-        return SlotBuilder.build(this.index, newEntries);
+        final Map.Entry<K,V>[] newEntries = new Map.Entry[] { this.entry, entry};
+        return DataSlotBuilder.build(newEntries);
+
     }
 
 
+
     @Override
-    public Slot<K,V> remove(final Object key) {
+    public DataSlot<K,V> remove(final Object key) {
+
         if (!this.entry.getKey().equals(key)) {
             return this;
         }
         return null;
+
     }
 
 
     @Override
     public void acceptVisitor(final Visitor<K,V> visitor) {
-        visitor.visitSlot(this.index, Collections.singletonList(this.entry));
+        visitor.visitDataSlot(Collections.singletonList(this.entry));
     }
 
 }

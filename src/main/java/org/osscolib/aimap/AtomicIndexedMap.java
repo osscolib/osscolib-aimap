@@ -30,11 +30,11 @@ public final class AtomicIndexedMap<K,V> implements IndexedMap<K,V> {
 
     AtomicIndexedMap(
             final int lowestIndex, final int highestIndex, final ToIntFunction<Object> indexFunction,
-            final int maxSlotsPerNode, final Node<K,V> root) {
+            final int maxNodeSize, final Node<K,V> root) {
         super();
         this.innerMap = new AtomicReference<>();
         this.innerMap.set(
-                new FluentIndexedMap<>(lowestIndex, highestIndex, indexFunction, maxSlotsPerNode, root));
+                new FluentIndexedMap<>(lowestIndex, highestIndex, indexFunction, maxNodeSize, root));
     }
 
 

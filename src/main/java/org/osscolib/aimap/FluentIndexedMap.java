@@ -26,20 +26,20 @@ public final class FluentIndexedMap<K,V> implements IndexedMap<K,V> {
 
     private final Node<K,V> root;
     private final ToIntFunction<Object> indexFunction;
-    private final int lowestIndex;
-    private final int highestIndex;
-    private final int maxSlotsPerNode;
+    private final long lowestIndex;
+    private final long highestIndex;
+    private final int maxNodeSize;
 
 
 
     FluentIndexedMap(
-            final int lowestIndex, final int highestIndex, final ToIntFunction<Object> indexFunction,
-            final int maxSlotsPerNode, final Node<K,V> root) {
+            final long lowestIndex, final long highestIndex, final ToIntFunction<Object> indexFunction,
+            final int maxNodeSize, final Node<K,V> root) {
         super();
         this.lowestIndex = lowestIndex;
         this.highestIndex = highestIndex;
         this.indexFunction = indexFunction;
-        this.maxSlotsPerNode = maxSlotsPerNode;
+        this.maxNodeSize = maxNodeSize;
         this.root = root;
     }
 
@@ -47,13 +47,13 @@ public final class FluentIndexedMap<K,V> implements IndexedMap<K,V> {
 
     @Override
     public int getLowestIndex() {
-        return this.lowestIndex;
+        return (int) this.lowestIndex;
     }
 
 
     @Override
     public int getHighestIndex() {
-        return this.highestIndex;
+        return (int) this.highestIndex;
     }
 
     @Override
@@ -86,7 +86,7 @@ public final class FluentIndexedMap<K,V> implements IndexedMap<K,V> {
             return this;
         }
         return new FluentIndexedMap<K,V>(
-                this.lowestIndex, this.highestIndex, this.indexFunction, this.maxSlotsPerNode, newRoot);
+                this.lowestIndex, this.highestIndex, this.indexFunction, this.maxNodeSize, newRoot);
     }
 
 
@@ -100,15 +100,16 @@ public final class FluentIndexedMap<K,V> implements IndexedMap<K,V> {
             return this;
         }
         return new FluentIndexedMap<K,V>(
-                this.lowestIndex, this.highestIndex, this.indexFunction, this.maxSlotsPerNode, newRoot);
+                this.lowestIndex, this.highestIndex, this.indexFunction, this.maxNodeSize, newRoot);
     }
 
 
 
 
 
-    private int computeIndex(final Object key) {
-        final int idx = this.indexFunction.applyAsInt(key);
+    private long computeIndex(final Object key) {
+        // Even if we only allow index functions to return int, we will internally use indexes as a long for convenience
+        final long idx = (long) this.indexFunction.applyAsInt(key);
         if (this.lowestIndex > idx || this.highestIndex < idx) {
             throw new IllegalStateException(
                     String.format(

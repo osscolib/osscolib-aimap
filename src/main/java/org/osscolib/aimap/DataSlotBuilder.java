@@ -21,24 +21,24 @@ package org.osscolib.aimap;
 
 import java.util.Map;
 
-import org.osscolib.aimap.IndexedMap.Slot;
+import org.osscolib.aimap.IndexedMap.DataSlot;
 
-final class SlotBuilder {
+final class DataSlotBuilder {
 
 
-    static <K,V> Slot<K,V> build(final int index, final Map.Entry<K,V> entry) {
-        return new SingleValueSlot<>(index, entry);
+    static <K,V> DataSlot<K,V> build(final Map.Entry<K,V> entry) {
+        return new SingleEntryDataSlot<>(entry);
     }
 
-    static <K,V> Slot<K,V> build(final int index, final Map.Entry<K,V>[] entries) {
+    static <K,V> DataSlot<K,V> build(final Map.Entry<K,V>[] entries) {
         if (entries.length == 1) {
-            return new SingleValueSlot<>(index, entries[0]);
+            return new SingleEntryDataSlot<>(entries[0]);
         }
-        return new MultiValueSlot<>(index, entries);
+        return new MultiEntryDataSlot<>(entries);
     }
 
 
-    private SlotBuilder() {
+    private DataSlotBuilder() {
         super();
     }
 

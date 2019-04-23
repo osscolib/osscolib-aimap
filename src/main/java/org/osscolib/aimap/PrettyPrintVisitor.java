@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.osscolib.aimap.IndexedMap.Node;
-import org.osscolib.aimap.IndexedMap.Slot;
+import org.osscolib.aimap.IndexedMap.DataSlot;
 import org.osscolib.aimap.IndexedMap.Visitor;
 
 final class PrettyPrintVisitor<K,V> implements Visitor<K,V> {
@@ -60,7 +60,7 @@ final class PrettyPrintVisitor<K,V> implements Visitor<K,V> {
 
 
     @Override
-    public void visitBranchNode(final int indexLowLimit, final int indexHighLimit, final List<Node<K,V>> nodes) {
+    public void visitBranchNode(final long indexLowLimit, final long indexHighLimit, final List<Node<K,V>> nodes) {
 
         this.visitorStrBuilder.append(indentForLevel(this.level));
         this.visitorStrBuilder.append(String.format("[%11d | %11d] {", indexLowLimit, indexHighLimit));
@@ -82,7 +82,7 @@ final class PrettyPrintVisitor<K,V> implements Visitor<K,V> {
 
 
     @Override
-    public void visitLeafNode(final int indexLowLimit, final int indexHighLimit, final List<Slot<K,V>> slots) {
+    public void visitLeafNode(final long indexLowLimit, final long indexHighLimit, final List<DataSlot<K,V>> slots) {
 
         this.visitorStrBuilder.append(indentForLevel(this.level));
         this.visitorStrBuilder.append(String.format("[%11d | %11d] {", indexLowLimit, indexHighLimit));
@@ -104,7 +104,7 @@ final class PrettyPrintVisitor<K,V> implements Visitor<K,V> {
 
 
     @Override
-    public void visitSlot(final int index, final List<Map.Entry<K,V>> entries) {
+    public void visitDataSlot(final long index, final List<Map.Entry<K,V>> entries) {
 
         this.visitorStrBuilder.append(indentForLevel(this.level));
         this.visitorStrBuilder.append(String.format("[%11d] (", index));

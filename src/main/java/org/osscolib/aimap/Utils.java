@@ -19,29 +19,25 @@
  */
 package org.osscolib.aimap;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-
-import org.osscolib.aimap.IndexedMap.Node;
-import org.osscolib.aimap.IndexedMap.Slot;
+import org.osscolib.aimap.IndexedMap.DataSlot;
 
 final class Utils {
 
     // If size is under this threshold, a sequential search probably performs better
     private static final int SEQUENTIAL_SEARCH_THRESHOLD = 8;
 
-    private static final Slot[] EMPTY_SLOTS = new Slot[0];
+    private static final DataSlot[] EMPTY_INDEXED_ENTRIES = new DataSlot[0];
 
-    static <K,V> Slot<K,V>[] emptySlots() {
-        return EMPTY_SLOTS;
+    static <K,V> DataSlot<K,V>[] emptySlots() {
+        return EMPTY_INDEXED_ENTRIES;
     }
 
-
-    static <K,V> int binarySearchIndexInSlots(final Slot<K,V>[] slots, final int index) {
+/*
+    static <K,V> int binarySearchIndexInSlots(final Slot<K,V>[] slots, final long index) {
 
         // If under the threshold, try sequential search
         if (slots.length <= SEQUENTIAL_SEARCH_THRESHOLD) {
-            int idx;
+            long idx;
             for (int i = 0; i < slots.length; i++) {
                 idx = slots[i].getIndex();
                 if (idx > index) {
@@ -59,14 +55,14 @@ final class Utils {
         int high = slots.length - 1;
 
         int mid, cmp;
-        int midVal;
+        long midVal;
 
         while (low <= high) {
 
             mid = (low + high) >>> 1;
             midVal = slots[mid].getIndex();
 
-            cmp = Integer.compare(midVal, index);
+            cmp = Long.compare(midVal, index);
 
             if (cmp < 0) {
                 low = mid + 1;
@@ -86,11 +82,12 @@ final class Utils {
 
 
 
-    static <K,V> int binarySearchIndexInNodes(final Node<K,V> [] nodes, final int index) {
+    static <K,V> int binarySearchIndexInNodes(final Node<K,V> [] nodes, final long index) {
 
         // If under the threshold, try sequential search
         if (nodes.length <= SEQUENTIAL_SEARCH_THRESHOLD) {
-            int idxLow, idxHigh, cmp;
+            long idxLow, idxHigh;
+            int cmp;
             for (int i = 0; i < nodes.length; i++) {
                 idxLow = nodes[i].getIndexLowLimit();
                 idxHigh = nodes[i].getIndexHighLimit();
@@ -136,28 +133,35 @@ final class Utils {
 
 
 
-    static long computeRangePerNode(final int lowLimit, final int highLimit, final int maxNodeSize) {
-        final long totalRange = ((long)highLimit - (long)lowLimit) + 1L; // limits are inclusive => +1
+    static long computeRangePerNode(final long lowLimit, final long highLimit, final int maxNodeSize) {
+        final long totalRange = (highLimit - lowLimit) + 1L; // limits are inclusive => +1
         final long divider = totalRange / (long)maxNodeSize;
         if ((totalRange % (long)maxNodeSize) == 0) {
             return divider;
         }
         return divider + 1L;
     }
+*/
 
 
-
-    private static long computeRangePerPosition(final long nodeRange, final long maxNodeSize) {
+    static long computeRangePerSlot(final long nodeRange, final int maxNodeSize) {
         return (nodeRange / maxNodeSize) + (nodeRange % maxNodeSize == 0 ? 0 : 1);
     }
 
-    static int computePosition(final long lowLimit, final long highLimit, final long maxNodeSize, final long index) {
+    static int computeNeededSlots(final long nodeRange, final long rangePerSlot) {
+        return (int) ( (nodeRange / rangePerSlot) + (nodeRange % rangePerSlot == 0 ? 0 : 1) );
+    }
 
-        final long rangePerPosition =
-                computeRangePerPosition((highLimit - lowLimit) + 1, maxNodeSize);  // nRange could be stored per node
+    static int computeSlot(final long lowLimit, final long rangePerSlot, final long index) {
+        return (int) ((index - lowLimit) / rangePerSlot);
+    }
 
-        return (int) ((index - lowLimit) / rangePerPosition);
+    static long computeLowLimitForSlot(final long indexLowLimit, final long rangePerSlot, final int slot) {
+        return indexLowLimit + (slot * rangePerSlot);
+    }
 
+    static long computeHighLimitForSlot(final long indexLowLimit, final long rangePerSlot, final int slot) {
+        return (indexLowLimit + ((slot + 1) * rangePerSlot)) - 1;
     }
 
 

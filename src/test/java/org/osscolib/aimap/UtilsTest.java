@@ -5,7 +5,7 @@ import org.junit.Test;
 
 public class UtilsTest {
 
-    private static final int[] NODE_SIZES = new int[] { 1, 2, 3, 5, 7, 9, 10, 11, 13, 17, 19, 20, 25, 30, 48, 50, 60, 64, 100, 1024 };
+    private static final int[] NODE_SIZES = new int[] { 1, 2, 3, 5, 7, 10, 11, 50, 64, 100, 1024 };
 
 
     @Test
@@ -32,6 +32,7 @@ public class UtilsTest {
     private static void testPositioningWith(final long lowLimit, final long highLimit) {
         for (int i = 0; i < NODE_SIZES.length; i++) {
             testPositioningWith(lowLimit, highLimit, NODE_SIZES[i]);
+            System.out.println("Tested: " + NODE_SIZES[i]);
         }
     }
 
@@ -67,7 +68,8 @@ public class UtilsTest {
 
         }
 
-        final int computedPos = Utils.computePosition(lowLimit, highLimit, nodeSize, index);
+        final long computedRangePerPosition = Utils.computeRangePerSlot((highLimit - lowLimit) + 1, nodeSize);
+        final int computedPos = Utils.computeSlot(lowLimit, computedRangePerPosition, index);
 
         Assert.assertEquals(iterPos, computedPos);
         Assert.assertTrue(computedPos >= 0);

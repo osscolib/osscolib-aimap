@@ -9,8 +9,8 @@ public class AtomicIndexedMapTest {
         FluentIndexedMap<String,Object> m =
                 IndexedMap
                         .<String,Object>build()
-                        .withMaxSlotsPerNode(2)
-                        .withIndexing(0, 2, key -> Math.abs(key.hashCode() % 3))
+                        .withMaxNodeSize(2)
+//                        .withIndexing(0, 2, key -> Math.abs(key.hashCode() % 3))
                         .asFluentMap();
 
         System.out.println();
