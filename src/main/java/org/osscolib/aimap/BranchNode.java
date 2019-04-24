@@ -33,22 +33,22 @@ final class BranchNode<K,V> implements Node<K,V> {
     private final long indexRangePerSlot;
     private final int maxNodeSize;
 
-    private final int usedSlots;
-    private final Node<K,V>[] slots;
+    private final int childrenSize;
+    private final Node<K,V>[] children;
 
 
 
 
     BranchNode(
             final long indexLowLimit, final long indexHighLimit, final long indexRangePerSlot,
-            final int maxNodeSize, final int usedSlots, final Node<K,V>[] slots) {
+            final int maxNodeSize, final int childrenSize, final Node<K,V>[] children) {
         super();
         this.indexLowLimit = indexLowLimit;
         this.indexHighLimit = indexHighLimit;
         this.indexRangePerSlot = indexRangePerSlot;
         this.maxNodeSize = maxNodeSize;
-        this.usedSlots = usedSlots;
-        this.slots = slots;
+        this.childrenSize = childrenSize;
+        this.children = children;
     }
 
 
@@ -66,8 +66,8 @@ final class BranchNode<K,V> implements Node<K,V> {
     @Override
     public int size() {
         int size = 0;
-        for (int i = 0; i < this.slots.length; i++) {
-            size += this.slots[i].size();
+        for (int i = 0; i < this.children.length; i++) {
+            size += this.children[i].size();
         }
         return size;
     }
@@ -80,8 +80,8 @@ final class BranchNode<K,V> implements Node<K,V> {
             return false;
         }
 
-        int pos = Utils.computeSlot(this.indexLowLimit, this.indexRangePerSlot, index);
-        return this.slots[pos].containsKey(index, key);
+        int pos = Utils.computeChildPos(this.indexLowLimit, this.indexRangePerSlot, index);
+        return this.children[pos].containsKey(index, key);
 
     }
 
@@ -93,8 +93,8 @@ final class BranchNode<K,V> implements Node<K,V> {
             return null;
         }
 
-        int pos = Utils.computeSlot(this.indexLowLimit, this.indexRangePerSlot, index);
-        return this.slots[pos].get(index, key);
+        int pos = Utils.computeChildPos(this.indexLowLimit, this.indexRangePerSlot, index);
+        return this.children[pos].get(index, key);
 
     }
 
@@ -106,39 +106,39 @@ final class BranchNode<K,V> implements Node<K,V> {
             return this;
         }
 
-        int pos = Utils.computeSlot(this.indexLowLimit, this.indexRangePerSlot, index);
+        int pos = Utils.computeChildPos(this.indexLowLimit, this.indexRangePerSlot, index);
 
-        if (this.slots[pos] != null) {
+        if (this.children[pos] != null) {
 
-            final Node<K,V> newNode = this.slots[pos].put(index, entry);
+            final Node<K,V> newNode = this.children[pos].put(index, entry);
 
-            if (newNode == this.slots[pos]) {
+            if (newNode == this.children[pos]) {
                 return this;
             }
 
-            final Node<K,V>[] newNodes = Arrays.copyOf(this.slots, this.slots.length);
+            final Node<K,V>[] newNodes = Arrays.copyOf(this.children, this.children.length);
             newNodes[pos] = newNode;
 
-            return NodeBuilder.build(this.indexLowLimit, this.indexHighLimit, this.maxNodeSize, this.usedSlots, newNodes);
+            return NodeBuilder.build(this.indexLowLimit, this.indexHighLimit, this.maxNodeSize, this.childrenSize, newNodes);
 
         }
 
         // Nothing currently in the slot, so just add it
 
         final long nodeIndexRange = (this.indexHighLimit - this.indexLowLimit) + 1;
-        final long nodeRangePerPosition = Utils.computeRangePerSlot(nodeIndexRange, this.maxNodeSize);
+        final long nodeRangePerPosition = Utils.computeRangePerChild(nodeIndexRange, this.maxNodeSize);
 
         final DataSlot<K,V> dataSlot = DataSlotBuilder.build(entry);
-        final long newIndexLowLimit = Utils.computeLowLimitForSlot(this.indexLowLimit, nodeRangePerPosition, pos);
-        final long newIndexHighLimit = Utils.computeHighLimitForSlot(this.indexLowLimit, nodeRangePerPosition, pos);
+        final long newIndexLowLimit = Utils.computeLowLimitForChild(this.indexLowLimit, nodeRangePerPosition, pos);
+        final long newIndexHighLimit = Utils.computeHighLimitForChild(this.indexLowLimit, nodeRangePerPosition, pos);
 
         final Node<K,V> newNode =
                 NodeBuilder.build(newIndexLowLimit, newIndexHighLimit, this.maxNodeSize, index, dataSlot);
 
-        final Node<K,V>[] newSlots = Arrays.copyOf(this.slots, this.slots.length);
+        final Node<K,V>[] newSlots = Arrays.copyOf(this.children, this.children.length);
         newSlots[pos] = newNode;
 
-        return NodeBuilder.build(this.indexLowLimit, this.indexHighLimit, this.maxNodeSize, this.usedSlots + 1, newSlots);
+        return NodeBuilder.build(this.indexLowLimit, this.indexHighLimit, this.maxNodeSize, this.childrenSize + 1, newSlots);
 
     }
 
@@ -150,25 +150,25 @@ final class BranchNode<K,V> implements Node<K,V> {
             return this;
         }
 
-        int pos = Utils.computeSlot(this.indexLowLimit, this.indexRangePerSlot, index);
+        int pos = Utils.computeChildPos(this.indexLowLimit, this.indexRangePerSlot, index);
 
-        if (this.slots[pos] == null) {
+        if (this.children[pos] == null) {
             // Not found
             return this;
         }
 
-        final Node<K,V> newNode = this.slots[pos].remove(index, key);
-        if (newNode == this.slots[pos]) {
+        final Node<K,V> newNode = this.children[pos].remove(index, key);
+        if (newNode == this.children[pos]) {
             return this;
         }
 
-        if (newNode == null && this.usedSlots == 2) {
+        if (newNode == null && this.childrenSize == 2) {
             // We need to turn this into a forwarder
 
             Node<K,V> onlySlot = null;
-            for (int i = 0; onlySlot == null && i < this.slots.length; i++) {
-                if (this.slots[i] != null) {
-                    onlySlot = this.slots[i];
+            for (int i = 0; onlySlot == null && i < this.children.length; i++) {
+                if (this.children[i] != null) {
+                    onlySlot = this.children[i];
                 }
             }
             return NodeBuilder.build(this.indexLowLimit, this.indexHighLimit, this.maxNodeSize, onlySlot);
@@ -176,10 +176,10 @@ final class BranchNode<K,V> implements Node<K,V> {
         }
 
         // Note newNode can still be null here
-        final Node<K,V>[] newNodes = Arrays.copyOf(this.slots, this.slots.length);
+        final Node<K,V>[] newNodes = Arrays.copyOf(this.children, this.children.length);
         newNodes[pos] = newNode;
 
-        final int newUsedSlots = (newNode == null? this.usedSlots - 1 : this.usedSlots);
+        final int newUsedSlots = (newNode == null? this.childrenSize - 1 : this.childrenSize);
 
         return NodeBuilder.build(this.indexLowLimit, this.indexHighLimit, this.maxNodeSize, newUsedSlots, newNodes);
 
@@ -188,7 +188,7 @@ final class BranchNode<K,V> implements Node<K,V> {
 
     @Override
     public void acceptVisitor(final Visitor<K,V> visitor) {
-        visitor.visitBranchNode(this.indexLowLimit, this.indexHighLimit, Arrays.asList(this.slots));
+        visitor.visitBranchNode(this.indexLowLimit, this.indexHighLimit, Arrays.asList(this.children));
     }
 
 }

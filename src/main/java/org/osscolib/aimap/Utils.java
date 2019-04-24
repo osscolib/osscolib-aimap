@@ -144,24 +144,24 @@ final class Utils {
 */
 
 
-    static long computeRangePerSlot(final long nodeRange, final int maxNodeSize) {
+    static long computeRangePerChild(final long nodeRange, final int maxNodeSize) {
         return (nodeRange / maxNodeSize) + (nodeRange % maxNodeSize == 0 ? 0 : 1);
     }
 
-    static int computeNeededSlots(final long nodeRange, final long rangePerSlot) {
-        return (int) ( (nodeRange / rangePerSlot) + (nodeRange % rangePerSlot == 0 ? 0 : 1) );
+    static int computeChildrenSize(final long nodeRange, final long rangePerChild) {
+        return (int) ( (nodeRange / rangePerChild) + (nodeRange % rangePerChild == 0 ? 0 : 1) );
     }
 
-    static int computeSlot(final long lowLimit, final long rangePerSlot, final long index) {
-        return (int) ((index - lowLimit) / rangePerSlot);
+    static int computeChildPos(final long lowLimit, final long rangePerChild, final long index) {
+        return (int) ((index - lowLimit) / rangePerChild);
     }
 
-    static long computeLowLimitForSlot(final long indexLowLimit, final long rangePerSlot, final int slot) {
-        return indexLowLimit + (slot * rangePerSlot);
+    static long computeLowLimitForChild(final long indexLowLimit, final long rangePerChild, final int childPos) {
+        return indexLowLimit + (childPos * rangePerChild);
     }
 
-    static long computeHighLimitForSlot(final long indexLowLimit, final long rangePerSlot, final int slot) {
-        return (indexLowLimit + ((slot + 1) * rangePerSlot)) - 1;
+    static long computeHighLimitForChild(final long indexLowLimit, final long rangePerChild, final int childPos) {
+        return (indexLowLimit + ((childPos + 1) * rangePerChild)) - 1;
     }
 
 

@@ -19,7 +19,6 @@
  */
 package org.osscolib.aimap;
 
-import java.util.Collections;
 import java.util.Map;
 
 import org.osscolib.aimap.IndexedMap.DataSlot;
@@ -39,13 +38,13 @@ final class DataSlotNode<K,V> implements Node<K,V> {
 
 
     DataSlotNode(final long indexLowLimit, final long indexHighLimit,
-                 final int maxNodeSize, final long dataSlotIndex, final DataSlot<K,V> dataSlot) {
+                 final int maxNodeSize, final DataSlot<K,V> dataSlot) {
         super();
         this.indexLowLimit = indexLowLimit;
         this.indexHighLimit = indexHighLimit;
         this.maxNodeSize = maxNodeSize;
-        this.dataSlotIndex = dataSlotIndex;
         this.dataSlot = dataSlot;
+        this.dataSlotIndex = dataSlot.getIndex();
     }
 
 
@@ -68,16 +67,13 @@ final class DataSlotNode<K,V> implements Node<K,V> {
 
     @Override
     public boolean containsKey(final long index, final Object key) {
-        return this.dataSlotIndex == index && this.dataSlot.containsKey(key);
+        return this.dataSlotIndex == index && this.dataSlot.containsKey(index, key);
     }
 
 
     @Override
     public V get(final long index, final Object key) {
-        if (this.dataSlotIndex == index) {
-            return this.dataSlot.get(key);
-        }
-        return null;
+        return this.dataSlotIndex == index? this.dataSlot.get(index, key) : null;
     }
 
 
@@ -90,19 +86,21 @@ final class DataSlotNode<K,V> implements Node<K,V> {
 
         if (this.dataSlotIndex == index) {
 
-            final DataSlot<K,V> newDataSlot = this.dataSlot.put(entry);
+            final DataSlot<K,V> newDataSlot = this.dataSlot.put(index, entry);
             if (newDataSlot == this.dataSlot) {
                 // Nothing was added because the entry already existed
                 return this;
             }
 
-            return NodeBuilder.build(
-                    this.indexLowLimit, this.indexHighLimit, this.maxNodeSize, this.dataSlotIndex, newDataSlot);
+            return NodeBuilder.build(this.indexLowLimit, this.indexHighLimit, this.maxNodeSize, newDataSlot);
 
         }
 
         // We need to add a new slot in the same range, so this has to be converted into a branch
 
+        final DataSlot<K,V> newDataSlot = DataSlotBuilder.build(index, entry);
+        return NodeBuilder.build(
+                this.indexLowLimit, this.indexHighLimit, this.maxNodeSize, this.dataSlot, newDataSlot);
 
     }
 
@@ -115,7 +113,7 @@ final class DataSlotNode<K,V> implements Node<K,V> {
             return this;
         }
 
-        final DataSlot<K,V> newDataSlot = this.dataSlot.remove(key);
+        final DataSlot<K,V> newDataSlot = this.dataSlot.remove(index, key);
 
         if (newDataSlot == this.dataSlot) {
             // No changes needed (key not found)
@@ -124,8 +122,7 @@ final class DataSlotNode<K,V> implements Node<K,V> {
 
         if (newDataSlot != null) {
             // There is still data at the slot - we need a new container node
-            return NodeBuilder.build(
-                    this.indexLowLimit, this.indexHighLimit, this.maxNodeSize, this.dataSlotIndex, newDataSlot);
+            return NodeBuilder.build(this.indexLowLimit, this.indexHighLimit, this.maxNodeSize, newDataSlot);
         }
 
         // All data removed -> should remove this container too

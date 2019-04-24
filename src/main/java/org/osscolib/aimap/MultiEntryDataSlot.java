@@ -27,12 +27,20 @@ import org.osscolib.aimap.IndexedMap.Visitor;
 
 final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
 
+    private final long index;
     private final Map.Entry<K,V>[] entries;
 
 
-    MultiEntryDataSlot(final Map.Entry<K,V>[] entries) {
+    MultiEntryDataSlot(final long index, final Map.Entry<K,V>[] entries) {
         super();
+        this.index = index;
         this.entries = entries;
+    }
+
+
+    @Override
+    public long getIndex() {
+        return this.index;
     }
 
 
@@ -43,7 +51,10 @@ final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
 
 
     @Override
-    public boolean containsKey(final Object key) {
+    public boolean containsKey(final long index, final Object key) {
+        if (this.index != index) {
+            return false;
+        }
         for (int i = 0; i < this.entries.length; i++) {
             if (this.entries[i].getKey().equals(key)) {
                 return true;
@@ -54,7 +65,10 @@ final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
 
 
     @Override
-    public V get(final Object key) {
+    public V get(final long index, final Object key) {
+        if (this.index != index) {
+            return null;
+        }
         for (int i = 0; i < this.entries.length; i++) {
             if (this.entries[i].getKey().equals(key)) {
                 return this.entries[i].getValue();
@@ -65,7 +79,11 @@ final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
 
 
     @Override
-    public DataSlot<K,V> put(final Map.Entry<K,V> entry) {
+    public DataSlot<K,V> put(final long index, final Map.Entry<K,V> entry) {
+
+        if (this.index != index) {
+            return this;
+        }
 
         // TODO We should improve this to avoid linear performance depending on the amount of collisions. This was also fixed in HashMap in Java 8 to avoid DoS
 
@@ -85,18 +103,22 @@ final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
             }
             final Map.Entry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length);
             newEntries[pos] = entry;
-            return DataSlotBuilder.build(newEntries);
+            return DataSlotBuilder.build(index, newEntries);
         }
 
         final Map.Entry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length + 1);
         newEntries[this.entries.length] = entry;
-        return DataSlotBuilder.build(newEntries);
+        return DataSlotBuilder.build(index, newEntries);
 
     }
 
 
     @Override
-    public DataSlot<K,V> remove(final Object key) {
+    public DataSlot<K,V> remove(final long index, final Object key) {
+
+        if (this.index != index) {
+            return this;
+        }
 
         int pos = -1;
         for (int i = 0; i < this.entries.length; i++) {
@@ -109,13 +131,14 @@ final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
             if (this.entries.length == 2) {
                 // There are only two items in the multi value, and we are removing one, so now its single value
                 final Map.Entry<K,V> remainingEntry = this.entries[pos == 0? 1 : 0];
-                return DataSlotBuilder.build(remainingEntry);
+                return DataSlotBuilder.build(index, remainingEntry);
             }
             final Map.Entry<K,V>[] newEntries = new Map.Entry[this.entries.length - 1];
             System.arraycopy(this.entries, 0, newEntries, 0, pos);
             System.arraycopy(this.entries, pos + 1, newEntries, pos, (this.entries.length - (pos + 1)));
-            return DataSlotBuilder.build(newEntries);
+            return DataSlotBuilder.build(index, newEntries);
         }
+
         return this;
 
     }

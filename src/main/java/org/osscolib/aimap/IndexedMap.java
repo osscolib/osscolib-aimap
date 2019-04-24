@@ -108,10 +108,12 @@ public interface IndexedMap<K,V> {
 
     interface DataSlot<K,V> {
 
-        boolean containsKey(final Object key);
-        V get(final Object key);
-        DataSlot<K,V> put(final Map.Entry<K, V> entry);
-        DataSlot<K,V> remove(final Object key);
+        long getIndex();
+
+        boolean containsKey(final long index, final Object key);
+        V get(final long index, final Object key);
+        DataSlot<K,V> put(final long index, final Map.Entry<K, V> entry);
+        DataSlot<K,V> remove(final long index, final Object key);
         int size();
 
         void acceptVisitor(final Visitor<K, V> visitor);

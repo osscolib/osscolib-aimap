@@ -26,15 +26,16 @@ import org.osscolib.aimap.IndexedMap.DataSlot;
 final class DataSlotBuilder {
 
 
-    static <K,V> DataSlot<K,V> build(final Map.Entry<K,V> entry) {
-        return new SingleEntryDataSlot<>(entry);
+    static <K,V> DataSlot<K,V> build(final long index, final Map.Entry<K,V> entry) {
+        return new SingleEntryDataSlot<>(index, entry);
     }
 
-    static <K,V> DataSlot<K,V> build(final Map.Entry<K,V>[] entries) {
+
+    static <K,V> DataSlot<K,V> build(final long index, final Map.Entry<K,V>[] entries) {
         if (entries.length == 1) {
-            return new SingleEntryDataSlot<>(entries[0]);
+            return new SingleEntryDataSlot<>(index, entries[0]);
         }
-        return new MultiEntryDataSlot<>(entries);
+        return new MultiEntryDataSlot<>(index, entries);
     }
 
 

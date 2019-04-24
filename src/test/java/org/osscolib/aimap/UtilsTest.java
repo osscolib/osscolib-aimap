@@ -68,8 +68,8 @@ public class UtilsTest {
 
         }
 
-        final long computedRangePerPosition = Utils.computeRangePerSlot((highLimit - lowLimit) + 1, nodeSize);
-        final int computedPos = Utils.computeSlot(lowLimit, computedRangePerPosition, index);
+        final long computedRangePerPosition = Utils.computeRangePerChild((highLimit - lowLimit) + 1, nodeSize);
+        final int computedPos = Utils.computeChildPos(lowLimit, computedRangePerPosition, index);
 
         Assert.assertEquals(iterPos, computedPos);
         Assert.assertTrue(computedPos >= 0);

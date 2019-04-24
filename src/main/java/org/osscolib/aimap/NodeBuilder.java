@@ -19,55 +19,115 @@
  */
 package org.osscolib.aimap;
 
-import org.osscolib.aimap.IndexedMap.Node;
 import org.osscolib.aimap.IndexedMap.DataSlot;
+import org.osscolib.aimap.IndexedMap.Node;
 
 final class NodeBuilder {
 
 
 
+            /*
+
+
+
+        NOTE the difference between a DS and a DSN is that the DSN does have a low, high
+
+        - DSN: One existing DS, we have a new DS  -> Branch(DSN,DSN)
+        - FWD: One existing node, we have a new DS -> Branch(NODE,DSN)
+        - BRANCH: Several existing nodes, we have a new DS - Branch(NODE...,DSN)
+
+        Node<K,V> build(low, high, maxSize, [original], newDS)
+
+             */
+
+
     static <K,V> Node<K,V> build(final long indexLowLimit, final long indexHighLimit, final int maxNodeSize,
-                                 final long dataSlotIndex, final DataSlot<K,V> dataSlot) {
-        return new DataSlotNode<>(indexLowLimit, indexHighLimit, maxNodeSize, dataSlotIndex, dataSlot);
+                                 final Node<K,V> slot) {
+        return new ForwarderNode(indexLowLimit, indexHighLimit, maxNodeSize, slot);
+    }
+
+
+    static <K,V> Node<K,V> build(final long indexLowLimit, final long indexHighLimit, final int maxNodeSize,
+                                 final DataSlot<K,V> dataSlot) {
+        return new DataSlotNode<>(indexLowLimit, indexHighLimit, maxNodeSize, dataSlot);
+    }
+
+
+    static <K,V> Node<K,V> build(final long indexLowLimit, final long indexHighLimit, final long rangePerChild,
+                                 final int maxNodeSize, final int childrenSize, final Node<K,V>[] children) {
+        return new BranchNode<>(indexLowLimit, indexHighLimit, rangePerChild, maxNodeSize, childrenSize, children);
     }
 
 
 
     static <K,V> Node<K,V> build(final long indexLowLimit, final long indexHighLimit, final int maxNodeSize,
-                                 final Node<K,V> node) {
-        return new ForwarderNode(indexLowLimit, indexHighLimit, maxNodeSize, node);
-    }
+                                 final DataSlot<K,V> originalDataSlot, final DataSlot<K,V> newDataSlot) {
 
+        // We need to compute the range per child, and the amount of children to be created
+        final long nodeRange = (indexHighLimit - indexLowLimit) + 1;
+        final long rangePerChild = Utils.computeRangePerChild(nodeRange, maxNodeSize);
 
+        // Next, compute the new position that the two DataSlots (existing and new) will occupy
+        final int originalChildPos = Utils.computeChildPos(indexLowLimit, rangePerChild, originalDataSlot.getIndex());
+        final int newChildPos = Utils.computeChildPos(indexLowLimit, rangePerChild, newDataSlot.getIndex());
 
-    static <K,V> Node<K,V> build(final long indexLowLimit, final long indexHighLimit, final int maxNodeSize,
-                                 final Node<K,V> node1, final Node<K,V> node2) {
+        // If both data slots would be assigned the same child node position, then we need to drill down further
+        if (originalChildPos == newChildPos) {
 
-        final long nodeIndexRange = (indexHighLimit - indexLowLimit) + 1;
-        final long nodeRangePerPosition = Utils.computeRangePerSlot(nodeIndexRange, maxNodeSize);
-        final int nodePositions = Utils.computeNeededSlots(nodeIndexRange, nodeRangePerPosition);
+            final long childIndexLow = Utils.computeLowLimitForChild(indexLowLimit, rangePerChild, originalChildPos);
+            final long childIndexHigh = Utils.computeHighLimitForChild(indexLowLimit, rangePerChild, originalChildPos);
 
-        final int node1Pos = Utils.computeSlot(indexLowLimit, nodeRangePerPosition, node1.getIndexLowLimit());
-        final int node2Pos = Utils.computeSlot(indexLowLimit, nodeRangePerPosition, node2.getIndexLowLimit());
+            // We will need a new level to be created, but applying a narrower range
+            final Node<K,V> forwarded =
+                    build(childIndexLow, childIndexHigh, maxNodeSize, originalDataSlot, newDataSlot);
 
-        if (node1Pos == node2Pos) {
-            // Both nodes would be assigned the same position, so we need to build a forwarder and try a smaller range
-            final long forwardedIndexLowLimit = Utils.computeLowLimitForSlot(indexLowLimit, nodeRangePerPosition, node1Pos);
-            final long forwardedIndexHighLimit = Utils.computeHighLimitForSlot(indexLowLimit, nodeRangePerPosition, node1Pos);
-            final Node<K,V> forwardedNode = build(forwardedIndexLowLimit, forwardedIndexHighLimit, maxNodeSize, node1, node2);
-            return new ForwarderNode<>(indexLowLimit, indexHighLimit, maxNodeSize, forwardedNode);
+            return build(indexLowLimit, indexHighLimit, maxNodeSize, forwarded);
+
         }
 
-        final Node<K,V>[] newNodes = new Node[nodePositions];
-        newNodes[node1Pos] = node1;
-        newNodes[node2Pos] = node2;
+        // Data slots are assigned different positions, so we need to create a normal (multi-children) branch
 
-        return new BranchNode(indexLowLimit, indexHighLimit, nodeRangePerPosition, maxNodeSize, 2, newNodes);
+        final int childrenSize = Utils.computeChildrenSize(nodeRange, rangePerChild);
+        final Node<K,V>[] newChildren = new Node[childrenSize];
+
+        // In order to create the DataSlotNodes for the DataSlots, we will need to compute their limits
+        final long originalChildIndexLow = Utils.computeLowLimitForChild(indexLowLimit, rangePerChild, originalChildPos);
+        final long originalChildIndexHigh = Utils.computeHighLimitForChild(indexLowLimit, rangePerChild, originalChildPos);
+        final long newChildIndexLow = Utils.computeLowLimitForChild(indexLowLimit, rangePerChild, newChildPos);
+        final long newChildIndexHigh = Utils.computeHighLimitForChild(indexLowLimit, rangePerChild, newChildPos);
+
+        // Now we have the full data, we can build the new DataSlotNodes
+        final Node<K,V> originalDataSlotNode =
+                build(originalChildIndexLow, originalChildIndexHigh, maxNodeSize, originalDataSlot);
+        final Node<K,V> newDataSlotNode =
+                build(newChildIndexLow, newChildIndexHigh, maxNodeSize, newDataSlot);
+
+        // Finally assignd the DataSlotNodes to their positions as new children
+        newChildren[originalChildPos] = originalDataSlotNode;
+        newChildren[newChildPos] = newDataSlotNode;
+
+        return build(indexLowLimit, indexHighLimit, rangePerChild, maxNodeSize, 2, newChildren);
 
     }
 
 
 
+    static <K,V> Node<K,V> build(final long indexLowLimit, final long indexHighLimit, final int maxNodeSize,
+                                 final Node<K,V> originalChild, final DataSlot<K,V> newDataSlot) {
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+/*
     static <K,V> Node<K,V> build(final long indexLowLimit, final long indexHighLimit, final int maxNodeSize,
                                  final int newUsedSlots, final Node<K,V>[] slots) {
 
@@ -129,7 +189,7 @@ final class NodeBuilder {
     }
 
 
-/*
+
     static <K,V> Node<K,V> build(final long indexLowLimit, final long indexHighLimit,
                    final long newSlotCount, final int maxNodeSize, final Node<K,V>[] nodes) {
 

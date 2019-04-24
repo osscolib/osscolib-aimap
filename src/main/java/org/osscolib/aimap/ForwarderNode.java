@@ -31,18 +31,22 @@ final class ForwarderNode<K,V> implements Node<K,V> {
     private final long indexHighLimit;
     private final int maxNodeSize;
 
-    private final Node<K,V> node;
+    private final long childIndexLowLimit;
+    private final long childIndexHighLimit;
+    private final Node<K,V> child;
 
 
     ForwarderNode(
             final long indexLowLimit, final long indexHighLimit,
             final int maxNodeSize,
-            final Node<K,V> node) {
+            final Node<K,V> child) {
         super();
         this.indexLowLimit = indexLowLimit;
         this.indexHighLimit = indexHighLimit;
         this.maxNodeSize = maxNodeSize;
-        this.node = node;
+        this.child = child;
+        this.childIndexLowLimit = this.child.getIndexLowLimit();
+        this.childIndexHighLimit = this.child.getIndexHighLimit();
     }
 
 
@@ -58,25 +62,25 @@ final class ForwarderNode<K,V> implements Node<K,V> {
 
     @Override
     public int size() {
-        return this.node.size();
+        return this.child.size();
     }
 
 
     @Override
     public boolean containsKey(final long index, final Object key) {
-        if (index < this.indexLowLimit || index > this.indexHighLimit) {
+        if (index < this.childIndexLowLimit || index > this.childIndexHighLimit) {
             return false;
         }
-        return this.node.containsKey(index, key);
+        return this.child.containsKey(index, key);
     }
 
 
     @Override
     public V get(final long index, final Object key) {
-        if (index < this.indexLowLimit || index > this.indexHighLimit) {
+        if (index < this.childIndexLowLimit || index > this.childIndexHighLimit) {
             return null;
         }
-        return this.node.get(index, key);
+        return this.child.get(index, key);
     }
 
 
@@ -88,11 +92,11 @@ final class ForwarderNode<K,V> implements Node<K,V> {
         }
 
         // Let's check if putting this would be the entire responsibility of the forwarded node
-        if (index >= this.node.getIndexLowLimit() && index <= this.node.getIndexHighLimit()) {
+        if (index >= this.childIndexLowLimit && index <= this.childIndexHighLimit) {
             // This should be delegated
 
             final Node<K, V> newNode = this.node.put(index, entry);
-            if (newNode == this.node) {
+            if (newNode == this.child) {
                 // Not found
                 return this;
             }
@@ -105,7 +109,7 @@ final class ForwarderNode<K,V> implements Node<K,V> {
         // We will need to convert this forwarder into a branch node
 
         final Node<K,V> newNode = DataSlotBuilder.build(index, entry);
-        return NodeBuilder.build(this.indexLowLimit, this.indexHighLimit, this.maxNodeSize, this.node, newNode);
+        return NodeBuilder.build(this.indexLowLimit, this.indexHighLimit, this.maxNodeSize, this.child, newNode);
 
     }
 
@@ -114,12 +118,12 @@ final class ForwarderNode<K,V> implements Node<K,V> {
     @Override
     public Node<K,V> remove(final long index, final Object key) {
 
-        if (index < this.indexLowLimit || index > this.indexHighLimit) {
+        if (index < this.childIndexLowLimit || index > this.childIndexHighLimit) {
             return this;
         }
 
-        final Node<K,V> newNode = this.node.remove(index, key);
-        if (newNode == this.node) {
+        final Node<K,V> newNode = this.child.remove(index, key);
+        if (newNode == this.child) {
             // Not found
             return this;
         }
@@ -136,7 +140,7 @@ final class ForwarderNode<K,V> implements Node<K,V> {
 
     @Override
     public void acceptVisitor(final Visitor<K,V> visitor) {
-        visitor.visitLeafNode(this.indexLowLimit, this.indexHighLimit, Collections.singletonList(this.node));
+        visitor.visitLeafNode(this.indexLowLimit, this.indexHighLimit, Collections.singletonList(this.child));
     }
 
 
