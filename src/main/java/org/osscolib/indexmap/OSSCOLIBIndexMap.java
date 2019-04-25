@@ -17,14 +17,14 @@
  *
  * =============================================================================
  */
-package org.osscolib.aimap;
+package org.osscolib.indexmap;
 
 import java.util.Properties;
 
 
 /**
  * <p>
- *  Class meant to keep some constants related to the version of the osscolib-aimap library being used, build date, etc.
+ *  Class meant to keep some constants related to the version of the osscolib-indexmap library being used, build date, etc.
  * </p>
  *
  * @author Daniel Fern&aacute;ndez
@@ -32,7 +32,7 @@ import java.util.Properties;
  * @since 1.0.0
  *
  */
-public final class OsscolibAimap {
+public final class OSSCOLIBIndexMap {
 
     public static final String VERSION;
     public static final String BUILD_TIMESTAMP;
@@ -49,7 +49,7 @@ public final class OsscolibAimap {
         String buildTimestamp = null;
         try {
             final Properties properties = new Properties();
-            properties.load(ClassLoaderUtils.loadResourceAsStream("org/osscolib/aimap/osscolib-aimap.properties"));
+            properties.load(ClassLoaderUtils.loadResourceAsStream("org/osscolib/indexmap/osscolib-indexmap.properties"));
             version = properties.getProperty("version");
             buildTimestamp = properties.getProperty("build.date");
         } catch (final Exception ignored) {
@@ -89,7 +89,7 @@ public final class OsscolibAimap {
 
             } catch (final Exception e) {
                 throw new ExceptionInInitializerError(
-                        "Exception during initialization of osscolib-aimap versioning utilities. Identified osscolib-aimap " +
+                        "Exception during initialization of osscolib-indexmap versioning utilities. Identified osscolib-indexmap " +
                         "version is '" + VERSION + "', which does not follow the {major}.{minor}.{build}[.|-]{type} " +
                         "scheme");
             }
@@ -108,7 +108,7 @@ public final class OsscolibAimap {
 
 
 
-    private OsscolibAimap() {
+    private OSSCOLIBIndexMap() {
         super();
     }
 

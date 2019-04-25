@@ -17,7 +17,7 @@
  *
  * =============================================================================
  */
-package org.osscolib.aimap;
+package org.osscolib.indexmap;
 
 import java.util.Arrays;
 

@@ -19,9 +19,9 @@
       <directory>${basedir}/target/</directory>
       <outputDirectory>/dist</outputDirectory>
       <includes>
-        <include>osscolib-aimap-${version}.jar</include>
-        <include>osscolib-aimap-${version}-javadoc.jar</include>
-        <include>osscolib-aimap-${version}-sources.jar</include>
+        <include>osscolib-indexmap-${version}.jar</include>
+        <include>osscolib-indexmap-${version}-javadoc.jar</include>
+        <include>osscolib-indexmap-${version}-sources.jar</include>
       </includes>
     </fileSet>
     <fileSet>

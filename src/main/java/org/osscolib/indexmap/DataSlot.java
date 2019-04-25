@@ -17,17 +17,18 @@
  *
  * =============================================================================
  */
-package org.osscolib.aimap;
+package org.osscolib.indexmap;
 
-import java.util.List;
-import java.util.Map;
+interface DataSlot<K,V> {
 
+    long getIndex();
 
-interface IndexMapVisitor<K,V> {
+    boolean containsKey(final long index, final Object key);
+    V get(final long index, final Object key);
+    DataSlot<K,V> put(final long index, final Entry<K, V> entry);
+    DataSlot<K,V> remove(final long index, final Object key);
+    int size();
 
-    void visitRoot(final Node<K, V> rootNode);
-    void visitBranchNode(final long indexLowLimit, final long indexHighLimit, final List<Node<K, V>> nodes);
-    void visitDataSlotNode(final long indexLowLimit, final long indexHighLimit, final DataSlot<K, V> dataSlot);
-    void visitDataSlot(final long index, final List<Map.Entry<K, V>> entries);
+    void acceptVisitor(final IndexMapVisitor<K, V> visitor);
 
 }

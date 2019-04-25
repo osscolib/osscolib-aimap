@@ -17,26 +17,22 @@
  *
  * =============================================================================
  */
-package org.osscolib.aimap;
+package org.osscolib.indexmap;
 
-final class DataSlotBuilder {
+import org.junit.Assert;
+import org.junit.Test;
+
+public class OSSCOLIBIndexMapTest {
 
 
-    static <K,V> DataSlot<K,V> build(final long index, final Entry<K,V> entry) {
-        return new SingleEntryDataSlot<>(index, entry);
+    @Test
+    public void testVersion() {
+        Assert.assertNotNull(OSSCOLIBIndexMap.VERSION);
+        Assert.assertTrue(OSSCOLIBIndexMap.VERSION_MAJOR >= 0);
+        Assert.assertTrue(OSSCOLIBIndexMap.VERSION_MINOR >= 0);
+        Assert.assertTrue(OSSCOLIBIndexMap.VERSION_BUILD >= 0);
+        Assert.assertTrue(OSSCOLIBIndexMap.BUILD_TIMESTAMP != null && OSSCOLIBIndexMap.BUILD_TIMESTAMP.trim().length() > 0);
     }
 
-
-    static <K,V> DataSlot<K,V> build(final long index, final Entry<K,V>[] entries) {
-        if (entries.length == 1) {
-            return new SingleEntryDataSlot<>(index, entries[0]);
-        }
-        return new MultiEntryDataSlot<>(index, entries);
-    }
-
-
-    private DataSlotBuilder() {
-        super();
-    }
 
 }

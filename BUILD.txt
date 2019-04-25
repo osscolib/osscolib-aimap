@@ -1,28 +1,28 @@
 
- Building osscolib-aimap
- -----------------------
+ Building osscolib-indexmap
+ --------------------------
  
- To build osscolib-aimap you will need Maven 2. You can get it at:
+ To build osscolib-indexmap you will need Maven 2. You can get it at:
  
      http://maven.apache.org
 
- Build and install the project executing, from the osscolib-aimap
+ Build and install the project executing, from the osscolib-indexmap
  project root folder:
  
      mvn clean:clean install
      
- And you will get a fresh target/osscolib-aimap-{version}.jar file.
+ And you will get a fresh target/osscolib-indexmap-{version}.jar file.
  You will also get it installed in your local repository at:
  
-     $M2_REPO/org/osscolib/osscolib-aimap/{version}/osscolib-aimap-{version}.jar
+     $M2_REPO/org/osscolib/osscolib-indexmap/{version}/osscolib-indexmap-{version}.jar
 
 
 
- Generating Javadoc for osscolib-aimap
- -------------------------------------
+ Generating Javadoc for osscolib-indexmap
+ ----------------------------------------
  
- If you wish to generate the javadoc for osscolib-aimap, execute this from the
- osscolib-aimap root folder:
+ If you wish to generate the javadoc for osscolib-indexmap, execute this from the
+ osscolib-indexmap root folder:
  
      mvn javadoc:javadoc
      

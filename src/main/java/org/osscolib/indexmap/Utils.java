@@ -17,7 +17,7 @@
  *
  * =============================================================================
  */
-package org.osscolib.aimap;
+package org.osscolib.indexmap;
 
 final class Utils {
 

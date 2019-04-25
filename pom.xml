@@ -22,14 +22,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.osscolib</groupId>
-    <artifactId>osscolib-aimap</artifactId>
+    <artifactId>osscolib-indexmap</artifactId>
     <version>0.0.1.BUILD-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>osscolib-aimap</name>
+    <name>osscolib-indexmap</name>
     <url>http://www.osscolib.org</url>
 
-    <description>OSSCOLIB Atomic Indexed Map</description>
+    <description>OSSCOLIB Indexed Map</description>
 
     <licenses>
         <license>
@@ -45,9 +45,9 @@
     </organization>
 
     <scm>
-        <url>scm:git:git@github.com:osscolib/osscolib-aimap.git</url>
-        <connection>scm:git:git@github.com:osscolib/osscolib-aimap.git</connection>
-        <developerConnection>scm:git:git@github.com:osscolib/osscolib-aimap.git</developerConnection>
+        <url>scm:git:git@github.com:osscolib/osscolib-indexmap.git</url>
+        <connection>scm:git:git@github.com:osscolib/osscolib-indexmap.git</connection>
+        <developerConnection>scm:git:git@github.com:osscolib/osscolib-indexmap.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
@@ -92,12 +92,12 @@
         <maven.compile.source>8</maven.compile.source>
         <maven.compile.target>8</maven.compile.target>
         <project.build.sourceEncoding>US-ASCII</project.build.sourceEncoding>
-        <!-- These are needed for showing the build timestamp correctly at the osscolib-aimap.properties file -->
+        <!-- These are needed for showing the build timestamp correctly at the osscolib-indexmap.properties   -->
         <timestamp>${maven.build.timestamp}</timestamp>
         <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ssZ</maven.build.timestamp.format>
         <!-- A project-name-based approach is adopted for the module name (instead of a reverse-DNS one)      -->
         <!-- NOTE we cannot use ${project.artifactId} here because it contains '-', a forbidden char          -->
-        <module.name>osscolib.aimap</module.name>
+        <module.name>osscolib.indexmap</module.name>
         <junit.version>4.12</junit.version>
     </properties>
 
@@ -109,14 +109,14 @@
             <resource>
                 <directory>src/main/resources</directory>
                 <excludes>
-                    <exclude>org/osscolib/aimap/osscolib-aimap.properties</exclude>
+                    <exclude>org/osscolib/indexmap/osscolib-indexmap.properties</exclude>
                 </excludes>
             </resource>
 
             <resource>
                 <directory>src/main/resources</directory>
                 <includes>
-                    <include>org/osscolib/aimap/osscolib-aimap.properties</include>
+                    <include>org/osscolib/indexmap/osscolib-indexmap.properties</include>
                 </includes>
                 <filtering>true</filtering>
             </resource>

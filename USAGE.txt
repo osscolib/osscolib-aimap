@@ -1,14 +1,14 @@
  
- Using osscolib-aimap from Maven 2
- ----------------------------
+ Using osscolib-indexmap from Maven 2+
+ -------------------------------------
  
  
- To use it in your Maven 2 applications, you will need to add it as
+ To use it in your Maven 2+ applications, you will need to add it as
  a dependency with:
 
      <dependency>
        <groupId>org.osscolib</groupId>
-       <artifactId>osscolib-aimap</artifactId>
+       <artifactId>osscolib-indexmap</artifactId>
        <version>{version}</version>
        <scope>compile</scope>
      </dependency>
