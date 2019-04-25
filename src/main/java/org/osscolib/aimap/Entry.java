@@ -24,13 +24,10 @@ import java.util.Objects;
 
 final class Entry<K,V> implements Map.Entry<K,V> {
 
-    private final K key;
-    private final V value;
+    final K key;
+    final V value;
 
     static <K,V> Entry<K,V> build(final K key, final V value) {
-        if (key == null) {
-            throw new IllegalArgumentException("Null keys are forbidden");
-        }
         return new Entry(key, value);
     }
 

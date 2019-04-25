@@ -19,24 +19,15 @@
  */
 package org.osscolib.aimap;
 
-final class DataSlotBuilder {
+import java.util.List;
+import java.util.Map;
 
 
-    static <K,V> DataSlot<K,V> build(final long index, final Entry<K,V> entry) {
-        return new SingleEntryDataSlot<>(index, entry);
-    }
+interface IndexMapVisitor<K,V> {
 
-
-    static <K,V> DataSlot<K,V> build(final long index, final Entry<K,V>[] entries) {
-        if (entries.length == 1) {
-            return new SingleEntryDataSlot<>(index, entries[0]);
-        }
-        return new MultiEntryDataSlot<>(index, entries);
-    }
-
-
-    private DataSlotBuilder() {
-        super();
-    }
+    void visitRoot(final Node<K, V> rootNode);
+    void visitBranchNode(final long indexLowLimit, final long indexHighLimit, final List<Node<K, V>> nodes);
+    void visitDataSlotNode(final long indexLowLimit, final long indexHighLimit, final DataSlot<K, V> dataSlot);
+    void visitDataSlot(final long index, final List<Map.Entry<K, V>> entries);
 
 }

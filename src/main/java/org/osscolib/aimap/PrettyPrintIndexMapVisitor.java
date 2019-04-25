@@ -22,16 +22,12 @@ package org.osscolib.aimap;
 import java.util.List;
 import java.util.Map;
 
-import org.osscolib.aimap.IndexedMap.Node;
-import org.osscolib.aimap.IndexedMap.DataSlot;
-import org.osscolib.aimap.IndexedMap.Visitor;
-
-final class PrettyPrintVisitor<K,V> implements Visitor<K,V> {
+final class PrettyPrintIndexMapVisitor<K,V> implements IndexMapVisitor<K,V> {
 
     private final StringBuilder visitorStrBuilder;
     private int level;
 
-    PrettyPrintVisitor() {
+    PrettyPrintIndexMapVisitor() {
         super();
         this.visitorStrBuilder = new StringBuilder();
         this.level = 0;
@@ -55,23 +51,28 @@ final class PrettyPrintVisitor<K,V> implements Visitor<K,V> {
 
     @Override
     public void visitRoot(final Node rootNode) {
-        rootNode.acceptVisitor(this);
+        if (rootNode != null) {
+            rootNode.acceptVisitor(this);
+        }
     }
 
 
     @Override
-    public void visitBranchNode(final long indexLowLimit, final long indexHighLimit, final List<Node<K,V>> nodes) {
+    public void visitBranchNode(final long indexLowLimit, final long indexHighLimit, final List<Node<K,V>> children) {
 
         this.visitorStrBuilder.append(indentForLevel(this.level));
         this.visitorStrBuilder.append(String.format("[%11d | %11d] {", indexLowLimit, indexHighLimit));
-        if (nodes.size() == 0) {
+        if (children.size() == 0) {
             this.visitorStrBuilder.append("}");
         } else {
             this.visitorStrBuilder.append('\n');
             this.level++;
-            for (int i = 0; i < nodes.size(); i++) {
-                nodes.get(i).acceptVisitor(this);
-                this.visitorStrBuilder.append('\n');
+            for (int i = 0; i < children.size(); i++) {
+                final Node<K,V> child = children.get(i);
+                if (child != null) {
+                    child.acceptVisitor(this);
+                    this.visitorStrBuilder.append('\n');
+                }
             }
             this.level--;
             this.visitorStrBuilder.append(indentForLevel(this.level));
@@ -82,23 +83,19 @@ final class PrettyPrintVisitor<K,V> implements Visitor<K,V> {
 
 
     @Override
-    public void visitLeafNode(final long indexLowLimit, final long indexHighLimit, final List<DataSlot<K,V>> slots) {
+    public void visitDataSlotNode(final long indexLowLimit, final long indexHighLimit, final DataSlot<K,V> dataSlot) {
 
         this.visitorStrBuilder.append(indentForLevel(this.level));
-        this.visitorStrBuilder.append(String.format("[%11d | %11d] {", indexLowLimit, indexHighLimit));
-        if (slots.size() == 0) {
-            this.visitorStrBuilder.append("}");
-        } else {
-            this.visitorStrBuilder.append('\n');
-            this.level++;
-            for (int i = 0; i < slots.size(); i++) {
-                slots.get(i).acceptVisitor(this);
-                this.visitorStrBuilder.append('\n');
-            }
-            this.level--;
-            this.visitorStrBuilder.append(indentForLevel(this.level));
-            this.visitorStrBuilder.append('}');
-        }
+        this.visitorStrBuilder.append(String.format("[%11d | %11d] {\n", indexLowLimit, indexHighLimit));
+
+        this.level++;
+
+        dataSlot.acceptVisitor(this);
+        this.visitorStrBuilder.append('\n');
+
+        this.level--;
+        this.visitorStrBuilder.append(indentForLevel(this.level));
+        this.visitorStrBuilder.append('}');
 
     }
 

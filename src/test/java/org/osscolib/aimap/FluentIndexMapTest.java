@@ -22,7 +22,7 @@ package org.osscolib.aimap;
 import java.util.function.ToIntFunction;
 
 
-public final class FluentIndexedMap<K,V> implements IndexedMap<K,V> {
+public final class FluentIndexMapTest<K,V> implements IndexMap<K,V> {
 
     private final Node<K,V> root;
     private final ToIntFunction<Object> indexFunction;
@@ -32,7 +32,7 @@ public final class FluentIndexedMap<K,V> implements IndexedMap<K,V> {
 
 
 
-    FluentIndexedMap(
+    FluentIndexMapTest(
             final long lowestIndex, final long highestIndex, final ToIntFunction<Object> indexFunction,
             final int maxNodeSize, final Node<K,V> root) {
         super();
@@ -68,39 +68,65 @@ public final class FluentIndexedMap<K,V> implements IndexedMap<K,V> {
     }
 
 
+
+    @Override
+    public boolean containsKey(final Object key) {
+        if (this.root == null) {
+            return false;
+        }
+        return this.root.containsKey(computeIndex(key), key);
+    }
+
+
+    @Override
     public V get(final Object key) {
-        if (key == null) {
-            throw new IllegalArgumentException("Null not allowed as a key");
+        if (this.root == null) {
+            return null;
         }
         return this.root.get(computeIndex(key), key);
     }
 
 
-    public FluentIndexedMap<K,V> put(final K key, final V value) {
-        if (key == null) {
-            throw new IllegalArgumentException("Null not allowed as a key");
+    public FluentIndexMapTest<K,V> put(final K key, final V value) {
+
+        final long index = computeIndex(key);
+        final Entry entry = Entry.build(key, value);
+
+        final Node newRoot;
+        if (this.root == null) {
+
+            final DataSlot<K,V> newDataSlot = DataSlotBuilder.build(index, entry);
+            newRoot = NodeBuilder.build(this.lowestIndex, this.highestIndex, this.maxNodeSize, newDataSlot);
+
+        } else {
+
+            newRoot = this.root.put(index, entry);
+            if (this.root == newRoot) {
+                return this;
+            }
+
         }
-        final Node newRoot =
-                this.root.put(computeIndex(key), Entry.build(key, value));
-        if (this.root == newRoot) {
-            return this;
-        }
-        return new FluentIndexedMap<K,V>(
+
+        return new FluentIndexMapTest<K,V>(
                 this.lowestIndex, this.highestIndex, this.indexFunction, this.maxNodeSize, newRoot);
+
     }
 
 
-    public FluentIndexedMap<K,V> remove(final Object key) {
-        if (key == null) {
-            throw new IllegalArgumentException("Null not allowed as a key");
+    public FluentIndexMapTest<K,V> remove(final Object key) {
+
+        if (this.root == null) {
+            return this;
         }
-        final Node newRoot =
-                this.root.remove(computeIndex(key), key);
+
+        final Node newRoot = this.root.remove(computeIndex(key), key);
         if (this.root == newRoot) {
             return this;
         }
-        return new FluentIndexedMap<K,V>(
+
+        return new FluentIndexMapTest<K,V>(
                 this.lowestIndex, this.highestIndex, this.indexFunction, this.maxNodeSize, newRoot);
+
     }
 
 
@@ -114,14 +140,14 @@ public final class FluentIndexedMap<K,V> implements IndexedMap<K,V> {
             throw new IllegalStateException(
                     String.format(
                             "Map has bad indexing specification. A key was assigned index %d but " +
-                                    "established limits are %d to %d", idx, this.lowestIndex, this.highestIndex));
+                            "established limits are %d to %d", idx, this.lowestIndex, this.highestIndex));
         }
         return idx;
     }
 
 
     String prettyPrint() {
-        final Visitor<K,V> visitor = new PrettyPrintVisitor();
+        final IndexMapVisitor<K,V> visitor = new PrettyPrintIndexMapVisitor();
         visitor.visitRoot(this.root);
         return visitor.toString();
     }

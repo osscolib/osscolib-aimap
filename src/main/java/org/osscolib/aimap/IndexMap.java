@@ -19,15 +19,14 @@
  */
 package org.osscolib.aimap;
 
-import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.function.ToIntFunction;
 
-public interface IndexedMap<K,V> {
+public interface IndexMap<K,V> {
 
     int size();
 //    boolean isEmpty();
-//    boolean containsKey(Object key);
+    boolean containsKey(Object key);
 //    boolean containsValue(Object value);
     V get(final Object key);
 
@@ -86,65 +85,21 @@ public interface IndexedMap<K,V> {
         }
 
 
-        public FluentIndexedMap<K,V> asFluentMap() {
-            final Node<K,V> root = NodeBuilder.build(this.lowestIndex, this.highestIndex, this.maxNodeSize);
-            return new FluentIndexedMap<>(this.lowestIndex, this.highestIndex, this.indexFunction, this.maxNodeSize, root);
+        public FluentIndexMap<K,V> asFluentMap() {
+            // The map is initialized with a null root (no DataSlots)
+            return new FluentIndexMap<>(
+                    this.lowestIndex, this.highestIndex, this.indexFunction, this.maxNodeSize, null);
         }
 
 
         private static class HashCodeFunction implements ToIntFunction<Object> {
             @Override
             public int applyAsInt(final Object k) {
-                return k.hashCode();
+                return Objects.hashCode(k);
             }
         }
 
     }
 
-
-
-
-    // TODO maybe add pretty print functions here? probably better in an additional package-protected intf...
-
-    interface DataSlot<K,V> {
-
-        long getIndex();
-
-        boolean containsKey(final long index, final Object key);
-        V get(final long index, final Object key);
-        DataSlot<K,V> put(final long index, final Map.Entry<K, V> entry);
-        DataSlot<K,V> remove(final long index, final Object key);
-        int size();
-
-        void acceptVisitor(final Visitor<K, V> visitor);
-
-    }
-
-
-    interface Node<K,V> {
-
-        boolean containsKey(final long index, final Object key);
-        V get(final long index, final Object key);
-        Node<K,V> put(final long index, final Map.Entry<K, V> entry);
-        Node<K,V> remove(final long index, final Object key);
-        int size();
-
-        long getIndexLowLimit();
-        long getIndexHighLimit();
-
-        void acceptVisitor(final Visitor<K, V> visitor);
-
-    }
-
-
-    // TODO maybe this can be package protected? in such case, Node and Slot could be package-protected too
-    interface Visitor<K,V> {
-
-        void visitRoot(final Node<K, V> rootNode);
-        void visitBranchNode(final long indexLowLimit, final long indexHighLimit, final List<Node<K, V>> nodes);
-        void visitDataSlotNode(final long indexLowLimit, final long indexHighLimit, final long dataSlotIndex, final DataSlot dataSlot);
-        void visitDataSlot(final List<Map.Entry<K, V>> entries);
-
-    }
 
 }

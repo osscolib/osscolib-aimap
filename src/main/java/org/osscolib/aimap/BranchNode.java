@@ -20,32 +20,27 @@
 package org.osscolib.aimap;
 
 import java.util.Arrays;
-import java.util.Map;
-
-import org.osscolib.aimap.IndexedMap.DataSlot;
-import org.osscolib.aimap.IndexedMap.Node;
-import org.osscolib.aimap.IndexedMap.Visitor;
 
 final class BranchNode<K,V> implements Node<K,V> {
 
-    private final long indexLowLimit;
-    private final long indexHighLimit;
-    private final long indexRangePerSlot;
-    private final int maxNodeSize;
+    final long indexLowLimit;
+    final long indexHighLimit;
+    final long rangePerChild;
+    final int maxNodeSize;
 
-    private final int childrenSize;
-    private final Node<K,V>[] children;
+    final int childrenSize; // not "childrenLen", this is the amount of non-null children
+    final Node<K,V>[] children; // can contain many nulls
 
 
 
 
     BranchNode(
-            final long indexLowLimit, final long indexHighLimit, final long indexRangePerSlot,
+            final long indexLowLimit, final long indexHighLimit, final long rangePerChild,
             final int maxNodeSize, final int childrenSize, final Node<K,V>[] children) {
         super();
         this.indexLowLimit = indexLowLimit;
         this.indexHighLimit = indexHighLimit;
-        this.indexRangePerSlot = indexRangePerSlot;
+        this.rangePerChild = rangePerChild;
         this.maxNodeSize = maxNodeSize;
         this.childrenSize = childrenSize;
         this.children = children;
@@ -66,8 +61,12 @@ final class BranchNode<K,V> implements Node<K,V> {
     @Override
     public int size() {
         int size = 0;
+        Node<K,V> child;
         for (int i = 0; i < this.children.length; i++) {
-            size += this.children[i].size();
+            child = this.children[i];
+            if (child != null) {
+                size += child.size();
+            }
         }
         return size;
     }
@@ -75,70 +74,48 @@ final class BranchNode<K,V> implements Node<K,V> {
 
     @Override
     public boolean containsKey(final long index, final Object key) {
-
-        if (index < this.indexLowLimit || index > this.indexHighLimit) {
-            return false;
-        }
-
-        int pos = Utils.computeChildPos(this.indexLowLimit, this.indexRangePerSlot, index);
-        return this.children[pos].containsKey(index, key);
-
+        final int pos = Utils.computeChildPos(this.indexLowLimit, this.rangePerChild, index);
+        final Node<K,V> child = this.children[pos];
+        return child != null && child.containsKey(index, key);
     }
 
 
     @Override
     public V get(final long index, final Object key) {
-
-        if (index < this.indexLowLimit || index > this.indexHighLimit) {
-            return null;
-        }
-
-        int pos = Utils.computeChildPos(this.indexLowLimit, this.indexRangePerSlot, index);
-        return this.children[pos].get(index, key);
-
+        final int pos = Utils.computeChildPos(this.indexLowLimit, this.rangePerChild, index);
+        final Node<K,V> child = this.children[pos];
+        return (child != null ? child.get(index, key) : null);
     }
 
 
     @Override
-    public Node<K,V> put(final long index, final Map.Entry<K,V> entry) {
+    public Node<K,V> put(final long index, final Entry<K,V> entry) {
 
-        if (index < this.indexLowLimit || index > this.indexHighLimit) {
-            return this;
-        }
+        final int pos = Utils.computeChildPos(this.indexLowLimit, this.rangePerChild, index);
+        final Node<K,V> child = this.children[pos];
 
-        int pos = Utils.computeChildPos(this.indexLowLimit, this.indexRangePerSlot, index);
+        if (child != null) {
 
-        if (this.children[pos] != null) {
+            final Node<K,V> newNode = child.put(index, entry);
 
-            final Node<K,V> newNode = this.children[pos].put(index, entry);
-
-            if (newNode == this.children[pos]) {
+            if (newNode == child) {
                 return this;
             }
 
             final Node<K,V>[] newNodes = Arrays.copyOf(this.children, this.children.length);
             newNodes[pos] = newNode;
 
-            return NodeBuilder.build(this.indexLowLimit, this.indexHighLimit, this.maxNodeSize, this.childrenSize, newNodes);
+            return NodeBuilder.build(
+                    this.indexLowLimit, this.indexHighLimit, this.rangePerChild,
+                    this.maxNodeSize, this.childrenSize, newNodes);
 
         }
 
-        // Nothing currently in the slot, so just add it
-
-        final long nodeIndexRange = (this.indexHighLimit - this.indexLowLimit) + 1;
-        final long nodeRangePerPosition = Utils.computeRangePerChild(nodeIndexRange, this.maxNodeSize);
-
-        final DataSlot<K,V> dataSlot = DataSlotBuilder.build(entry);
-        final long newIndexLowLimit = Utils.computeLowLimitForChild(this.indexLowLimit, nodeRangePerPosition, pos);
-        final long newIndexHighLimit = Utils.computeHighLimitForChild(this.indexLowLimit, nodeRangePerPosition, pos);
-
-        final Node<K,V> newNode =
-                NodeBuilder.build(newIndexLowLimit, newIndexHighLimit, this.maxNodeSize, index, dataSlot);
-
-        final Node<K,V>[] newSlots = Arrays.copyOf(this.children, this.children.length);
-        newSlots[pos] = newNode;
-
-        return NodeBuilder.build(this.indexLowLimit, this.indexHighLimit, this.maxNodeSize, this.childrenSize + 1, newSlots);
+        // Nothing currently in the selected slot, so let's add a new DataSlot
+        final DataSlot<K,V> newDataSlot = DataSlotBuilder.build(index, entry);
+        return NodeBuilder.build(
+                this.indexLowLimit, this.indexHighLimit, this.rangePerChild,
+                this.maxNodeSize, this.childrenSize, this.children, newDataSlot);
 
     }
 
@@ -146,48 +123,39 @@ final class BranchNode<K,V> implements Node<K,V> {
     @Override
     public Node<K,V> remove(final long index, final Object key) {
 
-        if (index < this.indexLowLimit || index > this.indexHighLimit) {
-            return this;
-        }
+        final int pos = Utils.computeChildPos(this.indexLowLimit, this.rangePerChild, index);
+        final Node<K,V> child = this.children[pos];
 
-        int pos = Utils.computeChildPos(this.indexLowLimit, this.indexRangePerSlot, index);
-
-        if (this.children[pos] == null) {
+        if (child == null) {
             // Not found
             return this;
         }
 
-        final Node<K,V> newNode = this.children[pos].remove(index, key);
-        if (newNode == this.children[pos]) {
+        final Node<K,V> newChild = child.remove(index, key);
+        if (newChild == child) {
             return this;
         }
 
-        if (newNode == null && this.childrenSize == 2) {
-            // We need to turn this into a forwarder
-
-            Node<K,V> onlySlot = null;
-            for (int i = 0; onlySlot == null && i < this.children.length; i++) {
-                if (this.children[i] != null) {
-                    onlySlot = this.children[i];
-                }
-            }
-            return NodeBuilder.build(this.indexLowLimit, this.indexHighLimit, this.maxNodeSize, onlySlot);
-
+        if (newChild == null && this.childrenSize == 1) {
+            // This branch has become empty
+            return null;
         }
 
-        // Note newNode can still be null here
-        final Node<K,V>[] newNodes = Arrays.copyOf(this.children, this.children.length);
-        newNodes[pos] = newNode;
+        // Note newChild can still be null here
+        final Node<K,V>[] newChildren = Arrays.copyOf(this.children, this.children.length);
+        newChildren[pos] = newChild;
 
-        final int newUsedSlots = (newNode == null? this.childrenSize - 1 : this.childrenSize);
+        final int newChildrenSize = (newChild == null? this.childrenSize - 1 : this.childrenSize);
 
-        return NodeBuilder.build(this.indexLowLimit, this.indexHighLimit, this.maxNodeSize, newUsedSlots, newNodes);
+        return NodeBuilder.build(
+                this.indexLowLimit, this.indexHighLimit, this.rangePerChild,
+                this.maxNodeSize, newChildrenSize, newChildren);
 
     }
 
 
     @Override
-    public void acceptVisitor(final Visitor<K,V> visitor) {
+    public void acceptVisitor(final IndexMapVisitor<K,V> visitor) {
         visitor.visitBranchNode(this.indexLowLimit, this.indexHighLimit, Arrays.asList(this.children));
     }
 

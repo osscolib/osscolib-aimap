@@ -20,18 +20,15 @@
 package org.osscolib.aimap;
 
 import java.util.Arrays;
-import java.util.Map;
-
-import org.osscolib.aimap.IndexedMap.DataSlot;
-import org.osscolib.aimap.IndexedMap.Visitor;
+import java.util.Objects;
 
 final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
 
     private final long index;
-    private final Map.Entry<K,V>[] entries;
+    private final Entry<K,V>[] entries;
 
 
-    MultiEntryDataSlot(final long index, final Map.Entry<K,V>[] entries) {
+    MultiEntryDataSlot(final long index, final Entry<K,V>[] entries) {
         super();
         this.index = index;
         this.entries = entries;
@@ -52,11 +49,8 @@ final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
 
     @Override
     public boolean containsKey(final long index, final Object key) {
-        if (this.index != index) {
-            return false;
-        }
         for (int i = 0; i < this.entries.length; i++) {
-            if (this.entries[i].getKey().equals(key)) {
+            if (Objects.equals(this.entries[i].key, key)) {
                 return true;
             }
         }
@@ -66,12 +60,9 @@ final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
 
     @Override
     public V get(final long index, final Object key) {
-        if (this.index != index) {
-            return null;
-        }
         for (int i = 0; i < this.entries.length; i++) {
-            if (this.entries[i].getKey().equals(key)) {
-                return this.entries[i].getValue();
+            if (Objects.equals(this.entries[i].key, key)) {
+                return this.entries[i].value;
             }
         }
         return null;
@@ -79,35 +70,30 @@ final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
 
 
     @Override
-    public DataSlot<K,V> put(final long index, final Map.Entry<K,V> entry) {
-
-        if (this.index != index) {
-            return this;
-        }
+    public DataSlot<K,V> put(final long index, final Entry<K,V> newEntry) {
 
         // TODO We should improve this to avoid linear performance depending on the amount of collisions. This was also fixed in HashMap in Java 8 to avoid DoS
 
-        final K entryKey = entry.getKey();
         int pos = -1;
         for (int i = 0; i < this.entries.length; i++) {
-            if (this.entries[i].getKey().equals(entryKey)) {
+            if (Objects.equals(this.entries[i].key, newEntry.key)) {
                 pos = i;
                 break;
             }
         }
         if (pos >= 0) {
-            if (this.entries[pos].getKey() == entry.getKey() && this.entries[pos].getValue() == entry.getValue()) {
+            if (this.entries[pos].key == newEntry.key && this.entries[pos].value == newEntry.value) {
                 // No need to perform any modifications, we might avoid a rewrite of a tree path!
                 // Note this will only happen if key and value are actually the same object, not by object equality
                 return this;
             }
-            final Map.Entry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length);
-            newEntries[pos] = entry;
+            final Entry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length);
+            newEntries[pos] = newEntry;
             return DataSlotBuilder.build(index, newEntries);
         }
 
-        final Map.Entry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length + 1);
-        newEntries[this.entries.length] = entry;
+        final Entry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length + 1);
+        newEntries[this.entries.length] = newEntry;
         return DataSlotBuilder.build(index, newEntries);
 
     }
@@ -116,13 +102,9 @@ final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
     @Override
     public DataSlot<K,V> remove(final long index, final Object key) {
 
-        if (this.index != index) {
-            return this;
-        }
-
         int pos = -1;
         for (int i = 0; i < this.entries.length; i++) {
-            if (this.entries[i].getKey().equals(key)) {
+            if (Objects.equals(this.entries[i].key, key)) {
                 pos = i;
                 break;
             }
@@ -130,10 +112,10 @@ final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
         if (pos >= 0) {
             if (this.entries.length == 2) {
                 // There are only two items in the multi value, and we are removing one, so now its single value
-                final Map.Entry<K,V> remainingEntry = this.entries[pos == 0? 1 : 0];
+                final Entry<K,V> remainingEntry = this.entries[pos == 0? 1 : 0];
                 return DataSlotBuilder.build(index, remainingEntry);
             }
-            final Map.Entry<K,V>[] newEntries = new Map.Entry[this.entries.length - 1];
+            final Entry<K,V>[] newEntries = new Entry[this.entries.length - 1];
             System.arraycopy(this.entries, 0, newEntries, 0, pos);
             System.arraycopy(this.entries, pos + 1, newEntries, pos, (this.entries.length - (pos + 1)));
             return DataSlotBuilder.build(index, newEntries);
@@ -145,8 +127,8 @@ final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
 
 
     @Override
-    public void acceptVisitor(final Visitor<K,V> visitor) {
-        visitor.visitDataSlot(Arrays.asList(this.entries));
+    public void acceptVisitor(final IndexMapVisitor<K,V> visitor) {
+        visitor.visitDataSlot(this.index, Arrays.asList(this.entries));
     }
 
 }

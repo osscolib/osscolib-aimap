@@ -19,24 +19,17 @@
  */
 package org.osscolib.aimap;
 
-final class DataSlotBuilder {
+interface Node<K,V> {
 
+    boolean containsKey(final long index, final Object key);
+    V get(final long index, final Object key);
+    Node<K,V> put(final long index, final Entry<K, V> entry);
+    Node<K,V> remove(final long index, final Object key);
+    int size();
 
-    static <K,V> DataSlot<K,V> build(final long index, final Entry<K,V> entry) {
-        return new SingleEntryDataSlot<>(index, entry);
-    }
+    long getIndexLowLimit();
+    long getIndexHighLimit();
 
-
-    static <K,V> DataSlot<K,V> build(final long index, final Entry<K,V>[] entries) {
-        if (entries.length == 1) {
-            return new SingleEntryDataSlot<>(index, entries[0]);
-        }
-        return new MultiEntryDataSlot<>(index, entries);
-    }
-
-
-    private DataSlotBuilder() {
-        super();
-    }
+    void acceptVisitor(final IndexMapVisitor<K, V> visitor);
 
 }

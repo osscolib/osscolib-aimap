@@ -1,3 +1,22 @@
+/*
+ * =============================================================================
+ *
+ *   Copyright (c) 2019, The OSSCOLIB team (http://www.osscolib.org)
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ * =============================================================================
+ */
 package org.osscolib.aimap;
 
 public class AtomicIndexedMapTest {
@@ -6,10 +25,10 @@ public class AtomicIndexedMapTest {
 
     public static void main(String[] args) {
 
-        FluentIndexedMap<String,Object> m =
-                IndexedMap
+        FluentIndexMap<String,Object> m =
+                IndexMap
                         .<String,Object>build()
-                        .withMaxNodeSize(2)
+                        .withMaxNodeSize(10)
 //                        .withIndexing(0, 2, key -> Math.abs(key.hashCode() % 3))
                         .asFluentMap();
 
@@ -134,6 +153,25 @@ public class AtomicIndexedMapTest {
         System.out.println(m.prettyPrint());
 
         m = m.remove("Hola");
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.put(null, "Something null!");
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        m = m.put(null, "Something other null!");
+
+        System.out.println();
+        System.out.println(m.prettyPrint());
+
+        System.out.println(m.get(null));
+        System.out.println(m.get("Hola"));
+        System.out.println(m.get("n.oworld"));
+
+        m = m.remove(null);
 
         System.out.println();
         System.out.println(m.prettyPrint());

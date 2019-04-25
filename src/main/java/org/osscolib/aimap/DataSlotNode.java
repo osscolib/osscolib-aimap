@@ -19,20 +19,14 @@
  */
 package org.osscolib.aimap;
 
-import java.util.Map;
-
-import org.osscolib.aimap.IndexedMap.DataSlot;
-import org.osscolib.aimap.IndexedMap.Node;
-import org.osscolib.aimap.IndexedMap.Visitor;
-
 final class DataSlotNode<K,V> implements Node<K,V> {
 
-    private final long indexLowLimit;
-    private final long indexHighLimit;
-    private final int maxNodeSize;
+    final long indexLowLimit;
+    final long indexHighLimit;
+    final int maxNodeSize;
 
-    private final long dataSlotIndex;
-    private final DataSlot<K,V> dataSlot;
+    final long dataSlotIndex;
+    final DataSlot<K,V> dataSlot;
 
 
 
@@ -73,16 +67,12 @@ final class DataSlotNode<K,V> implements Node<K,V> {
 
     @Override
     public V get(final long index, final Object key) {
-        return this.dataSlotIndex == index? this.dataSlot.get(index, key) : null;
+        return (this.dataSlotIndex == index ? this.dataSlot.get(index, key) : null);
     }
 
 
     @Override
-    public Node<K,V> put(final long index, final Map.Entry<K,V> entry) {
-
-        if (index < this.indexLowLimit || index > this.indexHighLimit) {
-            return this;
-        }
+    public Node<K,V> put(final long index, final Entry<K,V> entry) {
 
         if (this.dataSlotIndex == index) {
 
@@ -132,8 +122,8 @@ final class DataSlotNode<K,V> implements Node<K,V> {
 
 
     @Override
-    public void acceptVisitor(final Visitor<K,V> visitor) {
-        visitor.visitDataSlotNode(this.indexLowLimit, this.indexHighLimit, this.dataSlotIndex, this.dataSlot);
+    public void acceptVisitor(final IndexMapVisitor<K,V> visitor) {
+        visitor.visitDataSlotNode(this.indexLowLimit, this.indexHighLimit, this.dataSlot);
     }
 
 }
