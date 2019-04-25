@@ -25,8 +25,8 @@ final class NodeBuilder {
 
 
     static <K,V> Node<K,V> build(final long indexLowLimit, final long indexHighLimit, final int maxNodeSize,
-                                 final DataSlot<K,V> dataSlot) {
-        return new DataSlotNode<>(indexLowLimit, indexHighLimit, maxNodeSize, dataSlot);
+                                 final long dataSlotIndex, final DataSlot<K,V> dataSlot) {
+        return Node.buildDataSlotNode(indexLowLimit, indexHighLimit, maxNodeSize, dataSlotIndex, dataSlot);
     }
 
 
@@ -34,7 +34,7 @@ final class NodeBuilder {
 
     static <K,V> Node<K,V> build(final long indexLowLimit, final long indexHighLimit, final long rangePerChild,
                                  final int maxNodeSize, final int childrenSize, final Node<K,V>[] children) {
-        return new BranchNode<>(indexLowLimit, indexHighLimit, rangePerChild, maxNodeSize, childrenSize, children);
+        return Node.buildBranchNode(indexLowLimit, indexHighLimit, rangePerChild, maxNodeSize, childrenSize, children);
     }
 
 
@@ -47,9 +47,13 @@ final class NodeBuilder {
         final long nodeRange = (indexHighLimit - indexLowLimit) + 1;
         final long rangePerChild = Utils.computeRangePerChild(nodeRange, maxNodeSize);
 
+        // Obtain the DataSlot indices
+        final long originalDataSlotIndex = originalDataSlot.getIndex();
+        final long newDataSlotIndex = newDataSlot.getIndex();
+
         // Next, compute the new position that the two DataSlots (existing and new) will occupy
-        final int originalChildPos = Utils.computeChildPos(indexLowLimit, rangePerChild, originalDataSlot.getIndex());
-        final int newChildPos = Utils.computeChildPos(indexLowLimit, rangePerChild, newDataSlot.getIndex());
+        final int originalChildPos = Utils.computeChildPos(indexLowLimit, rangePerChild, originalDataSlotIndex);
+        final int newChildPos = Utils.computeChildPos(indexLowLimit, rangePerChild, newDataSlotIndex);
 
         // We initialise the new children array
         final int childrenSize = Utils.computeChildrenSize(nodeRange, rangePerChild);
@@ -82,9 +86,9 @@ final class NodeBuilder {
 
         // Now we have the full data, we can build the new DataSlotNodes
         final Node<K,V> originalDataSlotNode =
-                build(originalChildIndexLow, originalChildIndexHigh, maxNodeSize, originalDataSlot);
+                build(originalChildIndexLow, originalChildIndexHigh, maxNodeSize, originalDataSlotIndex, originalDataSlot);
         final Node<K,V> newDataSlotNode =
-                build(newChildIndexLow, newChildIndexHigh, maxNodeSize, newDataSlot);
+                build(newChildIndexLow, newChildIndexHigh, maxNodeSize, newDataSlotIndex, newDataSlot);
 
         // Finally assign the DataSlotNodes to their positions as new children
         newChildren[originalChildPos] = originalDataSlotNode;
@@ -103,9 +107,12 @@ final class NodeBuilder {
         final long nodeRange = (indexHighLimit - indexLowLimit) + 1;
         final long rangePerChild = Utils.computeRangePerChild(nodeRange, maxNodeSize);
 
+        // Obtain the DataSlot index
+        final long newDataSlotIndex = newDataSlot.getIndex();
+
         // Next, compute the new position that the two DataSlots (existing and new) will occupy
-        final int originalChildPos = Utils.computeChildPos(indexLowLimit, rangePerChild, originalChild.getIndexLowLimit());
-        final int newChildPos = Utils.computeChildPos(indexLowLimit, rangePerChild, newDataSlot.getIndex());
+        final int originalChildPos = Utils.computeChildPos(indexLowLimit, rangePerChild, originalChild.indexLowLimit);
+        final int newChildPos = Utils.computeChildPos(indexLowLimit, rangePerChild, newDataSlotIndex);
 
         // If both data slots would be assigned the same child node position, then ranges weren't properly computed
         // and the "put" operation that originated this should have been delegated to the originalChild
@@ -125,7 +132,8 @@ final class NodeBuilder {
         final long newChildIndexHigh = Utils.computeHighLimitForChild(indexLowLimit, rangePerChild, newChildPos);
 
         // Now we have the full data, we can build the new DataSlotNode
-        final Node<K,V> newDataSlotNode = build(newChildIndexLow, newChildIndexHigh, maxNodeSize, newDataSlot);
+        final Node<K,V> newDataSlotNode =
+                build(newChildIndexLow, newChildIndexHigh, maxNodeSize, newDataSlotIndex, newDataSlot);
 
         // Finally assign the children nodes to their positions as new children
         newChildren[originalChildPos] = originalChild;
@@ -141,8 +149,11 @@ final class NodeBuilder {
                                  final int maxNodeSize, final int originalChildrenSize,
                                  final Node<K,V>[] originalChildren, final DataSlot<K,V> newDataSlot) {
 
+        // Obtain the DataSlot index
+        final long newDataSlotIndex = newDataSlot.getIndex();
+
         // Next, compute the new position that the two DataSlots (existing and new) will occupy
-        final int newChildPos = Utils.computeChildPos(indexLowLimit, rangePerChild, newDataSlot.getIndex());
+        final int newChildPos = Utils.computeChildPos(indexLowLimit, rangePerChild, newDataSlotIndex);
 
         // If the data slot would be assigned an already used position, then ranges weren't properly computed
         // and the "put" operation that originated this should have been delegated to the child in that position
@@ -160,7 +171,7 @@ final class NodeBuilder {
         final long newChildIndexHigh = Utils.computeHighLimitForChild(indexLowLimit, rangePerChild, newChildPos);
 
         // Now we have the full data, we can build the new DataSlotNode
-        final Node<K,V> newDataSlotNode = build(newChildIndexLow, newChildIndexHigh, maxNodeSize, newDataSlot);
+        final Node<K,V> newDataSlotNode = build(newChildIndexLow, newChildIndexHigh, maxNodeSize, newDataSlotIndex, newDataSlot);
 
         // Finally assign the DataSlotNode to its position as new children
         newChildren[newChildPos] = newDataSlotNode;

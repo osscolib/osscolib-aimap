@@ -64,6 +64,9 @@ public final class FluentIndexMap<K,V> implements IndexMap<K,V> {
 
     @Override
     public int size() {
+        if (this.root == null) {
+            return 0;
+        }
         return this.root.size();
     }
 
@@ -71,19 +74,37 @@ public final class FluentIndexMap<K,V> implements IndexMap<K,V> {
 
     @Override
     public boolean containsKey(final Object key) {
-        if (this.root == null) {
-            return false;
+
+        final long index = computeIndex(key);
+
+        Node<K,V> node = this.root;
+        int pos;
+
+        while (node != null && node.branch) {
+            pos = Utils.computeChildPos(node.indexLowLimit, node.rangePerChild, index);
+            node = node.children[pos];
         }
-        return this.root.containsKey(computeIndex(key), key);
+
+        return (node != null && node.dataSlotIndex == index) ? node.dataSlot.containsKey(index, key) : null;
+
     }
 
 
     @Override
     public V get(final Object key) {
-        if (this.root == null) {
-            return null;
+
+        final long index = computeIndex(key);
+
+        Node<K,V> node = this.root;
+        int pos;
+
+        while (node != null && node.branch) {
+            pos = Utils.computeChildPos(node.indexLowLimit, node.rangePerChild, index);
+            node = node.children[pos];
         }
-        return this.root.get(computeIndex(key), key);
+
+        return (node != null && node.dataSlotIndex == index) ? node.dataSlot.get(index, key) : null;
+
     }
 
 
@@ -96,7 +117,7 @@ public final class FluentIndexMap<K,V> implements IndexMap<K,V> {
         if (this.root == null) {
 
             final DataSlot<K,V> newDataSlot = DataSlotBuilder.build(index, entry);
-            newRoot = NodeBuilder.build(this.lowestIndex, this.highestIndex, this.maxNodeSize, newDataSlot);
+            newRoot = NodeBuilder.build(this.lowestIndex, this.highestIndex, this.maxNodeSize, index, newDataSlot);
 
         } else {
 
