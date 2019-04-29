@@ -36,8 +36,6 @@ public interface IndexMap<K,V> {
 //    Set<Map.Entry<K, V>> entrySet();
 
 
-    int getLowestIndex();
-    int getHighestIndex();
     ToIntFunction<Object> getIndexFunction();
 
 
@@ -49,46 +47,43 @@ public interface IndexMap<K,V> {
 
     final class Builder<K,V> {
 
-        private final static int DEFAULT_MAX_SLOTS_PER_NODE = 64;
-        private final static long DEFAULT_LOWEST_INDEX = (long)Integer.MIN_VALUE;
-        private final static long DEFAULT_HIGHEST_INDEX = (long)Integer.MAX_VALUE;
+        private final static int SMALL_MASK_SIZE = 2; // node size = 4, max levels = 16
+        private final static int MEDIUM_MASK_SIZE = 4; // node size = 16, max levels = 8
+        private final static int LARGE_MASK_SIZE = 8; // node size = 256, max levels = 4
         private final static HashCodeFunction DEFAULT_INDEX_FUNCTION = new HashCodeFunction();
 
-        private final static Builder DEFAULT_BUILDER =
-                new Builder(DEFAULT_LOWEST_INDEX, DEFAULT_HIGHEST_INDEX, DEFAULT_INDEX_FUNCTION, DEFAULT_MAX_SLOTS_PER_NODE);
+        private final static Builder DEFAULT_BUILDER = new Builder(MEDIUM_MASK_SIZE, DEFAULT_INDEX_FUNCTION);
 
         private final ToIntFunction<Object> indexFunction;
-        private final long lowestIndex;
-        private final long highestIndex;
-        private final int maxNodeSize;
+        private final int maskSize;
 
 
-        private Builder(final long lowestIndex, final long highestIndex, final ToIntFunction<Object> indexFunction,
-                final int maxNodeSize) {
+        private Builder(final int maskSize, final ToIntFunction<Object> indexFunction) {
             super();
-            this.lowestIndex = lowestIndex;
-            this.highestIndex = highestIndex;
+            this.maskSize = maskSize;
             this.indexFunction = indexFunction;
-            this.maxNodeSize = maxNodeSize;
         }
 
 
-        public Builder<K,V> withMaxNodeSize(final int maxNodeSize) {
-            return new Builder<>(this.lowestIndex, this.highestIndex, this.indexFunction, maxNodeSize);
+        public Builder<K,V> withSmallSize() {
+            return new Builder<>(SMALL_MASK_SIZE, this.indexFunction);
+        }
+        public Builder<K,V> withMediumSize() {
+            return new Builder<>(MEDIUM_MASK_SIZE, this.indexFunction);
+        }
+        public Builder<K,V> withLargeSize() {
+            return new Builder<>(LARGE_MASK_SIZE, this.indexFunction);
         }
 
 
-        public Builder<K,V> withIndexing(
-                final int lowestIndex, final int highestIndex, final ToIntFunction<Object> indexFunction) {
-            // Indexing will be defined in terms of int, but internally long will be used to avoid overflow issues
-            return new Builder<>((long)lowestIndex, (long)highestIndex, indexFunction, this.maxNodeSize);
+        public Builder<K,V> withIndexFunction(final ToIntFunction<Object> indexFunction) {
+            return new Builder<>(this.maskSize, indexFunction);
         }
 
 
         public FluentIndexMap<K,V> asFluentMap() {
             // The map is initialized with a null root (no DataSlots)
-            return new FluentIndexMap<>(
-                    this.lowestIndex, this.highestIndex, this.indexFunction, this.maxNodeSize, null);
+            return new FluentIndexMap<>(this.maskSize, this.indexFunction, null);
         }
 
 

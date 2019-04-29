@@ -28,7 +28,7 @@ public class AtomicIndexedMapTest {
         FluentIndexMap<String,Object> m =
                 IndexMap
                         .<String,Object>build()
-                        .withMaxNodeSize(10)
+                        .withMediumSize()
 //                        .withIndexing(0, 2, key -> Math.abs(key.hashCode() % 3))
                         .asFluentMap();
 

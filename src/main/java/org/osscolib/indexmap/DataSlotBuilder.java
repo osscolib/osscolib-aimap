@@ -22,12 +22,12 @@ package org.osscolib.indexmap;
 final class DataSlotBuilder {
 
 
-    static <K,V> DataSlot<K,V> build(final long index, final Entry<K,V> entry) {
+    static <K,V> DataSlot<K,V> build(final int index, final Entry<K,V> entry) {
         return new SingleEntryDataSlot<>(index, entry);
     }
 
 
-    static <K,V> DataSlot<K,V> build(final long index, final Entry<K,V>[] entries) {
+    static <K,V> DataSlot<K,V> build(final int index, final Entry<K,V>[] entries) {
         if (entries.length == 1) {
             return new SingleEntryDataSlot<>(index, entries[0]);
         }

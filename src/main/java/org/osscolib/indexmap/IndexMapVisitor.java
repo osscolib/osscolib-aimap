@@ -26,8 +26,8 @@ import java.util.Map;
 interface IndexMapVisitor<K,V> {
 
     void visitRoot(final Node<K, V> rootNode);
-    void visitBranchNode(final long indexLowLimit, final long indexHighLimit, final List<Node<K, V>> nodes);
-    void visitDataSlotNode(final long indexLowLimit, final long indexHighLimit, final DataSlot<K, V> dataSlot);
-    void visitDataSlot(final long index, final List<Map.Entry<K, V>> entries);
+    void visitBranchNode(final int level, final int maskSize, final List<Node<K, V>> nodes);
+    void visitDataSlotNode(final int level, final int maskSize, final DataSlot<K, V> dataSlot);
+    void visitDataSlot(final int index, final List<Map.Entry<K, V>> entries);
 
 }

@@ -28,24 +28,10 @@ public final class AtomicIndexMap<K,V> implements IndexMap<K,V> {
 
 
 
-    AtomicIndexMap(
-            final int lowestIndex, final int highestIndex, final ToIntFunction<Object> indexFunction,
-            final int maxNodeSize, final Node<K,V> root) {
+    AtomicIndexMap(final int maskSize, final ToIntFunction<Object> indexFunction, final Node<K,V> root) {
         super();
         this.innerMap = new AtomicReference<>();
-        this.innerMap.set(
-                new FluentIndexMap<>(lowestIndex, highestIndex, indexFunction, maxNodeSize, root));
-    }
-
-
-    @Override
-    public int getLowestIndex() {
-        return this.innerMap.get().getLowestIndex();
-    }
-
-    @Override
-    public int getHighestIndex() {
-        return this.innerMap.get().getHighestIndex();
+        this.innerMap.set(new FluentIndexMap<>(maskSize, indexFunction, root));
     }
 
     @Override

@@ -19,6 +19,7 @@
  */
 package org.osscolib.indexmap;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
@@ -58,10 +59,10 @@ final class PrettyPrintIndexMapVisitor<K,V> implements IndexMapVisitor<K,V> {
 
 
     @Override
-    public void visitBranchNode(final long indexLowLimit, final long indexHighLimit, final List<Node<K,V>> children) {
+    public void visitBranchNode(final int level, final int maskSize, final List<Node<K,V>> children) {
 
         this.visitorStrBuilder.append(indentForLevel(this.level));
-        this.visitorStrBuilder.append(String.format("[%11d | %11d] {", indexLowLimit, indexHighLimit));
+        this.visitorStrBuilder.append(String.format("[%2d | %032d] {", level, new BigInteger(Integer.toBinaryString(((1 << maskSize) - 1) << (level * maskSize)))));
         if (children.size() == 0) {
             this.visitorStrBuilder.append("}");
         } else {
@@ -83,10 +84,10 @@ final class PrettyPrintIndexMapVisitor<K,V> implements IndexMapVisitor<K,V> {
 
 
     @Override
-    public void visitDataSlotNode(final long indexLowLimit, final long indexHighLimit, final DataSlot<K,V> dataSlot) {
+    public void visitDataSlotNode(final int level, final int maskSize, final DataSlot<K,V> dataSlot) {
 
         this.visitorStrBuilder.append(indentForLevel(this.level));
-        this.visitorStrBuilder.append(String.format("[%11d | %11d] {\n", indexLowLimit, indexHighLimit));
+        this.visitorStrBuilder.append(String.format("[%2d | %032d] {\n", level, new BigInteger(Integer.toBinaryString(((1 << maskSize) - 1) << (level * maskSize)))));
 
         this.level++;
 
@@ -101,10 +102,10 @@ final class PrettyPrintIndexMapVisitor<K,V> implements IndexMapVisitor<K,V> {
 
 
     @Override
-    public void visitDataSlot(final long index, final List<Map.Entry<K,V>> entries) {
+    public void visitDataSlot(final int index, final List<Map.Entry<K,V>> entries) {
 
         this.visitorStrBuilder.append(indentForLevel(this.level));
-        this.visitorStrBuilder.append(String.format("[%11d] (", index));
+        this.visitorStrBuilder.append(String.format("[%032d] (", new BigInteger(Integer.toBinaryString(index))));
         if (entries.size() == 1) {
             this.visitorStrBuilder.append(String.format(" %s )", writeEntry(entries.get(0))));
         } else {

@@ -24,37 +24,20 @@ import java.util.function.ToIntFunction;
 
 public final class FluentIndexMap<K,V> implements IndexMap<K,V> {
 
-    private final Node<K,V> root;
+    private final int maskSize;
     private final ToIntFunction<Object> indexFunction;
-    private final long lowestIndex;
-    private final long highestIndex;
-    private final int maxNodeSize;
+    private final Node<K,V> root;
 
 
 
-    FluentIndexMap(
-            final long lowestIndex, final long highestIndex, final ToIntFunction<Object> indexFunction,
-            final int maxNodeSize, final Node<K,V> root) {
+    FluentIndexMap(final int maskSize, final ToIntFunction<Object> indexFunction, final Node<K,V> root) {
         super();
-        this.lowestIndex = lowestIndex;
-        this.highestIndex = highestIndex;
+        this.maskSize = maskSize;
         this.indexFunction = indexFunction;
-        this.maxNodeSize = maxNodeSize;
         this.root = root;
     }
 
 
-
-    @Override
-    public int getLowestIndex() {
-        return (int) this.lowestIndex;
-    }
-
-
-    @Override
-    public int getHighestIndex() {
-        return (int) this.highestIndex;
-    }
 
     @Override
     public ToIntFunction<Object> getIndexFunction() {
@@ -75,13 +58,13 @@ public final class FluentIndexMap<K,V> implements IndexMap<K,V> {
     @Override
     public boolean containsKey(final Object key) {
 
-        final long index = computeIndex(key);
+        final int index = computeIndex(key);
 
         Node<K,V> node = this.root;
         int pos;
 
         while (node != null && node.branch) {
-            pos = Utils.computeChildPos(node.indexLowLimit, node.rangePerChild, index);
+            pos = Node.pos(node.shift, node.mask, index);
             node = node.children[pos];
         }
 
@@ -93,13 +76,13 @@ public final class FluentIndexMap<K,V> implements IndexMap<K,V> {
     @Override
     public V get(final Object key) {
 
-        final long index = computeIndex(key);
+        final int index = computeIndex(key);
 
         Node<K,V> node = this.root;
         int pos;
 
         while (node != null && node.branch) {
-            pos = Utils.computeChildPos(node.indexLowLimit, node.rangePerChild, index);
+            pos = Node.pos(node.shift, node.mask, index);
             node = node.children[pos];
         }
 
@@ -110,14 +93,14 @@ public final class FluentIndexMap<K,V> implements IndexMap<K,V> {
 
     public FluentIndexMap<K,V> put(final K key, final V value) {
 
-        final long index = computeIndex(key);
+        final int index = computeIndex(key);
         final Entry entry = Entry.build(key, value);
 
         final Node newRoot;
         if (this.root == null) {
 
             final DataSlot<K,V> newDataSlot = DataSlotBuilder.build(index, entry);
-            newRoot = NodeBuilder.build(this.lowestIndex, this.highestIndex, this.maxNodeSize, index, newDataSlot);
+            newRoot = NodeBuilder.build(0, this.maskSize, index, newDataSlot);
 
         } else {
 
@@ -128,8 +111,7 @@ public final class FluentIndexMap<K,V> implements IndexMap<K,V> {
 
         }
 
-        return new FluentIndexMap<K,V>(
-                this.lowestIndex, this.highestIndex, this.indexFunction, this.maxNodeSize, newRoot);
+        return new FluentIndexMap<K,V>(this.maskSize, this.indexFunction, newRoot);
 
     }
 
@@ -145,8 +127,7 @@ public final class FluentIndexMap<K,V> implements IndexMap<K,V> {
             return this;
         }
 
-        return new FluentIndexMap<K,V>(
-                this.lowestIndex, this.highestIndex, this.indexFunction, this.maxNodeSize, newRoot);
+        return new FluentIndexMap<K,V>(this.maskSize, this.indexFunction, newRoot);
 
     }
 
@@ -154,16 +135,8 @@ public final class FluentIndexMap<K,V> implements IndexMap<K,V> {
 
 
 
-    private long computeIndex(final Object key) {
-        // Even if we only allow index functions to return int, we will internally use indexes as a long for convenience
-        final long idx = (long) this.indexFunction.applyAsInt(key);
-        if (this.lowestIndex > idx || this.highestIndex < idx) {
-            throw new IllegalStateException(
-                    String.format(
-                            "Map has bad indexing specification. A key was assigned index %d but " +
-                            "established limits are %d to %d", idx, this.lowestIndex, this.highestIndex));
-        }
-        return idx;
+    private int computeIndex(final Object key) {
+        return this.indexFunction.applyAsInt(key);
     }
 
 

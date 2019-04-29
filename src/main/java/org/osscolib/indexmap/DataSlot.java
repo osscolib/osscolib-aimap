@@ -21,12 +21,12 @@ package org.osscolib.indexmap;
 
 interface DataSlot<K,V> {
 
-    long getIndex();
+    int getIndex();
 
-    boolean containsKey(final long index, final Object key);
-    V get(final long index, final Object key);
-    DataSlot<K,V> put(final long index, final Entry<K, V> entry);
-    DataSlot<K,V> remove(final long index, final Object key);
+    boolean containsKey(final int index, final Object key);
+    V get(final int index, final Object key);
+    DataSlot<K,V> put(final int index, final Entry<K, V> entry);
+    DataSlot<K,V> remove(final int index, final Object key);
     int size();
 
     void acceptVisitor(final IndexMapVisitor<K, V> visitor);

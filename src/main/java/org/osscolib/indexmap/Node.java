@@ -23,53 +23,52 @@ import java.util.Arrays;
 
 final class Node<K,V> {
 
-    final long indexLowLimit;
-    final long indexHighLimit;
-    final long rangePerChild;
-    final int maxNodeSize;
+    final int level;
+    final int maskSize;
+    final int shift;
+    final int mask;
 
     final boolean branch;
 
-    final int childrenSize; // not "childrenLen", this is the amount of non-null children
+    final int childrenSize;
     final Node<K,V>[] children; // can contain many nulls
 
-    final long dataSlotIndex;
+    final int dataSlotIndex;
     final DataSlot<K,V> dataSlot;
 
 
 
     static <K,V> Node<K,V> buildBranchNode(
-            final long indexLowLimit, final long indexHighLimit, final long rangePerChild, final int maxNodeSize,
-            final int childrenSize, final Node<K,V>[] children) {
-        return new Node<>(
-                indexLowLimit, indexHighLimit, rangePerChild, maxNodeSize, childrenSize, children, -1L, null);
+            final int level, final int maskSize, final int childrenSize, final Node<K,V>[] children) {
+        return new Node<>(level, maskSize, childrenSize, children, -1, null);
     }
 
 
     static <K,V> Node<K,V> buildDataSlotNode(
-            final long indexLowLimit, final long indexHighLimit, final int maxNodeSize,
-            final long dataSlotIndex, final DataSlot<K,V> dataSlot) {
-        return new Node<>(
-                indexLowLimit, indexHighLimit, -1L, maxNodeSize, -1, null, dataSlotIndex, dataSlot);
+            final int level, final int maskSize, final int dataSlotIndex, final DataSlot<K,V> dataSlot) {
+        return new Node<>(level, maskSize, 0, null, dataSlotIndex, dataSlot);
     }
 
 
 
 
-    private Node(final long indexLowLimit, final long indexHighLimit, final long rangePerChild, final int maxNodeSize,
-         final int childrenSize, final Node<K,V>[] children,
-         final long dataSlotIndex, final DataSlot<K,V> dataSlot) {
+    private Node(final int level, final int maskSize,
+                 final int childrenSize, final Node<K,V>[] children,
+                 final int dataSlotIndex, final DataSlot<K,V> dataSlot) {
 
         super();
-        this.indexLowLimit = indexLowLimit;
-        this.indexHighLimit = indexHighLimit;
-        this.rangePerChild = rangePerChild;
-        this.maxNodeSize = maxNodeSize;
+
+        this.level = level;
+        this.maskSize = maskSize;
+        this.shift = this.level * this.maskSize;
+        this.mask = (1 << this.maskSize) - 1; // ( 2^maskSize - 1 )
+
         this.childrenSize = childrenSize;
         this.children = children;
         this.dataSlotIndex = dataSlotIndex;
         this.dataSlot = dataSlot;
         this.branch = (this.dataSlot == null);
+
     }
 
 
@@ -93,13 +92,17 @@ final class Node<K,V> {
     }
 
 
+    static int pos(final int shift, final int mask, final int index) {
+        return (index >> shift) & mask;
+    }
 
 
-    Node<K,V> put(final long index, final Entry<K, V> entry) {
+
+    Node<K,V> put(final int index, final Entry<K, V> entry) {
 
         if (this.branch) {
 
-            final int pos = Utils.computeChildPos(this.indexLowLimit, this.rangePerChild, index);
+            final int pos = pos(this.shift, this.mask, index);
             final Node<K,V> child = this.children[pos];
 
             if (child != null) {
@@ -113,17 +116,13 @@ final class Node<K,V> {
                 final Node<K,V>[] newNodes = Arrays.copyOf(this.children, this.children.length);
                 newNodes[pos] = newNode;
 
-                return NodeBuilder.build(
-                        this.indexLowLimit, this.indexHighLimit, this.rangePerChild,
-                        this.maxNodeSize, this.childrenSize, newNodes);
+                return NodeBuilder.build(this.level, this.maskSize, this.childrenSize, newNodes);
 
             }
 
             // Nothing currently in the selected slot, so let's add a new DataSlot
             final DataSlot<K,V> newDataSlot = DataSlotBuilder.build(index, entry);
-            return NodeBuilder.build(
-                    this.indexLowLimit, this.indexHighLimit, this.rangePerChild,
-                    this.maxNodeSize, this.childrenSize, this.children, newDataSlot);
+            return NodeBuilder.build(this.level, this.maskSize, this.childrenSize, this.children, newDataSlot);
 
         }
 
@@ -137,26 +136,25 @@ final class Node<K,V> {
                 return this;
             }
 
-            return NodeBuilder.build(this.indexLowLimit, this.indexHighLimit, this.maxNodeSize, this.dataSlotIndex, newDataSlot);
+            return NodeBuilder.build(this.level, this.maskSize, this.dataSlotIndex, newDataSlot);
 
         }
 
         // We need to add a new slot in the same range, so this has to be converted into a branch
 
         final DataSlot<K,V> newDataSlot = DataSlotBuilder.build(index, entry);
-        return NodeBuilder.build(
-                this.indexLowLimit, this.indexHighLimit, this.maxNodeSize, this.dataSlot, newDataSlot);
+        return NodeBuilder.build(this.level, this.maskSize, this.dataSlot, newDataSlot);
 
     }
 
 
 
 
-    Node<K,V> remove(final long index, final Object key) {
+    Node<K,V> remove(final int index, final Object key) {
 
         if (this.branch) {
 
-            final int pos = Utils.computeChildPos(this.indexLowLimit, this.rangePerChild, index);
+            final int pos = pos(this.shift, this.mask, index);
             final Node<K,V> child = this.children[pos];
 
             if (child == null) {
@@ -180,9 +178,7 @@ final class Node<K,V> {
 
             final int newChildrenSize = (newChild == null? this.childrenSize - 1 : this.childrenSize);
 
-            return NodeBuilder.build(
-                    this.indexLowLimit, this.indexHighLimit, this.rangePerChild,
-                    this.maxNodeSize, newChildrenSize, newChildren);
+            return NodeBuilder.build(this.level, this.maskSize, newChildrenSize, newChildren);
 
         }
 
@@ -201,7 +197,7 @@ final class Node<K,V> {
 
         if (newDataSlot != null) {
             // There is still data at the slot - we need a new container node
-            return NodeBuilder.build(this.indexLowLimit, this.indexHighLimit, this.maxNodeSize, this.dataSlotIndex, newDataSlot);
+            return NodeBuilder.build(this.level, this.maskSize, this.dataSlotIndex, newDataSlot);
         }
 
         // All data removed -> should remove this container too
@@ -214,9 +210,9 @@ final class Node<K,V> {
 
     void acceptVisitor(final IndexMapVisitor<K, V> visitor) {
         if (this.branch) {
-            visitor.visitBranchNode(this.indexLowLimit, this.indexHighLimit, Arrays.asList(this.children));
+            visitor.visitBranchNode(this.level, this.maskSize, Arrays.asList(this.children));
         } else {
-            visitor.visitDataSlotNode(this.indexLowLimit, this.indexHighLimit, this.dataSlot);
+            visitor.visitDataSlotNode(this.level, this.maskSize, this.dataSlot);
         }
     }
 

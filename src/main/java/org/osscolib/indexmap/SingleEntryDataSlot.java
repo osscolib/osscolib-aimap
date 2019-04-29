@@ -24,13 +24,13 @@ import java.util.Objects;
 
 final class SingleEntryDataSlot<K,V> implements DataSlot<K,V> {
 
-    private final long index;
+    private final int index;
     private final Entry<K,V> entry;
 
 
 
 
-    SingleEntryDataSlot(final long index, final Entry<K,V> entry) {
+    SingleEntryDataSlot(final int index, final Entry<K,V> entry) {
         super();
         this.index = index;
         this.entry = entry;
@@ -38,7 +38,7 @@ final class SingleEntryDataSlot<K,V> implements DataSlot<K,V> {
 
 
     @Override
-    public long getIndex() {
+    public int getIndex() {
         return this.index;
     }
 
@@ -50,19 +50,19 @@ final class SingleEntryDataSlot<K,V> implements DataSlot<K,V> {
 
 
     @Override
-    public boolean containsKey(final long index, final Object key) {
+    public boolean containsKey(final int index, final Object key) {
         return Objects.equals(this.entry.key, key);
     }
 
 
     @Override
-    public V get(final long index, final Object key) {
+    public V get(final int index, final Object key) {
         return Objects.equals(this.entry.key, key) ? this.entry.value : null;
     }
 
 
     @Override
-    public DataSlot<K,V> put(final long index, final Entry<K,V> newEntry) {
+    public DataSlot<K,V> put(final int index, final Entry<K,V> newEntry) {
 
         if (this.entry.key == newEntry.key && this.entry.value == newEntry.value) {
             // No need to perform any modifications, we might avoid a rewrite of a tree path!
@@ -82,7 +82,7 @@ final class SingleEntryDataSlot<K,V> implements DataSlot<K,V> {
 
 
     @Override
-    public DataSlot<K,V> remove(final long index, final Object key) {
+    public DataSlot<K,V> remove(final int index, final Object key) {
         return Objects.equals(this.entry.key,key) ? null : this;
     }
 

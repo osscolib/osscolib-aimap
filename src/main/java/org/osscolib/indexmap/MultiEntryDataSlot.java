@@ -24,11 +24,11 @@ import java.util.Objects;
 
 final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
 
-    private final long index;
+    private final int index;
     private final Entry<K,V>[] entries;
 
 
-    MultiEntryDataSlot(final long index, final Entry<K,V>[] entries) {
+    MultiEntryDataSlot(final int index, final Entry<K,V>[] entries) {
         super();
         this.index = index;
         this.entries = entries;
@@ -36,7 +36,7 @@ final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
 
 
     @Override
-    public long getIndex() {
+    public int getIndex() {
         return this.index;
     }
 
@@ -48,7 +48,7 @@ final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
 
 
     @Override
-    public boolean containsKey(final long index, final Object key) {
+    public boolean containsKey(final int index, final Object key) {
         for (int i = 0; i < this.entries.length; i++) {
             if (Objects.equals(this.entries[i].key, key)) {
                 return true;
@@ -59,7 +59,7 @@ final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
 
 
     @Override
-    public V get(final long index, final Object key) {
+    public V get(final int index, final Object key) {
         for (int i = 0; i < this.entries.length; i++) {
             if (Objects.equals(this.entries[i].key, key)) {
                 return this.entries[i].value;
@@ -70,7 +70,7 @@ final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
 
 
     @Override
-    public DataSlot<K,V> put(final long index, final Entry<K,V> newEntry) {
+    public DataSlot<K,V> put(final int index, final Entry<K,V> newEntry) {
 
         // TODO We should improve this to avoid linear performance depending on the amount of collisions. This was also fixed in HashMap in Java 8 to avoid DoS
 
@@ -100,7 +100,7 @@ final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
 
 
     @Override
-    public DataSlot<K,V> remove(final long index, final Object key) {
+    public DataSlot<K,V> remove(final int index, final Object key) {
 
         int pos = -1;
         for (int i = 0; i < this.entries.length; i++) {
