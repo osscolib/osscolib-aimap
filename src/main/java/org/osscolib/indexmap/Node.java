@@ -92,6 +92,11 @@ final class Node<K,V> {
     }
 
 
+    Node child(final int index) {
+        return this.children[pos(this.shift, this.mask, index)];
+    }
+
+
     static int pos(final int shift, final int mask, final int index) {
         return (index >> shift) & mask;
     }

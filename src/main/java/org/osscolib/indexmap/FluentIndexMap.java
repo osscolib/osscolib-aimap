@@ -61,11 +61,8 @@ public final class FluentIndexMap<K,V> implements IndexMap<K,V> {
         final int index = computeIndex(key);
 
         Node<K,V> node = this.root;
-        int pos;
-
         while (node != null && node.branch) {
-            pos = Node.pos(node.shift, node.mask, index);
-            node = node.children[pos];
+            node = node.child(index);
         }
 
         return (node != null && node.dataSlotIndex == index) ? node.dataSlot.containsKey(index, key) : null;
@@ -79,11 +76,8 @@ public final class FluentIndexMap<K,V> implements IndexMap<K,V> {
         final int index = computeIndex(key);
 
         Node<K,V> node = this.root;
-        int pos;
-
         while (node != null && node.branch) {
-            pos = Node.pos(node.shift, node.mask, index);
-            node = node.children[pos];
+            node = node.child(index);
         }
 
         return (node != null && node.dataSlotIndex == index) ? node.dataSlot.get(index, key) : null;
