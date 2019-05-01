@@ -83,7 +83,8 @@ public interface IndexMap<K,V> {
 
         public FluentIndexMap<K,V> asFluentMap() {
             // The map is initialized with a null root (no DataSlots)
-            return new FluentIndexMap<>(this.maskSize, this.indexFunction, null);
+            final int mask = (1 << this.maskSize) - 1;
+            return new FluentIndexMap<>(mask, this.indexFunction, null);
         }
 
 

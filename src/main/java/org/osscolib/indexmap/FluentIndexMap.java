@@ -24,15 +24,15 @@ import java.util.function.ToIntFunction;
 
 public final class FluentIndexMap<K,V> implements IndexMap<K,V> {
 
-    private final int maskSize;
+    private final int mask;
     private final ToIntFunction<Object> indexFunction;
     private final Node<K,V> root;
 
 
 
-    FluentIndexMap(final int maskSize, final ToIntFunction<Object> indexFunction, final Node<K,V> root) {
+    FluentIndexMap(final int mask, final ToIntFunction<Object> indexFunction, final Node<K,V> root) {
         super();
-        this.maskSize = maskSize;
+        this.mask = mask;
         this.indexFunction = indexFunction;
         this.root = root;
     }
@@ -57,32 +57,38 @@ public final class FluentIndexMap<K,V> implements IndexMap<K,V> {
 
     @Override
     public boolean containsKey(final Object key) {
-
         final int index = computeIndex(key);
-
-        Node<K,V> node = this.root;
-        while (node != null && node.branch) {
-            node = node.child(index);
-        }
-
-        return (node != null && node.dataSlotIndex == index) ? node.dataSlot.containsKey(index, key) : null;
-
+        final Node<K,V> node = getNode(index);
+        return node != null ? node.dataSlot.containsKey(index, key) : null;
     }
 
 
     @Override
     public V get(final Object key) {
-
         final int index = computeIndex(key);
+        final Node<K,V> node = getNode(index);
+        return node != null ? node.dataSlot.get(index, key) : null;
+    }
 
-        Node<K,V> node = this.root;
-        while (node != null && node.branch) {
-            node = node.child(index);
+
+
+    Node<K,V> getNode(final int index) {
+        int m, msize, shift;
+        Node<K,V> node;
+        Node<K,V>[] children;
+
+        m = this.mask;
+        msize = (31 - Integer.numberOfLeadingZeros(m + 1)); // maskSize = log2(mask + 1)
+
+        for (shift = 0, node = this.root; node != null && (children = node.children) != null; shift+=msize) {
+            node = children[(index >> shift) & m];
         }
 
-        return (node != null && node.dataSlotIndex == index) ? node.dataSlot.get(index, key) : null;
+        return node != null && node.index == index ? node : null;
 
     }
+
+
 
 
     public FluentIndexMap<K,V> put(final K key, final V value) {
@@ -94,18 +100,18 @@ public final class FluentIndexMap<K,V> implements IndexMap<K,V> {
         if (this.root == null) {
 
             final DataSlot<K,V> newDataSlot = DataSlotBuilder.build(index, entry);
-            newRoot = NodeBuilder.build(0, this.maskSize, index, newDataSlot);
+            newRoot = NodeBuilder.build(index, newDataSlot);
 
         } else {
 
-            newRoot = this.root.put(index, entry);
+            newRoot = this.root.put(index, 0, this.mask, entry);
             if (this.root == newRoot) {
                 return this;
             }
 
         }
 
-        return new FluentIndexMap<K,V>(this.maskSize, this.indexFunction, newRoot);
+        return new FluentIndexMap<K,V>(this.mask, this.indexFunction, newRoot);
 
     }
 
@@ -116,12 +122,12 @@ public final class FluentIndexMap<K,V> implements IndexMap<K,V> {
             return this;
         }
 
-        final Node newRoot = this.root.remove(computeIndex(key), key);
+        final Node newRoot = this.root.remove(computeIndex(key), 0, this.mask, key);
         if (this.root == newRoot) {
             return this;
         }
 
-        return new FluentIndexMap<K,V>(this.maskSize, this.indexFunction, newRoot);
+        return new FluentIndexMap<K,V>(this.mask, this.indexFunction, newRoot);
 
     }
 
@@ -136,7 +142,7 @@ public final class FluentIndexMap<K,V> implements IndexMap<K,V> {
 
     String prettyPrint() {
         final IndexMapVisitor<K,V> visitor = new PrettyPrintIndexMapVisitor();
-        visitor.visitRoot(this.root);
+        visitor.visitRoot(this.mask, this.root);
         return visitor.toString();
     }
 

@@ -51,9 +51,9 @@ final class PrettyPrintIndexMapVisitor<K,V> implements IndexMapVisitor<K,V> {
 
 
     @Override
-    public void visitRoot(final Node rootNode) {
+    public void visitRoot(final int maskSize, final Node rootNode) {
         if (rootNode != null) {
-            rootNode.acceptVisitor(this);
+            rootNode.acceptVisitor(0, maskSize, this);
         }
     }
 
@@ -71,7 +71,7 @@ final class PrettyPrintIndexMapVisitor<K,V> implements IndexMapVisitor<K,V> {
             for (int i = 0; i < children.size(); i++) {
                 final Node<K,V> child = children.get(i);
                 if (child != null) {
-                    child.acceptVisitor(this);
+                    child.acceptVisitor(level + 1, maskSize, this);
                     this.visitorStrBuilder.append('\n');
                 }
             }
