@@ -19,9 +19,6 @@
  */
 package org.osscolib.indexmap;
 
-import java.util.Objects;
-import java.util.function.ToIntFunction;
-
 public interface IndexMap<K,V> {
 
     int size();
@@ -36,9 +33,6 @@ public interface IndexMap<K,V> {
 //    Set<Map.Entry<K, V>> entrySet();
 
 
-    ToIntFunction<Object> getIndexFunction();
-
-
     static <K,V> Builder<K,V> build() {
         return Builder.DEFAULT_BUILDER;
     }
@@ -50,50 +44,35 @@ public interface IndexMap<K,V> {
         private final static int SMALL_MASK_SIZE = 2; // node size = 4, max levels = 16
         private final static int MEDIUM_MASK_SIZE = 4; // node size = 16, max levels = 8
         private final static int LARGE_MASK_SIZE = 8; // node size = 256, max levels = 4
-        private final static HashCodeFunction DEFAULT_INDEX_FUNCTION = new HashCodeFunction();
 
-        private final static Builder DEFAULT_BUILDER = new Builder(MEDIUM_MASK_SIZE, DEFAULT_INDEX_FUNCTION);
+        private final static Builder DEFAULT_BUILDER = new Builder(MEDIUM_MASK_SIZE);
 
-        private final ToIntFunction<Object> indexFunction;
         private final int maskSize;
 
 
-        private Builder(final int maskSize, final ToIntFunction<Object> indexFunction) {
+        private Builder(final int maskSize) {
             super();
             this.maskSize = maskSize;
-            this.indexFunction = indexFunction;
         }
 
 
         public Builder<K,V> withSmallSize() {
-            return new Builder<>(SMALL_MASK_SIZE, this.indexFunction);
+            return new Builder<>(SMALL_MASK_SIZE);
         }
         public Builder<K,V> withMediumSize() {
-            return new Builder<>(MEDIUM_MASK_SIZE, this.indexFunction);
+            return new Builder<>(MEDIUM_MASK_SIZE);
         }
         public Builder<K,V> withLargeSize() {
-            return new Builder<>(LARGE_MASK_SIZE, this.indexFunction);
+            return new Builder<>(LARGE_MASK_SIZE);
         }
 
 
-        public Builder<K,V> withIndexFunction(final ToIntFunction<Object> indexFunction) {
-            return new Builder<>(this.maskSize, indexFunction);
-        }
-
-
-        public FluentIndexMap<K,V> asFluentMap() {
+        public AtomicHashStore<K,V> asFluentMap() {
             // The map is initialized with a null root (no DataSlots)
             final int mask = (1 << this.maskSize) - 1;
-            return new FluentIndexMap<>(mask, this.indexFunction, null);
+            return new AtomicHashStore<>(mask, null);
         }
 
-
-        private static class HashCodeFunction implements ToIntFunction<Object> {
-            @Override
-            public int applyAsInt(final Object k) {
-                return Objects.hashCode(k);
-            }
-        }
 
     }
 

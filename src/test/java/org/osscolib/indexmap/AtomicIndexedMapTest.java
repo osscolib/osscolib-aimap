@@ -25,7 +25,7 @@ public class AtomicIndexedMapTest {
 
     public static void main(String[] args) {
 
-        FluentIndexMap<String,Object> m =
+        AtomicHashStore<String,Object> m =
                 IndexMap
                         .<String,Object>build()
                         .withMediumSize()

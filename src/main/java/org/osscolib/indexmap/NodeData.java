@@ -19,31 +19,31 @@
  */
 package org.osscolib.indexmap;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Objects;
 
-final class NodeData<K,V> {
+final class NodeData<K,V> implements Serializable {
 
-    final int index;
-    final boolean multi;
+    private static final long serialVersionUID = -3351803095783536070L;
+
+    final int hash;
     final Entry<K,V> entry;
     final Entry<K,V>[] entries;
 
 
 
-    NodeData(final int index, final Entry<K,V> entry) {
+    NodeData(final int hash, final Entry<K,V> entry) {
         super();
-        this.index = index;
-        this.multi = false;
+        this.hash = hash;
         this.entry = entry;
         this.entries = null;
     }
 
 
-    NodeData(final int index, final Entry<K,V>[] entries) {
+    NodeData(final int hash, final Entry<K,V>[] entries) {
         super();
-        this.index = index;
-        this.multi = true;
+        this.hash = hash;
         this.entry = null;
         this.entries = entries;
     }
@@ -52,18 +52,18 @@ final class NodeData<K,V> {
 
 
     int size() {
-        return (this.multi ? this.entries.length : 1);
+        return (this.entry == null) ? this.entries.length : 1;
     }
 
 
 
 
-    NodeData<K,V> put(final int index, final Entry<K,V> newEntry) {
-        return this.multi ? putMulti(index, newEntry) : putSingle(index, newEntry);
+    NodeData<K,V> put(final int hash, final Entry<K,V> newEntry) {
+        return (this.entry == null) ? putMulti(hash, newEntry) : putSingle(hash, newEntry);
     }
 
 
-    NodeData<K,V> putMulti(final int index, final Entry<K,V> newEntry) {
+    NodeData<K,V> putMulti(final int hash, final Entry<K,V> newEntry) {
 
         // TODO We should improve this to avoid linear performance depending on the amount of collisions. This was also fixed in HashMap in Java 8 to avoid DoS
 
@@ -82,17 +82,17 @@ final class NodeData<K,V> {
             }
             final Entry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length);
             newEntries[pos] = newEntry;
-            return new NodeData<>(index, newEntries);
+            return new NodeData<>(hash, newEntries);
         }
 
         final Entry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length + 1);
         newEntries[this.entries.length] = newEntry;
-        return new NodeData<>(index, newEntries);
+        return new NodeData<>(hash, newEntries);
 
     }
 
 
-    NodeData<K,V> putSingle(final int index, final Entry<K,V> newEntry) {
+    NodeData<K,V> putSingle(final int hash, final Entry<K,V> newEntry) {
 
         if (this.entry.key == newEntry.key && this.entry.value == newEntry.value) {
             // No need to perform any modifications, we might avoid a rewrite of a tree path!
@@ -100,24 +100,23 @@ final class NodeData<K,V> {
         }
         if (Objects.equals(this.entry.key, newEntry.key)) {
             // We are replacing the previous value for a new one
-            return new NodeData<>(index, newEntry);
+            return new NodeData<>(hash, newEntry);
         }
-        // TODO We should improve this to avoid linear performance depending on the amount of collisions. This was also fixed in HashMap in Java 8 to avoid DoS
-        // There is an index collision, but this is a different slot, so we need to go multi value
+        // There is an hash collision, but this is a different slot, so we need to go multi value
         final Entry<K,V>[] newEntries = new Entry[] { this.entry, newEntry};
-        return new NodeData<>(index, newEntries);
+        return new NodeData<>(hash, newEntries);
 
     }
 
 
 
 
-    NodeData<K,V> remove(final int index, final Object key) {
-        return this.multi ? removeMulti(index, key) : removeSingle(index, key);
+    NodeData<K,V> remove(final int hash, final Object key) {
+        return (this.entry == null) ? removeMulti(hash, key) : removeSingle(hash, key);
     }
 
 
-    NodeData<K,V> removeMulti(final int index, final Object key) {
+    NodeData<K,V> removeMulti(final int hash, final Object key) {
 
         int pos = -1;
         for (int i = 0; i < this.entries.length; i++) {
@@ -130,12 +129,12 @@ final class NodeData<K,V> {
             if (this.entries.length == 2) {
                 // There are only two items in the multi value, and we are removing one, so now its single value
                 final Entry<K,V> remainingEntry = this.entries[pos == 0? 1 : 0];
-                return new NodeData<>(index, remainingEntry);
+                return new NodeData<>(hash, remainingEntry);
             }
             final Entry<K,V>[] newEntries = new Entry[this.entries.length - 1];
             System.arraycopy(this.entries, 0, newEntries, 0, pos);
             System.arraycopy(this.entries, pos + 1, newEntries, pos, (this.entries.length - (pos + 1)));
-            return new NodeData<>(index, newEntries);
+            return new NodeData<>(hash, newEntries);
         }
 
         return this;
@@ -143,7 +142,7 @@ final class NodeData<K,V> {
     }
 
 
-    NodeData<K,V> removeSingle(final int index, final Object key) {
+    NodeData<K,V> removeSingle(final int hash, final Object key) {
         return Objects.equals(this.entry.key,key) ? null : this;
     }
 

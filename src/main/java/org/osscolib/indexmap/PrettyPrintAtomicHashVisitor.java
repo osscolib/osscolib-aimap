@@ -23,14 +23,16 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
-final class PrettyPrintIndexMapVisitor<K,V> implements IndexMapVisitor<K,V> {
+final class PrettyPrintAtomicHashVisitor<K,V> implements AtomicHashVisitor<K,V> {
 
     private final StringBuilder visitorStrBuilder;
+    private final int maskSize;
     private int level;
 
-    PrettyPrintIndexMapVisitor() {
+    PrettyPrintAtomicHashVisitor(final int maskSize) {
         super();
         this.visitorStrBuilder = new StringBuilder();
+        this.maskSize = maskSize;
         this.level = 0;
     }
 
@@ -51,18 +53,21 @@ final class PrettyPrintIndexMapVisitor<K,V> implements IndexMapVisitor<K,V> {
 
 
     @Override
-    public void visitRoot(final int maskSize, final Node rootNode) {
+    public void visitRoot(final Node rootNode) {
         if (rootNode != null) {
-            rootNode.acceptVisitor(0, maskSize, this);
+            rootNode.acceptVisitor(this);
         }
     }
 
 
     @Override
-    public void visitBranchNode(final int level, final int maskSize, final List<Node<K,V>> children) {
+    public void visitNode(final List<Node<K,V>> children) {
 
         this.visitorStrBuilder.append(indentForLevel(this.level));
-        this.visitorStrBuilder.append(String.format("[%2d | %032d] {", level, new BigInteger(Integer.toBinaryString(((1 << maskSize) - 1) << (level * maskSize)))));
+        this.visitorStrBuilder.append(
+                String.format("[%2d | %032d] {",
+                        level,
+                        new BigInteger(Integer.toBinaryString(((1 << this.maskSize) - 1) << (this.level * this.maskSize)))));
         if (children.size() == 0) {
             this.visitorStrBuilder.append("}");
         } else {
@@ -71,7 +76,7 @@ final class PrettyPrintIndexMapVisitor<K,V> implements IndexMapVisitor<K,V> {
             for (int i = 0; i < children.size(); i++) {
                 final Node<K,V> child = children.get(i);
                 if (child != null) {
-                    child.acceptVisitor(level + 1, maskSize, this);
+                    child.acceptVisitor(this);
                     this.visitorStrBuilder.append('\n');
                 }
             }
@@ -84,15 +89,16 @@ final class PrettyPrintIndexMapVisitor<K,V> implements IndexMapVisitor<K,V> {
 
 
     @Override
-    public void visitDataNode(final int level, final int maskSize, final NodeData<K,V> data) {
+    public void visitData(final int hash, final Entry<K,V> entry, final Entry<K,V>[] entries) {
 
         this.visitorStrBuilder.append(indentForLevel(this.level));
-        this.visitorStrBuilder.append(String.format("[%2d | %032d] {\n", level, new BigInteger(Integer.toBinaryString(((1 << maskSize) - 1) << (level * maskSize)))));
+        this.visitorStrBuilder.append(
+                String.format("[%2d | %032d] {\n",
+                        level,
+                        new BigInteger(Integer.toBinaryString(((1 << this.maskSize) - 1) << (this.level * this.maskSize)))));
 
         this.level++;
-
-// TODO IMPLEMENT THIS
-//        data.acceptVisitor(this);
+        writeEntries(hash, entry, entries);
         this.visitorStrBuilder.append('\n');
 
         this.level--;
@@ -101,20 +107,18 @@ final class PrettyPrintIndexMapVisitor<K,V> implements IndexMapVisitor<K,V> {
 
     }
 
-// TODO IMPLEMENT THIS
-    /*
-    @Override
-    public void visitDataSlot(final int index, final List<Map.Entry<K,V>> entries) {
+
+    private void writeEntries(final int hash, final Entry<K,V> entry, final Map.Entry<K,V>[] entries) {
 
         this.visitorStrBuilder.append(indentForLevel(this.level));
-        this.visitorStrBuilder.append(String.format("[%032d] (", new BigInteger(Integer.toBinaryString(index))));
-        if (entries.size() == 1) {
-            this.visitorStrBuilder.append(String.format(" %s )", writeEntry(entries.get(0))));
+        this.visitorStrBuilder.append(String.format("[%032d] (", new BigInteger(Integer.toBinaryString(hash))));
+        if (entries == null) {
+            this.visitorStrBuilder.append(String.format(" %s )", writeEntry(entry)));
         } else {
             this.visitorStrBuilder.append('\n');
-            for (int i = 0; i < entries.size(); i++) {
+            for (int i = 0; i < entries.length; i++) {
                 this.visitorStrBuilder.append(indentForLevel(this.level + 1));
-                this.visitorStrBuilder.append(writeEntry(entries.get(i)));
+                this.visitorStrBuilder.append(writeEntry(entries[i]));
                 this.visitorStrBuilder.append('\n');
             }
             this.visitorStrBuilder.append(indentForLevel(this.level));
@@ -122,7 +126,7 @@ final class PrettyPrintIndexMapVisitor<K,V> implements IndexMapVisitor<K,V> {
         }
 
     }
-*/
+
 
     @Override
     public String toString() {

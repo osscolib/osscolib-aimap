@@ -19,38 +19,34 @@
  */
 package org.osscolib.indexmap;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
-final class Node<K,V> {
+final class Node<K,V> implements Serializable {
 
-    final int count;
+    private static final long serialVersionUID = 6914544628900109073L;
+
+    private final int count;
     final NodeData<K,V> data;
     final Node<K,V>[] children; // can contain many nulls
 
 
 
-
-    static <K,V> Node<K,V> build(final int count, final Node<K,V>[] children) {
-        return new Node<>(count, children,  null);
-    }
-
-
-    static <K,V> Node<K,V> build(final NodeData<K,V> data) {
-        return new Node<>(0, null, data);
-    }
-
-
-
-
-    private Node(final int count, final Node<K,V>[] children, final NodeData<K,V> data) {
-
+    Node(final int count, final Node<K,V>[] children) {
         super();
-
         this.count = count;
         this.children = children;
-        this.data = data;
-
+        this.data = null;
     }
+
+
+    Node(final NodeData<K,V> data) {
+        super();
+        this.count = 0;
+        this.children = null;
+        this.data = data;
+    }
+
 
 
 
@@ -73,8 +69,8 @@ final class Node<K,V> {
     }
 
 
-    static int pos(final int shift, final int mask, final int index) {
-        return (index >> shift) & mask;
+    static int pos(final int shift, final int mask, final int hash) {
+        return (hash >> shift) & mask;
     }
 
     static int incShift(final int shift, final int mask) {
@@ -84,16 +80,16 @@ final class Node<K,V> {
 
 
 
-    Node<K,V> put(final int index, final int shift, final int mask, final Entry<K, V> entry) {
+    Node<K,V> put(final int hash, final int shift, final int mask, final Entry<K, V> entry) {
 
         if (this.data == null) {
 
-            final int pos = pos(shift, mask, index);
+            final int pos = pos(shift, mask, hash);
             final Node<K,V> child = this.children[pos];
 
             if (child != null) {
 
-                final Node<K,V> newNode = child.put(index, incShift(shift, mask), mask, entry);
+                final Node<K,V> newNode = child.put(hash, incShift(shift, mask), mask, entry);
 
                 if (newNode == child) {
                     return this;
@@ -102,33 +98,33 @@ final class Node<K,V> {
                 final Node<K,V>[] newNodes = Arrays.copyOf(this.children, this.children.length);
                 newNodes[pos] = newNode;
 
-                return NodeBuilder.build(this.count, newNodes);
+                return new Node<>(this.count, newNodes);
 
             }
 
             // Nothing currently in the selected node, so let's add the new data
-            final NodeData<K,V> newData = new NodeData<>(index, entry);
+            final NodeData<K,V> newData = new NodeData<>(hash, entry);
             return NodeBuilder.build(shift, mask, this.count, this.children, newData);
 
         }
 
         // Not a branch -- this is a node with data
 
-        if (this.data.index == index) {
+        if (this.data.hash == hash) {
 
-            final NodeData<K,V> newData = this.data.put(index, entry);
+            final NodeData<K,V> newData = this.data.put(hash, entry);
             if (newData == this.data) {
                 // Nothing was added because the entry already existed
                 return this;
             }
 
-            return NodeBuilder.build(newData);
+            return new Node<>(newData);
 
         }
 
         // We need to add a new node in the same range, so this has to be converted into a branch
 
-        final NodeData<K,V> newData = new NodeData<>(index, entry);
+        final NodeData<K,V> newData = new NodeData<>(hash, entry);
         return NodeBuilder.build(shift, mask, this.data, newData);
 
     }
@@ -136,11 +132,11 @@ final class Node<K,V> {
 
 
 
-    Node<K,V> remove(final int index, final int shift, final int mask, final Object key) {
+    Node<K,V> remove(final int hash, final int shift, final int mask, final Object key) {
 
         if (this.data == null) {
 
-            final int pos = pos(shift, mask, index);
+            final int pos = pos(shift, mask, hash);
             final Node<K,V> child = this.children[pos];
 
             if (child == null) {
@@ -148,7 +144,7 @@ final class Node<K,V> {
                 return this;
             }
 
-            final Node<K,V> newChild = child.remove(index, incShift(shift, mask), mask, key);
+            final Node<K,V> newChild = child.remove(hash, incShift(shift, mask), mask, key);
             if (newChild == child) {
                 return this;
             }
@@ -164,17 +160,17 @@ final class Node<K,V> {
 
             final int newChildrenSize = (newChild == null? this.count - 1 : this.count);
 
-            return NodeBuilder.build(newChildrenSize, newChildren);
+            return new Node<>(newChildrenSize, newChildren);
 
         }
 
         // Not a branch -- this is a Node with data
 
-        if (this.data.index != index) {
+        if (this.data.hash != hash) {
             return this;
         }
 
-        final NodeData<K,V> newData = this.data.remove(index, key);
+        final NodeData<K,V> newData = this.data.remove(hash, key);
 
         if (newData == this.data) {
             // No changes needed (key not found)
@@ -183,7 +179,7 @@ final class Node<K,V> {
 
         if (newData != null) {
             // There is still data at the node - we need a new container node
-            return NodeBuilder.build(newData);
+            return new Node<>(newData);
         }
 
         // All data removed -> should remove this container too
@@ -194,11 +190,11 @@ final class Node<K,V> {
 
 
 
-    void acceptVisitor(final int level, final int maskSize, final IndexMapVisitor<K, V> visitor) {
+    void acceptVisitor(final AtomicHashVisitor<K, V> visitor) {
         if (this.data == null) {
-            visitor.visitBranchNode(level, maskSize, Arrays.asList(this.children));
+            visitor.visitNode(Arrays.asList(this.children));
         } else {
-            visitor.visitDataNode(level, maskSize, this.data);
+            visitor.visitData(this.data.hash, this.data.entry, this.data.entries);
         }
     }
 

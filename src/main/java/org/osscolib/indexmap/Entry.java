@@ -19,10 +19,13 @@
  */
 package org.osscolib.indexmap;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 
-final class Entry<K,V> implements Map.Entry<K,V> {
+final class Entry<K,V> implements Map.Entry<K,V>, Serializable {
+
+    private static final long serialVersionUID = -4165737057742605795L;
 
     final K key;
     final V value;

@@ -24,26 +24,12 @@ import java.util.Arrays;
 final class NodeBuilder {
 
 
-    static <K,V> Node<K,V> build(final NodeData<K,V> data) {
-        return Node.build(data);
-    }
-
-
-
-
-    static <K,V> Node<K,V> build(final int count, final Node<K,V>[] children) {
-        return Node.build(count, children);
-    }
-
-
-
-
     static <K,V> Node<K,V> build(final int shift, final int mask,
                                  final NodeData<K,V> originalData, final NodeData<K,V> newData) {
 
         // Next, compute the new position that the two DataSlots (existing and new) will occupy
-        final int originalChildPos = Node.pos(shift, mask, originalData.index);
-        final int newChildPos = Node.pos(shift, mask, newData.index);
+        final int originalChildPos = Node.pos(shift, mask, originalData.hash);
+        final int newChildPos = Node.pos(shift, mask, newData.hash);
 
         // We initialise the new children array
         final Node<K,V>[] newChildren = new Node[mask + 1]; // 2^maskSize
@@ -58,21 +44,21 @@ final class NodeBuilder {
             // Finally assign the BranchNode to its new position
             newChildren[newChildPos] = newBranchChild;
 
-            return build(1, newChildren);
+            return new Node<>(1, newChildren);
 
         }
 
         // Data slots are assigned different positions, so we need to create a normal (multi-children) branch
 
         // Now we have the full data, we can build the new DataSlotNodes
-        final Node<K,V> originalDataSlotNode = build(originalData);
-        final Node<K,V> newDataSlotNode = build(newData);
+        final Node<K,V> originalDataSlotNode = new Node<>(originalData);
+        final Node<K,V> newDataSlotNode = new Node<>(newData);
 
         // Finally assign the DataSlotNodes to their positions as new children
         newChildren[originalChildPos] = originalDataSlotNode;
         newChildren[newChildPos] = newDataSlotNode;
 
-        return build(2, newChildren);
+        return new Node<>(2, newChildren);
 
     }
 
@@ -83,7 +69,7 @@ final class NodeBuilder {
                                  final NodeData<K,V> newData) {
 
         // Next, compute the new position that the two DataSlots (existing and new) will occupy
-        final int newChildPos = Node.pos(shift, mask, newData.index);
+        final int newChildPos = Node.pos(shift, mask, newData.hash);
 
         // If the data slot would be assigned an already used position, then ranges weren't properly computed
         // and the "put" operation that originated this should have been delegated to the child in that position
@@ -97,12 +83,12 @@ final class NodeBuilder {
         final Node<K,V>[] newChildren = Arrays.copyOf(originalChildren, originalChildren.length);
 
         // Now we have the full data, we can build the new DataSlotNode
-        final Node<K,V> newDataSlotNode = build(newData);
+        final Node<K,V> newDataSlotNode = new Node<>(newData);
 
         // Finally assign the DataSlotNode to its position as new children
         newChildren[newChildPos] = newDataSlotNode;
 
-        return build(originalChildrenSize + 1, newChildren);
+        return new Node<>(originalChildrenSize + 1, newChildren);
 
     }
 

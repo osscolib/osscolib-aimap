@@ -19,13 +19,39 @@
  */
 package org.osscolib.indexmap;
 
-import java.util.List;
+import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicReference;
+
+public final class AtomicHashMap<K,V> implements IndexMap<K,V>, Serializable {
+
+    private static final long serialVersionUID = 2626373528770987645L;
+
+    private final AtomicReference<AtomicHashStore<K,V>> innerMap;
 
 
-interface IndexMapVisitor<K,V> {
 
-    void visitRoot(final int maskSize, final Node<K, V> rootNode);
-    void visitBranchNode(final int level, final int maskSize, final List<Node<K, V>> nodes);
-    void visitDataNode(final int level, final int maskSize, final NodeData<K, V> data);
+    AtomicHashMap(final int maskSize, final Node<K,V> root) {
+        super();
+        this.innerMap = new AtomicReference<>();
+        this.innerMap.set(new AtomicHashStore<>(maskSize, root));
+    }
+
+
+
+    @Override
+    public int size() {
+        return this.innerMap.get().size();
+    }
+
+    @Override
+    public boolean containsKey(final Object key) {
+        return this.innerMap.get().containsKey(key);
+    }
+
+    @Override
+    public V get(final Object key) {
+        return this.innerMap.get().get(key);
+    }
+
 
 }
