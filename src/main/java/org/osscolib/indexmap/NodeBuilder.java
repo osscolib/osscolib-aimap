@@ -24,30 +24,26 @@ import java.util.Arrays;
 final class NodeBuilder {
 
 
-    static <K,V> Node<K,V> build(final int dataSlotIndex, final DataSlot<K,V> dataSlot) {
-        return Node.buildDataSlotNode(dataSlotIndex, dataSlot);
+    static <K,V> Node<K,V> build(final NodeData<K,V> data) {
+        return Node.build(data);
     }
 
 
 
 
-    static <K,V> Node<K,V> build(final int childrenSize, final Node<K,V>[] children) {
-        return Node.buildBranchNode(childrenSize, children);
+    static <K,V> Node<K,V> build(final int count, final Node<K,V>[] children) {
+        return Node.build(count, children);
     }
 
 
 
 
     static <K,V> Node<K,V> build(final int shift, final int mask,
-                                 final DataSlot<K,V> originalDataSlot, final DataSlot<K,V> newDataSlot) {
-
-        // Obtain the DataSlot indices
-        final int originalDataSlotIndex = originalDataSlot.getIndex();
-        final int newDataSlotIndex = newDataSlot.getIndex();
+                                 final NodeData<K,V> originalData, final NodeData<K,V> newData) {
 
         // Next, compute the new position that the two DataSlots (existing and new) will occupy
-        final int originalChildPos = Node.pos(shift, mask, originalDataSlotIndex);
-        final int newChildPos = Node.pos(shift, mask, newDataSlotIndex);
+        final int originalChildPos = Node.pos(shift, mask, originalData.index);
+        final int newChildPos = Node.pos(shift, mask, newData.index);
 
         // We initialise the new children array
         final Node<K,V>[] newChildren = new Node[mask + 1]; // 2^maskSize
@@ -57,7 +53,7 @@ final class NodeBuilder {
 
             // We will need a new level to be created, but applying a narrower range
             final Node<K,V> newBranchChild =
-                    build(Node.incShift(shift, mask), mask, originalDataSlot, newDataSlot);
+                    build(Node.incShift(shift, mask), mask, originalData, newData);
 
             // Finally assign the BranchNode to its new position
             newChildren[newChildPos] = newBranchChild;
@@ -69,8 +65,8 @@ final class NodeBuilder {
         // Data slots are assigned different positions, so we need to create a normal (multi-children) branch
 
         // Now we have the full data, we can build the new DataSlotNodes
-        final Node<K,V> originalDataSlotNode = build(originalDataSlotIndex, originalDataSlot);
-        final Node<K,V> newDataSlotNode = build(newDataSlotIndex, newDataSlot);
+        final Node<K,V> originalDataSlotNode = build(originalData);
+        final Node<K,V> newDataSlotNode = build(newData);
 
         // Finally assign the DataSlotNodes to their positions as new children
         newChildren[originalChildPos] = originalDataSlotNode;
@@ -84,13 +80,10 @@ final class NodeBuilder {
 
     static <K,V> Node<K,V> build(final int shift, final int mask,
                                  final int originalChildrenSize, final Node<K,V>[] originalChildren,
-                                 final DataSlot<K,V> newDataSlot) {
-
-        // Obtain the DataSlot index
-        final int newDataSlotIndex = newDataSlot.getIndex();
+                                 final NodeData<K,V> newData) {
 
         // Next, compute the new position that the two DataSlots (existing and new) will occupy
-        final int newChildPos = Node.pos(shift, mask, newDataSlotIndex);
+        final int newChildPos = Node.pos(shift, mask, newData.index);
 
         // If the data slot would be assigned an already used position, then ranges weren't properly computed
         // and the "put" operation that originated this should have been delegated to the child in that position
@@ -104,7 +97,7 @@ final class NodeBuilder {
         final Node<K,V>[] newChildren = Arrays.copyOf(originalChildren, originalChildren.length);
 
         // Now we have the full data, we can build the new DataSlotNode
-        final Node<K,V> newDataSlotNode = build(newDataSlotIndex, newDataSlot);
+        final Node<K,V> newDataSlotNode = build(newData);
 
         // Finally assign the DataSlotNode to its position as new children
         newChildren[newChildPos] = newDataSlotNode;

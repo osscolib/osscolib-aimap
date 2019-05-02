@@ -84,14 +84,15 @@ final class PrettyPrintIndexMapVisitor<K,V> implements IndexMapVisitor<K,V> {
 
 
     @Override
-    public void visitDataSlotNode(final int level, final int maskSize, final DataSlot<K,V> dataSlot) {
+    public void visitDataNode(final int level, final int maskSize, final NodeData<K,V> data) {
 
         this.visitorStrBuilder.append(indentForLevel(this.level));
         this.visitorStrBuilder.append(String.format("[%2d | %032d] {\n", level, new BigInteger(Integer.toBinaryString(((1 << maskSize) - 1) << (level * maskSize)))));
 
         this.level++;
 
-        dataSlot.acceptVisitor(this);
+// TODO IMPLEMENT THIS
+//        data.acceptVisitor(this);
         this.visitorStrBuilder.append('\n');
 
         this.level--;
@@ -100,7 +101,8 @@ final class PrettyPrintIndexMapVisitor<K,V> implements IndexMapVisitor<K,V> {
 
     }
 
-
+// TODO IMPLEMENT THIS
+    /*
     @Override
     public void visitDataSlot(final int index, final List<Map.Entry<K,V>> entries) {
 
@@ -120,7 +122,7 @@ final class PrettyPrintIndexMapVisitor<K,V> implements IndexMapVisitor<K,V> {
         }
 
     }
-
+*/
 
     @Override
     public String toString() {

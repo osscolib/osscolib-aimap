@@ -22,55 +22,48 @@ package org.osscolib.indexmap;
 import java.util.Arrays;
 import java.util.Objects;
 
-final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
+final class NodeData<K,V> {
 
-    private final int index;
-    private final Entry<K,V>[] entries;
+    final int index;
+    final boolean multi;
+    final Entry<K,V> entry;
+    final Entry<K,V>[] entries;
 
 
-    MultiEntryDataSlot(final int index, final Entry<K,V>[] entries) {
+
+    NodeData(final int index, final Entry<K,V> entry) {
         super();
         this.index = index;
+        this.multi = false;
+        this.entry = entry;
+        this.entries = null;
+    }
+
+
+    NodeData(final int index, final Entry<K,V>[] entries) {
+        super();
+        this.index = index;
+        this.multi = true;
+        this.entry = null;
         this.entries = entries;
     }
 
 
-    @Override
-    public int getIndex() {
-        return this.index;
+
+
+    int size() {
+        return (this.multi ? this.entries.length : 1);
     }
 
 
-    @Override
-    public int size() {
-        return this.entries.length;
+
+
+    NodeData<K,V> put(final int index, final Entry<K,V> newEntry) {
+        return this.multi ? putMulti(index, newEntry) : putSingle(index, newEntry);
     }
 
 
-    @Override
-    public boolean containsKey(final int index, final Object key) {
-        for (int i = 0; i < this.entries.length; i++) {
-            if (Objects.equals(this.entries[i].key, key)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-
-    @Override
-    public V get(final int index, final Object key) {
-        for (int i = 0; i < this.entries.length; i++) {
-            if (Objects.equals(this.entries[i].key, key)) {
-                return this.entries[i].value;
-            }
-        }
-        return null;
-    }
-
-
-    @Override
-    public DataSlot<K,V> put(final int index, final Entry<K,V> newEntry) {
+    NodeData<K,V> putMulti(final int index, final Entry<K,V> newEntry) {
 
         // TODO We should improve this to avoid linear performance depending on the amount of collisions. This was also fixed in HashMap in Java 8 to avoid DoS
 
@@ -89,18 +82,42 @@ final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
             }
             final Entry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length);
             newEntries[pos] = newEntry;
-            return DataSlotBuilder.build(index, newEntries);
+            return new NodeData<>(index, newEntries);
         }
 
         final Entry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length + 1);
         newEntries[this.entries.length] = newEntry;
-        return DataSlotBuilder.build(index, newEntries);
+        return new NodeData<>(index, newEntries);
 
     }
 
 
-    @Override
-    public DataSlot<K,V> remove(final int index, final Object key) {
+    NodeData<K,V> putSingle(final int index, final Entry<K,V> newEntry) {
+
+        if (this.entry.key == newEntry.key && this.entry.value == newEntry.value) {
+            // No need to perform any modifications, we might avoid a rewrite of a tree path!
+            return this;
+        }
+        if (Objects.equals(this.entry.key, newEntry.key)) {
+            // We are replacing the previous value for a new one
+            return new NodeData<>(index, newEntry);
+        }
+        // TODO We should improve this to avoid linear performance depending on the amount of collisions. This was also fixed in HashMap in Java 8 to avoid DoS
+        // There is an index collision, but this is a different slot, so we need to go multi value
+        final Entry<K,V>[] newEntries = new Entry[] { this.entry, newEntry};
+        return new NodeData<>(index, newEntries);
+
+    }
+
+
+
+
+    NodeData<K,V> remove(final int index, final Object key) {
+        return this.multi ? removeMulti(index, key) : removeSingle(index, key);
+    }
+
+
+    NodeData<K,V> removeMulti(final int index, final Object key) {
 
         int pos = -1;
         for (int i = 0; i < this.entries.length; i++) {
@@ -113,12 +130,12 @@ final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
             if (this.entries.length == 2) {
                 // There are only two items in the multi value, and we are removing one, so now its single value
                 final Entry<K,V> remainingEntry = this.entries[pos == 0? 1 : 0];
-                return DataSlotBuilder.build(index, remainingEntry);
+                return new NodeData<>(index, remainingEntry);
             }
             final Entry<K,V>[] newEntries = new Entry[this.entries.length - 1];
             System.arraycopy(this.entries, 0, newEntries, 0, pos);
             System.arraycopy(this.entries, pos + 1, newEntries, pos, (this.entries.length - (pos + 1)));
-            return DataSlotBuilder.build(index, newEntries);
+            return new NodeData<>(index, newEntries);
         }
 
         return this;
@@ -126,9 +143,9 @@ final class MultiEntryDataSlot<K,V> implements DataSlot<K,V> {
     }
 
 
-    @Override
-    public void acceptVisitor(final IndexMapVisitor<K,V> visitor) {
-        visitor.visitDataSlot(this.index, Arrays.asList(this.entries));
+    NodeData<K,V> removeSingle(final int index, final Object key) {
+        return Objects.equals(this.entry.key,key) ? null : this;
     }
+
 
 }
