@@ -192,7 +192,7 @@ final class Node<K,V> implements Serializable {
 
     void acceptVisitor(final AtomicHashVisitor<K, V> visitor) {
         if (this.data == null) {
-            visitor.visitNode(Arrays.asList(this.children));
+            visitor.visitNode(this.children);
         } else {
             visitor.visitData(this.data.hash, this.data.entry, this.data.entries);
         }

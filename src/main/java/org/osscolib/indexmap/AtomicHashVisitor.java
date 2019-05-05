@@ -19,13 +19,10 @@
  */
 package org.osscolib.indexmap;
 
-import java.util.List;
-
-
 interface AtomicHashVisitor<K,V> {
 
     void visitRoot(final Node<K, V> rootNode);
-    void visitNode(final List<Node<K, V>> children);
+    void visitNode(final Node<K, V>[] children);
     void visitData(final int hash, final Entry<K,V> entry, final Entry<K,V>[] entries);
 
 }

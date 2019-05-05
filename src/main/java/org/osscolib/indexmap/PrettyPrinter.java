@@ -23,13 +23,13 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
-final class PrettyPrintAtomicHashVisitor<K,V> implements AtomicHashVisitor<K,V> {
+final class PrettyPrinter<K,V> implements AtomicHashVisitor<K,V> {
 
     private final StringBuilder visitorStrBuilder;
     private final int maskSize;
     private int level;
 
-    PrettyPrintAtomicHashVisitor(final int maskSize) {
+    PrettyPrinter(final int maskSize) {
         super();
         this.visitorStrBuilder = new StringBuilder();
         this.maskSize = maskSize;
@@ -61,20 +61,20 @@ final class PrettyPrintAtomicHashVisitor<K,V> implements AtomicHashVisitor<K,V> 
 
 
     @Override
-    public void visitNode(final List<Node<K,V>> children) {
+    public void visitNode(final Node<K,V>[] children) {
 
         this.visitorStrBuilder.append(indentForLevel(this.level));
         this.visitorStrBuilder.append(
                 String.format("[%2d | %032d] {",
                         level,
                         new BigInteger(Integer.toBinaryString(((1 << this.maskSize) - 1) << (this.level * this.maskSize)))));
-        if (children.size() == 0) {
+        if (children.length == 0) {
             this.visitorStrBuilder.append("}");
         } else {
             this.visitorStrBuilder.append('\n');
             this.level++;
-            for (int i = 0; i < children.size(); i++) {
-                final Node<K,V> child = children.get(i);
+            for (int i = 0; i < children.length; i++) {
+                final Node<K,V> child = children[i];
                 if (child != null) {
                     child.acceptVisitor(this);
                     this.visitorStrBuilder.append('\n');

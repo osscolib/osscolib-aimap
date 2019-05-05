@@ -158,7 +158,7 @@ public final class AtomicHashStore<K,V> implements IndexMap<K,V>, Serializable {
 
 
     String prettyPrint() {
-        final AtomicHashVisitor<K,V> visitor = new PrettyPrintAtomicHashVisitor(this.maskSize);
+        final AtomicHashVisitor<K,V> visitor = new PrettyPrinter(this.maskSize);
         visitor.visitRoot(this.root);
         return visitor.toString();
     }
@@ -170,7 +170,8 @@ public final class AtomicHashStore<K,V> implements IndexMap<K,V>, Serializable {
         private final AtomicHashStore<K,V> map;
         private final int[] pos;
         private int posSize;
-        private int child;
+
+        private int childPos;
         private boolean finished;
 
         EntryIterator(final AtomicHashStore<K,V> map) {
@@ -179,16 +180,22 @@ public final class AtomicHashStore<K,V> implements IndexMap<K,V>, Serializable {
             this.pos = new int[32 / map.maskSize]; // max possible array (node) level
             Arrays.fill(this.pos, -1);
             this.posSize = 0;
-            this.child = -1; // position inside multi-valued NodeData
+            this.childPos = -1; // position inside multi-valued NodeData
             this.finished = false;
             nextpos();
         }
 
 
         public void nextpos() {
+
             if (this.finished) {
                 return;
             }
+
+            if (childPos >= 0) {
+
+            }
+
             if (this.posSize == 0) {
                 this.finished = (this.map.root.data == null);
                 this.posSize++;
@@ -232,7 +239,7 @@ public final class AtomicHashStore<K,V> implements IndexMap<K,V>, Serializable {
             if (data.entry != null) {
                 entry = data.entry;
             } else {
-                entry = data.entries[this.child];
+                entry = data.entries[this.childPos];
             }
 
             nextpos();
