@@ -19,94 +19,147 @@
  */
 package org.osscolib.indexmap;
 
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
-final class EntryIterator<K,V> implements AtomicHashVisitor<K,V>, Iterator<Entry<K,V>> {
+final class EntryIterator<K,V> implements Iterator<Map.Entry<K,V>> {
 
-
-    private final Node<K,V>[][] stack;
-    private int stackSize = 0;
-    private int[] stackPos;
+    /*
+     * Location variables: these locate a child of the node currently at the top of the stack. So
+     * only nodes with children should be put on the stack
+     */
+    private final Node<K,V>[] stack;
+    private int stackSize;
+    private int[] currentChild;
 
     private Entry<K,V> entry;
     private Entry<K,V>[] entries;
-    private int entriesPos = -1;
-
-    private Entry<K,V> next = null;
+    private int entriesPos;
 
 
-    EntryIterator(final int maskSize) {
+    EntryIterator(final Node<K,V> root, final int maskSize) {
+
         super();
-        this.stack = new Node[32 / maskSize][]; // max possible node nesting level
-        this.stackPos = new int[this.stack.length];
-        computeNext();
+        this.entry = null;
+
+        if (root == null || root.children == null) {
+
+            this.stack = null;
+            this.currentChild = null;
+            this.stackSize = 0;
+            if (root != null) {
+                extractData(root);
+            }
+
+        } else {
+
+            this.stack = new Node[(32 / maskSize)]; // max possible node nesting level
+            Arrays.fill(this.stack, null);
+            this.currentChild = new int[this.stack.length];
+            Arrays.fill(this.currentChild, -1);
+            this.stack[0] = root;
+            this.stackSize = 1;
+            computeNext();
+
+        }
+
     }
 
 
 
     @Override
     public boolean hasNext() {
-        return this.next != null;
+        return this.entry != null;
     }
 
 
     @Override
-    public Entry<K,V> next() {
-        final Entry<K,V> n = this.next;
+    public Map.Entry<K,V> next() {
+        final Entry<K,V> n = this.entry;
         computeNext();
         return n;
     }
 
 
 
+
     private void computeNext() {
 
         if (this.entries != null) {
+            this.entriesPos++;
             if (this.entriesPos < this.entries.length) {
-                this.next = this.entries[this.entriesPos++];
+                this.entry = this.entries[this.entriesPos];
                 return;
             }
             this.entries = null;
             this.entriesPos = -1;
-        } else if (this.entry != null) {
-            this.next = this.entry;
-            this.entry = null;
+        }
+
+        this.entry = null;
+        if (this.stackSize > 0) {
+            selectNextNode();
+        }
+
+    }
+
+
+
+    private void selectNextNode() {
+        if (selectNextSibling()) {
             return;
         }
-
-        final int stackCurrent = this.stackSize - 1;
-        final Node<K,V>[] currentChildren = this.stack[stackCurrent];
-        final int currentChildrenPos = this.stackPos[stackCurrent];
-
-
-    }
-
-
-
-    @Override
-    public void visitRoot(final Node rootNode) {
-        if (rootNode != null) {
-            rootNode.acceptVisitor(this);
+        this.stackSize--;
+        this.stack[this.stackSize] = null;
+        if (this.stackSize == 0) {
+            return;
         }
+        selectNextNode();
     }
 
 
-    @Override
-    public void visitNode(final Node<K,V>[] children) {
-        this.stack[this.stackSize] = children;
-        this.stackPos[this.stackSize] = 0;
+    private boolean selectNextSibling() {
+        final int stackPos = this.stackSize - 1;
+        final Node<K,V> currentNode = this.stack[stackPos];
+        int childi = this.currentChild[stackPos] + 1;
+        while (childi < currentNode.children.length && currentNode.children[childi] == null) {
+            childi++;
+        }
+        if (childi == currentNode.children.length) {
+            this.currentChild[stackPos] = -1;
+            return false;
+        }
+        this.currentChild[stackPos] = childi;
+        return selectDeepest();
+    }
+
+
+    private boolean selectDeepest() {
+        final int stackPos = this.stackSize - 1;
+        final Node<K,V> currentNode = this.stack[stackPos];
+        int i = this.currentChild[stackPos];
+        if (currentNode.children[i].children == null) {
+            extractData(currentNode.children[i]);
+            return true;
+        }
+        this.stack[this.stackSize] = currentNode.children[i];
+        this.currentChild[this.stackSize] = -1;
         this.stackSize++;
+        return selectNextSibling();
     }
 
 
-    @Override
-    public void visitData(final int hash, final Entry<K,V> entry, final Entry<K,V>[] entries) {
-        if (entry != null) {
-            this.entry = entry;
+    private void extractData(final Node<K,V> dataNode) {
+        if (dataNode.data.entry != null) {
+            this.entry = dataNode.data.entry;
         } else {
-            this.entries = entries;
+            this.entries = dataNode.data.entries;
             this.entriesPos = 0;
+            this.entry = this.entries[0];
         }
     }
+
+
 
 }

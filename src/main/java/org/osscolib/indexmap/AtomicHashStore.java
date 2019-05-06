@@ -20,14 +20,15 @@
 package org.osscolib.indexmap;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 // TODO Serializable (+ transient for computed things like sets), Clonable
-public final class AtomicHashStore<K,V> implements IndexMap<K,V>, Serializable {
+public final class AtomicHashStore<K,V> implements IndexMap<K,V>, Iterable<Map.Entry<K,V>>, Serializable {
 
     private static final long serialVersionUID = 6362537038828380833L;
 
@@ -35,6 +36,8 @@ public final class AtomicHashStore<K,V> implements IndexMap<K,V>, Serializable {
     private final int mask;
     private final int maskSize;
     private final Node<K,V> root;
+
+    private transient StoreEntrySet<K,V> entrySet = null;
 
 
 
@@ -147,9 +150,25 @@ public final class AtomicHashStore<K,V> implements IndexMap<K,V>, Serializable {
 
 
 
+    @Override
+    public Iterator<Map.Entry<K, V>> iterator() {
+        return new EntryIterator<>(this.root, this.maskSize);
+    }
 
 
-    private int hash(final Object key) {
+
+    public Set<Map.Entry<K,V>> entrySet() {
+        StoreEntrySet<K,V> entrySet;
+        if ((entrySet = this.entrySet) != null) {
+            return entrySet;
+        }
+        this.entrySet = new StoreEntrySet<>(this);
+        return this.entrySet;
+    }
+
+
+
+    static int hash(final Object key) {
         int h;
         return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
     }
@@ -162,94 +181,6 @@ public final class AtomicHashStore<K,V> implements IndexMap<K,V>, Serializable {
         visitor.visitRoot(this.root);
         return visitor.toString();
     }
-
-
-
-    final static class EntryIterator<K,V> implements Iterator<Entry<K,V>> {
-
-        private final AtomicHashStore<K,V> map;
-        private final int[] pos;
-        private int posSize;
-
-        private int childPos;
-        private boolean finished;
-
-        EntryIterator(final AtomicHashStore<K,V> map) {
-            super();
-            this.map = map;
-            this.pos = new int[32 / map.maskSize]; // max possible array (node) level
-            Arrays.fill(this.pos, -1);
-            this.posSize = 0;
-            this.childPos = -1; // position inside multi-valued NodeData
-            this.finished = false;
-            nextpos();
-        }
-
-
-        public void nextpos() {
-
-            if (this.finished) {
-                return;
-            }
-
-            if (childPos >= 0) {
-
-            }
-
-            if (this.posSize == 0) {
-                this.finished = (this.map.root.data == null);
-                this.posSize++;
-                return;
-            }
-            nextpos(0);
-        }
-
-
-        public void nextpos(final int posi) { // TODO add Node as a param?
-            if (posi < this.posSize) {
-                do {
-                  this.pos[posi]++;
-                } while (this.)
-            }
-        }
-
-
-
-        @Override
-        public boolean hasNext() {
-            return !this.finished;
-        }
-
-
-        @Override
-        public Entry<K, V> next() {
-
-            if (this.finished) {
-                throw new NoSuchElementException();
-            }
-
-            Entry<K,V> entry;
-            Node<K,V> node = map.root;
-            NodeData<K,V> data = null;
-
-            for (int i = 0; i < this.posSize; i++) {
-                node = node.children[this.pos[i]];
-            }
-
-            if (data.entry != null) {
-                entry = data.entry;
-            } else {
-                entry = data.entries[this.childPos];
-            }
-
-            nextpos();
-
-            return entry;
-
-        }
-
-    }
-
 
 
 }

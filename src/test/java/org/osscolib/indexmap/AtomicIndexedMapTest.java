@@ -35,20 +35,26 @@ public class AtomicIndexedMapTest {
         System.out.println();
         System.out.println(m.prettyPrint());
 
+
+
         m = m.put("Hello", 21);
 
         System.out.println();
         System.out.println(m.prettyPrint());
+
 
         m = m.put("helloworld", 23);
 
         System.out.println();
         System.out.println(m.prettyPrint());
 
+
         m = m.put("iFlloworld", 52);
 
         System.out.println();
         System.out.println(m.prettyPrint());
+
+
 
         m = m.put("j'lloworld", 31);
 
@@ -74,6 +80,7 @@ public class AtomicIndexedMapTest {
 
         System.out.println();
         System.out.println(m.prettyPrint());
+
 
         m = m.put("IFllo", 987);
 
