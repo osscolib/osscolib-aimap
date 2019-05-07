@@ -27,9 +27,9 @@ final class Sets {
 
     /*
      * Sets for an AtomicHashStore are not the same as sets for an AtomicHashMap because
-     * the java.util.Map specification dictates that a Map's entry set has to reflect
+     * the java.util.Map specification dictates that a Map's entry/keys set has to reflect
      * modifications in the underlying Map, which does not apply to AtomicHashStore
-     * objects as they are immutable.
+     * objects due to the fact they are immutable.
      */
 
 
@@ -75,29 +75,6 @@ final class Sets {
         }
 
     }
-
-
-    final static class StoreValueSet<K,V> extends AbstractSet<V> {
-
-        private final AtomicHashStore<K,V> store;
-
-        StoreValueSet(final AtomicHashStore<K,V> store) {
-            super();
-            this.store = store;
-        }
-
-        @Override
-        public Iterator<V> iterator() {
-            return new Iterators.ValueIterator<>(this.store.root, this.store.maskSize);
-        }
-
-        @Override
-        public int size() {
-            return this.store.size();
-        }
-
-    }
-
 
 
 

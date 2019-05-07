@@ -20,6 +20,7 @@
 package org.osscolib.atomichash;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -37,7 +38,7 @@ public final class AtomicHashStore<K,V> implements AtomicHash<K,V>, Iterable<Map
 
     transient Sets.StoreEntrySet<K,V> entrySet = null;
     transient Sets.StoreKeySet<K,V> keySet = null;
-    transient Sets.StoreValueSet<K,V> valueSet = null;
+    transient Collections.StoreValueCollection<K,V> valueCollection = null;
 
 
 
@@ -178,14 +179,13 @@ public final class AtomicHashStore<K,V> implements AtomicHash<K,V>, Iterable<Map
     }
 
 
-
-    public Set<V> valueSet() {
-        Sets.StoreValueSet<K,V> valueSet;
-        if ((valueSet = this.valueSet) != null) {
-            return valueSet;
+    public Collection<V> values() {
+        Collections.StoreValueCollection<K,V> valueCollection;
+        if ((valueCollection = this.valueCollection) != null) {
+            return valueCollection;
         }
-        this.valueSet = new Sets.StoreValueSet<>(this);
-        return this.valueSet;
+        this.valueCollection = new Collections.StoreValueCollection<>(this);
+        return this.valueCollection;
     }
 
 
