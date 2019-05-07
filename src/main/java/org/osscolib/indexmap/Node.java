@@ -26,7 +26,7 @@ final class Node<K,V> implements Serializable {
 
     private static final long serialVersionUID = 6914544628900109073L;
 
-    private final int count;
+    final int count;
     final NodeData<K,V> data;
     final Node<K,V>[] children; // can contain many nulls
 
@@ -188,14 +188,5 @@ final class Node<K,V> implements Serializable {
     }
 
 
-
-
-    void acceptVisitor(final AtomicHashVisitor<K, V> visitor) {
-        if (this.data == null) {
-            visitor.visitNode(this.children);
-        } else {
-            visitor.visitData(this.data.hash, this.data.entry, this.data.entries);
-        }
-    }
 
 }

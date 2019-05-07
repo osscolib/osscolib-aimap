@@ -63,7 +63,7 @@ final class NodeData<K,V> implements Serializable {
     }
 
 
-    NodeData<K,V> putMulti(final int hash, final Entry<K,V> newEntry) {
+    private NodeData<K,V> putMulti(final int hash, final Entry<K,V> newEntry) {
 
         // TODO We should improve this to avoid linear performance depending on the amount of collisions. This was also fixed in HashMap in Java 8 to avoid DoS
 
@@ -92,7 +92,7 @@ final class NodeData<K,V> implements Serializable {
     }
 
 
-    NodeData<K,V> putSingle(final int hash, final Entry<K,V> newEntry) {
+    private NodeData<K,V> putSingle(final int hash, final Entry<K,V> newEntry) {
 
         if (this.entry.key == newEntry.key && this.entry.value == newEntry.value) {
             // No need to perform any modifications, we might avoid a rewrite of a tree path!
@@ -116,7 +116,7 @@ final class NodeData<K,V> implements Serializable {
     }
 
 
-    NodeData<K,V> removeMulti(final int hash, final Object key) {
+    private NodeData<K,V> removeMulti(final int hash, final Object key) {
 
         int pos = -1;
         for (int i = 0; i < this.entries.length; i++) {
@@ -142,7 +142,7 @@ final class NodeData<K,V> implements Serializable {
     }
 
 
-    NodeData<K,V> removeSingle(final int hash, final Object key) {
+    private NodeData<K,V> removeSingle(final int hash, final Object key) {
         return Objects.equals(this.entry.key,key) ? null : this;
     }
 

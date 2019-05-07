@@ -30,11 +30,7 @@ final class Entry<K,V> implements Map.Entry<K,V>, Serializable {
     final K key;
     final V value;
 
-    static <K,V> Entry<K,V> build(final K key, final V value) {
-        return new Entry(key, value);
-    }
-
-    private Entry(final K key, final V value) {
+    Entry(final K key, final V value) {
         super();
         this.key = key;
         this.value = value;

@@ -17,7 +17,7 @@
  *
  * =============================================================================
  */
-package org.osscolib.indexmap.testutil;
+package org.osscolib.indexmap;
 
 
 import org.apache.commons.lang3.RandomStringUtils;

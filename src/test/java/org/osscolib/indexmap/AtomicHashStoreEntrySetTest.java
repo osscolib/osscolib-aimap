@@ -24,56 +24,74 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-public class AtomicHashStoreIteratorTest {
+public class AtomicHashStoreEntrySetTest {
 
 
     @Test
-    public void testEntryIterator() throws Exception {
-        testIterator(1);
-        testIterator(2);
-        testIterator(3);
-        testIterator(5);
-        testIterator(8);
-        testIterator(16);
-        testIterator(32);
-        testIterator(64);
-        testIterator(100000);
-        testIterator(1000000);
+    public void testEntrySet() throws Exception {
+        testEntrySet(1);
+        testEntrySet(2);
+        testEntrySet(3);
+        testEntrySet(5);
+        testEntrySet(8);
+        testEntrySet(16);
+        testEntrySet(32);
+        testEntrySet(64);
+        testEntrySet(10000);
     }
 
 
-    private void testIterator(final int size) {
-        testIterator(size, IndexMap.<String, String>build().withSmallSize().asFluentMap(), 2);
-        testIterator(size, IndexMap.<String, String>build().withMediumSize().asFluentMap(), 4);
-        testIterator(size, IndexMap.<String, String>build().withLargeSize().asFluentMap(), 8);
-    }
+    private void testEntrySet(final int size) {
 
+        AtomicHashStore<String,String> m = IndexMap.<String,String>build().asFluentMap();
+        final int maskSize = 4;
 
-    private void testIterator(final int size, final AtomicHashStore<String,String> st, final int maskSize) {
+        final KeyValue<String,String>[] kvs = TestUtils.generateStringStringKeyValues(size);
 
-        AtomicHashStore<String,String> store = st;
-
-        final KeyValue<String,String>[] entries = TestUtils.generateStringStringKeyValues(size);
-
-        for (int i = 0; i < entries.length; i++) {
-            store = store.put(entries[i].getKey(), entries[i].getValue());
+        for (int i = 0; i < kvs.length; i++) {
+            m = m.put(kvs[i].getKey(), kvs[i].getValue());
         }
+
+        final Set<Map.Entry<String,String>> entrySet = m.entrySet();
+        Assert.assertEquals(kvs.length, entrySet.size());
+
+        for (int i = 0; i < kvs.length; i++) {
+            Assert.assertTrue(entrySet.contains(new Entry(kvs[i].getKey(), kvs[i].getValue())));
+        }
+
+
+        final int oldSize = entrySet.size();
+        m = m.put(null, "some null");
+        // The entrySet of a Store is not affected by modifications on that store (because it is immutable). Note this
+        // is the contrary of what should happen with a Map
+        Assert.assertEquals(oldSize, entrySet.size());
+        m = m.remove(null);
+        Assert.assertEquals(oldSize, entrySet.size());
+
+        testIterator(kvs, entrySet, maskSize);
+    }
+
+
+
+    private void testIterator(KeyValue<String,String>[] entries, final Set<Map.Entry<String,String>> entrySet, final int maskSize) {
 
         final List<KeyValue<String,String>> expected = new ArrayList<>(Arrays.asList(entries));
         expected.sort(new HashComparator(maskSize));
 
         final List<KeyValue<String,String>> obtained = new ArrayList<>();
-        for (final Map.Entry<String,String> entry : store) {
+        for (final Map.Entry<String,String> entry : entrySet) {
             obtained.add(new KeyValue<>(entry.getKey(), entry.getValue()));
         }
 
         Assert.assertEquals(expected, obtained);
 
     }
+
 
 
 

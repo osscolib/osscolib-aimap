@@ -24,20 +24,20 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 
-// TODO Serializable (+ transient for computed things like sets), Clonable
+// TODO implement equals and hashCode()
 public final class AtomicHashStore<K,V> implements IndexMap<K,V>, Iterable<Map.Entry<K,V>>, Serializable {
 
     private static final long serialVersionUID = 6362537038828380833L;
 
+    final int mask;
+    final int maskSize;
+    final Node<K,V> root;
 
-    private final int mask;
-    private final int maskSize;
-    private final Node<K,V> root;
-
-    private transient StoreEntrySet<K,V> entrySet = null;
+    transient Sets.StoreEntrySet<K,V> entrySet = null;
+    transient Sets.StoreKeySet<K,V> keySet = null;
+    transient Sets.StoreValueSet<K,V> valueSet = null;
 
 
 
@@ -74,7 +74,7 @@ public final class AtomicHashStore<K,V> implements IndexMap<K,V>, Iterable<Map.E
 
 
 
-    Entry<K,V> getEntry(final int hash, final Object key) {
+    private Entry<K,V> getEntry(final int hash, final Object key) {
         final int m  = this.mask, msize = this.maskSize;
         Node<K,V> node = this.root;
         NodeData<K,V> data = null;
@@ -85,17 +85,17 @@ public final class AtomicHashStore<K,V> implements IndexMap<K,V>, Iterable<Map.E
     }
 
 
-    Entry<K,V> getEntry(final Object key, final NodeData<K,V> data) {
+    private Entry<K,V> getEntry(final Object key, final NodeData<K,V> data) {
         return (data.entry == null) ? getMultiEntry(key, data.entries) : getSingleEntry(key, data.entry);
     }
 
 
-    Entry<K,V> getSingleEntry(final Object key, final Entry<K,V> entry) {
+    private Entry<K,V> getSingleEntry(final Object key, final Entry<K,V> entry) {
         return Objects.equals(entry.key, key) ? entry : null;
     }
 
 
-    Entry<K,V> getMultiEntry(final Object key, final Entry<K,V>[] entries) {
+    private Entry<K,V> getMultiEntry(final Object key, final Entry<K,V>[] entries) {
         for (int i = 0; i < entries.length; i++) {
             // TODO Performance degradation with large number of collisions -> adopt some kind of tree?
             if (Objects.equals(entries[i].key, key)) {
@@ -111,7 +111,7 @@ public final class AtomicHashStore<K,V> implements IndexMap<K,V>, Iterable<Map.E
     public AtomicHashStore<K,V> put(final K key, final V value) {
 
         final int hash = hash(key);
-        final Entry<K,V> entry = Entry.build(key, value);
+        final Entry<K,V> entry = new Entry(key, value);
 
         final Node newRoot;
         if (this.root == null) {
@@ -151,19 +151,41 @@ public final class AtomicHashStore<K,V> implements IndexMap<K,V>, Iterable<Map.E
 
 
     @Override
-    public Iterator<Map.Entry<K, V>> iterator() {
-        return new EntryIterator<>(this.root, this.maskSize);
+    public Iterator<Map.Entry<K,V>> iterator() {
+        return new Iterators.EntryIterator<>(this.root, this.maskSize);
     }
 
 
 
     public Set<Map.Entry<K,V>> entrySet() {
-        StoreEntrySet<K,V> entrySet;
+        Sets.StoreEntrySet<K,V> entrySet;
         if ((entrySet = this.entrySet) != null) {
             return entrySet;
         }
-        this.entrySet = new StoreEntrySet<>(this);
+        this.entrySet = new Sets.StoreEntrySet<>(this);
         return this.entrySet;
+    }
+
+
+
+    public Set<K> keySet() {
+        Sets.StoreKeySet<K,V> keySet;
+        if ((keySet = this.keySet) != null) {
+            return keySet;
+        }
+        this.keySet = new Sets.StoreKeySet<>(this);
+        return this.keySet;
+    }
+
+
+
+    public Set<V> valueSet() {
+        Sets.StoreValueSet<K,V> valueSet;
+        if ((valueSet = this.valueSet) != null) {
+            return valueSet;
+        }
+        this.valueSet = new Sets.StoreValueSet<>(this);
+        return this.valueSet;
     }
 
 
@@ -173,14 +195,6 @@ public final class AtomicHashStore<K,V> implements IndexMap<K,V>, Iterable<Map.E
         return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
     }
 
-
-
-
-    String prettyPrint() {
-        final AtomicHashVisitor<K,V> visitor = new PrettyPrinter(this.maskSize);
-        visitor.visitRoot(this.root);
-        return visitor.toString();
-    }
 
 
 }

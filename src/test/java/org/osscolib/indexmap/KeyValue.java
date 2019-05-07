@@ -19,37 +19,39 @@
  */
 package org.osscolib.indexmap;
 
-import java.util.AbstractSet;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.Objects;
 
-final class StoreEntrySet<K,V> extends AbstractSet<Map.Entry<K,V>> {
+public class KeyValue<K,V> {
 
-    /*
-     * This entry set represents an AtomicHashStore. Note this is not the same
-     * as entry set for an AtomicHashMap because the java.util.Map specification
-     * dictates that a Map's entry set has to reflect modifications in the
-     * underlying Map.
-     */
+    private final K key;
+    private final V value;
 
-
-    private final AtomicHashStore<K,V> store;
-
-
-    StoreEntrySet(final AtomicHashStore<K,V> store) {
+    public KeyValue(final K key, final V value) {
         super();
-        this.store = store;
+        this.key = key;
+        this.value = value;
+    }
+
+    public K getKey() {
+        return this.key;
+    }
+
+    public V getValue() {
+        return this.value;
     }
 
 
     @Override
-    public Iterator<Map.Entry<K, V>> iterator() {
-        return this.store.iterator();
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        final KeyValue<?, ?> keyValue = (KeyValue<?, ?>) o;
+        return Objects.equals(key, keyValue.key) &&
+                Objects.equals(value, keyValue.value);
     }
 
     @Override
-    public int size() {
-        return this.store.size();
+    public int hashCode() {
+        return Objects.hash(key, value);
     }
-
 }

@@ -22,9 +22,8 @@ package org.osscolib.indexmap;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
-final class EntryIterator<K,V> implements Iterator<Map.Entry<K,V>> {
+abstract class Iterators<K,V> {
 
     /*
      * Location variables: these locate a child of the node currently at the top of the stack. So
@@ -39,7 +38,7 @@ final class EntryIterator<K,V> implements Iterator<Map.Entry<K,V>> {
     private int entriesPos;
 
 
-    EntryIterator(final Node<K,V> root, final int maskSize) {
+    protected Iterators(final Node<K,V> root, final int maskSize) {
 
         super();
         this.entry = null;
@@ -69,14 +68,12 @@ final class EntryIterator<K,V> implements Iterator<Map.Entry<K,V>> {
 
 
 
-    @Override
     public boolean hasNext() {
         return this.entry != null;
     }
 
 
-    @Override
-    public Map.Entry<K,V> next() {
+    public Map.Entry<K,V> nextEntry() {
         final Entry<K,V> n = this.entry;
         computeNext();
         return n;
@@ -160,6 +157,53 @@ final class EntryIterator<K,V> implements Iterator<Map.Entry<K,V>> {
         }
     }
 
+
+
+
+    final static class EntryIterator<K,V>
+            extends Iterators<K,V>
+            implements Iterator<Map.Entry<K,V>>{
+
+        EntryIterator(final Node<K, V> root, final int maskSize) {
+            super(root, maskSize);
+        }
+
+        @Override
+        public Map.Entry<K, V> next() {
+            return super.nextEntry();
+        }
+
+    }
+
+
+    final static class KeyIterator<K,V>
+            extends Iterators<K,V>
+            implements Iterator<K> {
+
+        KeyIterator(final Node<K, V> root, final int maskSize) {
+            super(root, maskSize);
+        }
+
+        @Override
+        public K next() {
+            return super.nextEntry().getKey();
+        }
+    }
+
+
+    final static class ValueIterator<K,V>
+            extends Iterators<K,V>
+            implements Iterator<V> {
+
+        ValueIterator(final Node<K, V> root, final int maskSize) {
+            super(root, maskSize);
+        }
+
+        @Override
+        public V next() {
+            return super.nextEntry().getValue();
+        }
+    }
 
 
 }

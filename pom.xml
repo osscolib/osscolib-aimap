@@ -98,7 +98,8 @@
         <!-- A project-name-based approach is adopted for the module name (instead of a reverse-DNS one)      -->
         <!-- NOTE we cannot use ${project.artifactId} here because it contains '-', a forbidden char          -->
         <module.name>osscolib.indexmap</module.name>
-        <junit.version>4.12</junit.version>
+        <test.junit.version>4.12</test.junit.version>
+        <test.commons-lang3.version>3.8.1</test.commons-lang3.version>
     </properties>
 
 
@@ -289,14 +290,14 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
+            <version>${test.junit.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.8.1</version>
+            <version>${test.commons-lang3.version}</version>
             <scope>test</scope>
         </dependency>
 
