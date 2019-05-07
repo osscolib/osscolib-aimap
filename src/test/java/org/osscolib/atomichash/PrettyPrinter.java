@@ -17,7 +17,7 @@
  *
  * =============================================================================
  */
-package org.osscolib.indexmap;
+package org.osscolib.atomichash;
 
 import java.math.BigInteger;
 import java.util.Map;

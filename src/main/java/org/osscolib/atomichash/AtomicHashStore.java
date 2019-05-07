@@ -17,7 +17,7 @@
  *
  * =============================================================================
  */
-package org.osscolib.indexmap;
+package org.osscolib.atomichash;
 
 import java.io.Serializable;
 import java.util.Iterator;
@@ -27,7 +27,7 @@ import java.util.Set;
 
 
 // TODO implement equals and hashCode()
-public final class AtomicHashStore<K,V> implements IndexMap<K,V>, Iterable<Map.Entry<K,V>>, Serializable {
+public final class AtomicHashStore<K,V> implements AtomicHash<K,V>, Iterable<Map.Entry<K,V>>, Serializable {
 
     private static final long serialVersionUID = 6362537038828380833L;
 

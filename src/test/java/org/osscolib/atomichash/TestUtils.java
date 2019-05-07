@@ -17,7 +17,7 @@
  *
  * =============================================================================
  */
-package org.osscolib.indexmap;
+package org.osscolib.atomichash;
 
 
 import org.apache.commons.lang3.RandomStringUtils;

@@ -17,21 +17,21 @@
  *
  * =============================================================================
  */
-package org.osscolib.indexmap;
+package org.osscolib.atomichash;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-public class OSSCOLIBIndexMapTest {
+public class OSSCOLIBAtomicHashTest {
 
 
     @Test
     public void testVersion() {
-        Assert.assertNotNull(OSSCOLIBIndexMap.VERSION);
-        Assert.assertTrue(OSSCOLIBIndexMap.VERSION_MAJOR >= 0);
-        Assert.assertTrue(OSSCOLIBIndexMap.VERSION_MINOR >= 0);
-        Assert.assertTrue(OSSCOLIBIndexMap.VERSION_BUILD >= 0);
-        Assert.assertTrue(OSSCOLIBIndexMap.BUILD_TIMESTAMP != null && OSSCOLIBIndexMap.BUILD_TIMESTAMP.trim().length() > 0);
+        Assert.assertNotNull(OSSCOLIBAtomicHash.VERSION);
+        Assert.assertTrue(OSSCOLIBAtomicHash.VERSION_MAJOR >= 0);
+        Assert.assertTrue(OSSCOLIBAtomicHash.VERSION_MINOR >= 0);
+        Assert.assertTrue(OSSCOLIBAtomicHash.VERSION_BUILD >= 0);
+        Assert.assertTrue(OSSCOLIBAtomicHash.BUILD_TIMESTAMP != null && OSSCOLIBAtomicHash.BUILD_TIMESTAMP.trim().length() > 0);
     }
 
 

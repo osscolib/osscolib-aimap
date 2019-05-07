@@ -17,7 +17,7 @@
  *
  * =============================================================================
  */
-package org.osscolib.indexmap;
+package org.osscolib.atomichash;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,9 +47,9 @@ public class AtomicHashStoreIteratorTest {
 
 
     private void testIterator(final int size) {
-        testIterator(size, IndexMap.<String, String>build().withSmallSize().asFluentMap(), 2);
-        testIterator(size, IndexMap.<String, String>build().withMediumSize().asFluentMap(), 4);
-        testIterator(size, IndexMap.<String, String>build().withLargeSize().asFluentMap(), 8);
+        testIterator(size, AtomicHash.<String, String>build().withSmallSize().asFluentMap(), 2);
+        testIterator(size, AtomicHash.<String, String>build().withMediumSize().asFluentMap(), 4);
+        testIterator(size, AtomicHash.<String, String>build().withLargeSize().asFluentMap(), 8);
     }
 
 

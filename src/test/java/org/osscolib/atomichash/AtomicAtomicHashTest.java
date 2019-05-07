@@ -17,16 +17,16 @@
  *
  * =============================================================================
  */
-package org.osscolib.indexmap;
+package org.osscolib.atomichash;
 
-public class AtomicIndexedMapTest {
+public class AtomicAtomicHashTest {
 
 
 
     public static void main(String[] args) {
 
         AtomicHashStore<String,Object> m =
-                IndexMap
+                AtomicHash
                         .<String,Object>build()
                         .withMediumSize()
 //                        .withIndexing(0, 2, key -> Math.abs(key.hashCode() % 3))

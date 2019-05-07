@@ -1,6 +1,6 @@
  
- Using osscolib-indexmap from Maven 2+
- -------------------------------------
+ Using osscolib-atomichash from Maven 2+
+ ---------------------------------------
  
  
  To use it in your Maven 2+ applications, you will need to add it as
@@ -8,7 +8,7 @@
 
      <dependency>
        <groupId>org.osscolib</groupId>
-       <artifactId>osscolib-indexmap</artifactId>
+       <artifactId>osscolib-atomichash</artifactId>
        <version>{version}</version>
        <scope>compile</scope>
      </dependency>

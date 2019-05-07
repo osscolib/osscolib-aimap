@@ -22,14 +22,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.osscolib</groupId>
-    <artifactId>osscolib-indexmap</artifactId>
+    <artifactId>osscolib-atomichash</artifactId>
     <version>0.0.1.BUILD-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>osscolib-indexmap</name>
+    <name>osscolib-atomichash</name>
     <url>http://www.osscolib.org</url>
 
-    <description>OSSCOLIB Indexed Map</description>
+    <description>OSSCOLIB's atomic, non-blocking, hash-based data structures</description>
 
     <licenses>
         <license>
@@ -45,9 +45,9 @@
     </organization>
 
     <scm>
-        <url>scm:git:git@github.com:osscolib/osscolib-indexmap.git</url>
-        <connection>scm:git:git@github.com:osscolib/osscolib-indexmap.git</connection>
-        <developerConnection>scm:git:git@github.com:osscolib/osscolib-indexmap.git</developerConnection>
+        <url>scm:git:git@github.com:osscolib/osscolib-atomichash.git</url>
+        <connection>scm:git:git@github.com:osscolib/osscolib-atomichash.git</connection>
+        <developerConnection>scm:git:git@github.com:osscolib/osscolib-atomichash.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
@@ -92,12 +92,12 @@
         <maven.compile.source>8</maven.compile.source>
         <maven.compile.target>8</maven.compile.target>
         <project.build.sourceEncoding>US-ASCII</project.build.sourceEncoding>
-        <!-- These are needed for showing the build timestamp correctly at the osscolib-indexmap.properties   -->
+        <!-- These are needed for showing the build timestamp correctly at the osscolib-atomichash.properties   -->
         <timestamp>${maven.build.timestamp}</timestamp>
         <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ssZ</maven.build.timestamp.format>
         <!-- A project-name-based approach is adopted for the module name (instead of a reverse-DNS one)      -->
         <!-- NOTE we cannot use ${project.artifactId} here because it contains '-', a forbidden char          -->
-        <module.name>osscolib.indexmap</module.name>
+        <module.name>osscolib.atomichash</module.name>
         <test.junit.version>4.12</test.junit.version>
         <test.commons-lang3.version>3.8.1</test.commons-lang3.version>
     </properties>
@@ -110,14 +110,14 @@
             <resource>
                 <directory>src/main/resources</directory>
                 <excludes>
-                    <exclude>org/osscolib/indexmap/osscolib-indexmap.properties</exclude>
+                    <exclude>org/osscolib/atomichash/osscolib-atomichash.properties</exclude>
                 </excludes>
             </resource>
 
             <resource>
                 <directory>src/main/resources</directory>
                 <includes>
-                    <include>org/osscolib/indexmap/osscolib-indexmap.properties</include>
+                    <include>org/osscolib/atomichash/osscolib-atomichash.properties</include>
                 </includes>
                 <filtering>true</filtering>
             </resource>

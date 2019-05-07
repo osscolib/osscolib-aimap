@@ -17,7 +17,7 @@
  *
  * =============================================================================
  */
-package org.osscolib.indexmap;
+package org.osscolib.atomichash;
 
 import java.util.Map;
 
@@ -32,7 +32,7 @@ public class AtomicHashStoreReadWriteTest {
 
     @Before
     public void initStore() {
-        this.store = IndexMap.<String,String>build().asFluentMap();
+        this.store = AtomicHash.<String,String>build().asFluentMap();
     }
 
 

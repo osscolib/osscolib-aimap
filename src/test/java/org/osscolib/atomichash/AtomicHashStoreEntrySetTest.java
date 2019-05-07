@@ -17,7 +17,7 @@
  *
  * =============================================================================
  */
-package org.osscolib.indexmap;
+package org.osscolib.atomichash;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,16 +48,16 @@ public class AtomicHashStoreEntrySetTest {
 
     private void testEntrySet(final int size) {
 
-        AtomicHashStore<String,String> m = IndexMap.<String,String>build().asFluentMap();
+        AtomicHashStore<String,String> st = AtomicHash.<String,String>build().asFluentMap();
         final int maskSize = 4;
 
         final KeyValue<String,String>[] kvs = TestUtils.generateStringStringKeyValues(size);
 
         for (int i = 0; i < kvs.length; i++) {
-            m = m.put(kvs[i].getKey(), kvs[i].getValue());
+            st = st.put(kvs[i].getKey(), kvs[i].getValue());
         }
 
-        final Set<Map.Entry<String,String>> entrySet = m.entrySet();
+        final Set<Map.Entry<String,String>> entrySet = st.entrySet();
         Assert.assertEquals(kvs.length, entrySet.size());
 
         for (int i = 0; i < kvs.length; i++) {
@@ -66,11 +66,11 @@ public class AtomicHashStoreEntrySetTest {
 
 
         final int oldSize = entrySet.size();
-        m = m.put(null, "some null");
+        st = st.put(null, "some null");
         // The entrySet of a Store is not affected by modifications on that store (because it is immutable). Note this
         // is the contrary of what should happen with a Map
         Assert.assertEquals(oldSize, entrySet.size());
-        m = m.remove(null);
+        st = st.remove(null);
         Assert.assertEquals(oldSize, entrySet.size());
 
         testIterator(kvs, entrySet, maskSize);

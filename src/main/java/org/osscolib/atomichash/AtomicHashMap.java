@@ -17,12 +17,12 @@
  *
  * =============================================================================
  */
-package org.osscolib.indexmap;
+package org.osscolib.atomichash;
 
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicReference;
 
-public final class AtomicHashMap<K,V> implements IndexMap<K,V>, Serializable {
+public final class AtomicHashMap<K,V> implements AtomicHash<K,V>, Serializable {
 
     private static final long serialVersionUID = 2626373528770987645L;
 

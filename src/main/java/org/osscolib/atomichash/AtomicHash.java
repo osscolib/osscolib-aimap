@@ -17,9 +17,9 @@
  *
  * =============================================================================
  */
-package org.osscolib.indexmap;
+package org.osscolib.atomichash;
 
-public interface IndexMap<K,V> {
+public interface AtomicHash<K,V> {
 
     int size();
 //    boolean isEmpty();

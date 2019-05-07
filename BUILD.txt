@@ -1,28 +1,28 @@
 
- Building osscolib-indexmap
- --------------------------
+ Building osscolib-atomichash
+ ----------------------------
  
- To build osscolib-indexmap you will need Maven 2. You can get it at:
+ To build osscolib-atomichash you will need Maven 2. You can get it at:
  
      http://maven.apache.org
 
- Build and install the project executing, from the osscolib-indexmap
+ Build and install the project executing, from the osscolib-atomichash
  project root folder:
  
      mvn clean:clean install
      
- And you will get a fresh target/osscolib-indexmap-{version}.jar file.
+ And you will get a fresh target/osscolib-atomichash-{version}.jar file.
  You will also get it installed in your local repository at:
  
-     $M2_REPO/org/osscolib/osscolib-indexmap/{version}/osscolib-indexmap-{version}.jar
+     $M2_REPO/org/osscolib/osscolib-atomichash/{version}/osscolib-atomichash-{version}.jar
 
 
 
- Generating Javadoc for osscolib-indexmap
- ----------------------------------------
+ Generating Javadoc for osscolib-atomichash
+ ------------------------------------------
  
- If you wish to generate the javadoc for osscolib-indexmap, execute this from the
- osscolib-indexmap root folder:
+ If you wish to generate the javadoc for osscolib-atomichash, execute this from the
+ osscolib-atomichash root folder:
  
      mvn javadoc:javadoc
      
