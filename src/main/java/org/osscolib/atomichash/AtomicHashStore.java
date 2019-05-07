@@ -191,8 +191,7 @@ public final class AtomicHashStore<K,V> implements AtomicHash<K,V>, Iterable<Map
 
 
     static int hash(final Object key) {
-        int h;
-        return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+        return Objects.hashCode(key);
     }
 
 
