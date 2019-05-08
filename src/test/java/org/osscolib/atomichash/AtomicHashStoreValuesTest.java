@@ -21,32 +21,31 @@ package org.osscolib.atomichash;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-public class AtomicHashStoreEntrySetTest {
+public class AtomicHashStoreValuesTest {
 
 
     @Test
-    public void testEntrySet() throws Exception {
-        testEntrySet(1);
-        testEntrySet(2);
-        testEntrySet(3);
-        testEntrySet(5);
-        testEntrySet(8);
-        testEntrySet(16);
-        testEntrySet(32);
-        testEntrySet(64);
-        testEntrySet(10000);
+    public void testValues() throws Exception {
+        testValues(1);
+        testValues(2);
+        testValues(3);
+        testValues(5);
+        testValues(8);
+        testValues(16);
+        testValues(32);
+        testValues(64);
+        testValues(10000);
     }
 
 
-    private void testEntrySet(final int size) {
+    private void testValues(final int size) {
 
         AtomicHashStore<String,String> st = AtomicHash.<String,String>build().asFluentMap();
         final int maskSize = 4;
@@ -57,38 +56,42 @@ public class AtomicHashStoreEntrySetTest {
             st = st.put(kvs[i].getKey(), kvs[i].getValue());
         }
 
-        final Set<Map.Entry<String,String>> entrySet = st.entrySet();
-        Assert.assertEquals(kvs.length, entrySet.size());
+        final Collection<String> values = st.values();
 
         for (int i = 0; i < kvs.length; i++) {
-            Assert.assertTrue(entrySet.contains(new Entry(kvs[i].getKey(), kvs[i].getValue())));
+            Assert.assertTrue(values.contains(kvs[i].getValue()));
         }
 
 
-        final int oldSize = entrySet.size();
+        final int oldSize = values.size();
         st = st.put(null, "some null");
-        // The entrySet of a Store is not affected by modifications on that store (because it is immutable). Note this
+        // The values of a Store are not affected by modifications on that store (because it is immutable). Note this
         // is the contrary of what should happen with a Map
-        Assert.assertEquals(oldSize, entrySet.size());
+        Assert.assertEquals(oldSize, values.size());
         st = st.remove(null);
-        Assert.assertEquals(oldSize, entrySet.size());
+        Assert.assertEquals(oldSize, values.size());
 
-        testIterator(kvs, entrySet, maskSize);
+        testIterator(kvs, values, maskSize);
     }
 
 
 
-    private void testIterator(KeyValue<String,String>[] entries, final Set<Map.Entry<String,String>> entrySet, final int maskSize) {
+    private void testIterator(KeyValue<String,String>[] entries, final Collection<String> values, final int maskSize) {
 
         final List<KeyValue<String,String>> expectedEntries = new ArrayList<>(Arrays.asList(entries));
         expectedEntries.sort(new HashComparator(maskSize));
 
-        final List<KeyValue<String,String>> obtainedEntries = new ArrayList<>();
-        for (final Map.Entry<String,String> entry : entrySet) {
-            obtainedEntries.add(new KeyValue<>(entry.getKey(), entry.getValue()));
+        final List<String> expectedValues = new ArrayList<>();
+        for (final KeyValue<String,String> expectedEntry : expectedEntries) {
+            expectedValues.add(expectedEntry.getValue());
         }
 
-        Assert.assertEquals(expectedEntries, obtainedEntries);
+        final List<String> obtainedValues = new ArrayList<>();
+        for (final String value : values) {
+            obtainedValues.add(value);
+        }
+
+        Assert.assertEquals(expectedValues, obtainedValues);
 
     }
 

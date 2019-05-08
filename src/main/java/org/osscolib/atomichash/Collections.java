@@ -52,6 +52,11 @@ final class Collections {
             return this.store.size();
         }
 
+        @Override
+        public boolean contains(final Object o) {
+            return this.store.containsValue(o);
+        }
+
     }
 
 

@@ -24,6 +24,7 @@ public interface AtomicHash<K,V> {
     int size();
 //    boolean isEmpty();
     boolean containsKey(Object key);
+    boolean containsValue(Object value);
 //    boolean containsValue(Object value);
     V get(final Object key);
 

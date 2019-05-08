@@ -39,7 +39,8 @@ public final class TestUtils {
     }
 
 
-    public static KeyValue<String,String>[] generateStringStringKeyValues(final int numElements) {
+    public static KeyValue<String,String>[] generateStringStringKeyValues(
+            final int numElements) {
         final KeyValue<String,String>[] entries = new KeyValue[numElements];
         for (int i = 0; i < entries.length; i++) {
             entries[i] = new KeyValue<>(generateKey(), generateValue());

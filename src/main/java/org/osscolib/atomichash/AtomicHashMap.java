@@ -49,6 +49,11 @@ public final class AtomicHashMap<K,V> implements AtomicHash<K,V>, Serializable {
     }
 
     @Override
+    public boolean containsValue(final Object value) {
+        return this.innerMap.get().containsValue(value);
+    }
+
+    @Override
     public V get(final Object key) {
         return this.innerMap.get().get(key);
     }

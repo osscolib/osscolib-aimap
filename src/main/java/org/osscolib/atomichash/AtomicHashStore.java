@@ -63,19 +63,34 @@ public final class AtomicHashStore<K,V> implements AtomicHash<K,V>, Iterable<Map
 
     @Override
     public boolean containsKey(final Object key) {
-        return getEntry(hash(key), key) != null;
+        return getEntry(key) != null;
     }
 
 
     @Override
+    public boolean containsValue(final Object value) {
+        // Using an iterator here is actually not a bad-performing option, as we cannot do random access on values
+        final Iterators.ValueIterator valueIterator = new Iterators.ValueIterator(this.root, this.maskSize);
+        while (valueIterator.hasNext()) {
+            if (Objects.equals(valueIterator.next(), value)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+
+    @Override
     public V get(final Object key) {
-        final Entry<K,V> entry = getEntry(hash(key), key);
+        final Entry<K,V> entry = getEntry(key);
         return entry != null ? entry.value : null;
     }
 
 
 
-    private Entry<K,V> getEntry(final int hash, final Object key) {
+    Entry<K,V> getEntry(final Object key) {
+        final int hash = hash(key);
         final int m  = this.mask, msize = this.maskSize;
         Node<K,V> node = this.root;
         NodeData<K,V> data = null;
@@ -190,6 +205,7 @@ public final class AtomicHashStore<K,V> implements AtomicHash<K,V>, Iterable<Map
 
 
 
+    // TODO wouldn't this provoke a set of keys such as consecutive floats without decimals to unbalance the tree a lot?
     static int hash(final Object key) {
         return Objects.hashCode(key);
     }

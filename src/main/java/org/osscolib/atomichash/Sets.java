@@ -52,6 +52,18 @@ final class Sets {
             return this.store.size();
         }
 
+        @Override
+        public boolean contains(final Object o) {
+            // We can provide a better implementation than that of AbstractSet
+            if (!(o instanceof Map.Entry)) {
+                return false;
+            }
+            final Map.Entry<?,?> entry = (Map.Entry<?,?>) o;
+            final Object key = entry.getKey();
+            final Entry<?,?> candidate = this.store.getEntry(key);
+            return candidate != null && candidate.equals(entry);
+        }
+
     }
 
 
@@ -72,6 +84,12 @@ final class Sets {
         @Override
         public int size() {
             return this.store.size();
+        }
+
+        @Override
+        public boolean contains(final Object o) {
+            // We can provide a better implementation than that of AbstractSet
+            return this.store.containsKey(o);
         }
 
     }
