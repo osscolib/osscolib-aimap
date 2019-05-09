@@ -38,7 +38,7 @@ abstract class Iterators<K,V> {
     private int entriesPos;
 
 
-    protected Iterators(final Node<K,V> root, final int maskSize) {
+    protected Iterators(final Node<K,V> root) {
 
         super();
         this.entry = null;
@@ -54,7 +54,7 @@ abstract class Iterators<K,V> {
 
         } else {
 
-            this.stack = new Node[(32 / maskSize)]; // max possible node nesting level
+            this.stack = new Node[Level.LEVEL_COUNT]; // max possible node nesting level
             Arrays.fill(this.stack, null);
             this.currentChild = new int[this.stack.length];
             Arrays.fill(this.currentChild, -1);
@@ -164,8 +164,8 @@ abstract class Iterators<K,V> {
             extends Iterators<K,V>
             implements Iterator<Map.Entry<K,V>>{
 
-        EntryIterator(final Node<K, V> root, final int maskSize) {
-            super(root, maskSize);
+        EntryIterator(final Node<K, V> root) {
+            super(root);
         }
 
         @Override
@@ -180,8 +180,8 @@ abstract class Iterators<K,V> {
             extends Iterators<K,V>
             implements Iterator<K> {
 
-        KeyIterator(final Node<K, V> root, final int maskSize) {
-            super(root, maskSize);
+        KeyIterator(final Node<K, V> root) {
+            super(root);
         }
 
         @Override
@@ -195,8 +195,8 @@ abstract class Iterators<K,V> {
             extends Iterators<K,V>
             implements Iterator<V> {
 
-        ValueIterator(final Node<K, V> root, final int maskSize) {
-            super(root, maskSize);
+        ValueIterator(final Node<K, V> root) {
+            super(root);
         }
 
         @Override

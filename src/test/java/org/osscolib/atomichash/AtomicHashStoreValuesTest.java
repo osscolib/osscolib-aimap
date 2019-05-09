@@ -22,7 +22,6 @@ package org.osscolib.atomichash;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 
 import org.junit.Assert;
@@ -47,8 +46,7 @@ public class AtomicHashStoreValuesTest {
 
     private void testValues(final int size) {
 
-        AtomicHashStore<String,String> st = AtomicHash.<String,String>build().asFluentMap();
-        final int maskSize = 4;
+        AtomicHashStore<String,String> st = new AtomicHashStore<>();
 
         final KeyValue<String,String>[] kvs = TestUtils.generateStringStringKeyValues(size, 20, 0);
 
@@ -71,15 +69,15 @@ public class AtomicHashStoreValuesTest {
         st = st.remove(null);
         Assert.assertEquals(oldSize, values.size());
 
-        testIterator(kvs, values, maskSize);
+        testIterator(kvs, values);
     }
 
 
 
-    private void testIterator(KeyValue<String,String>[] entries, final Collection<String> values, final int maskSize) {
+    private void testIterator(KeyValue<String,String>[] entries, final Collection<String> values) {
 
         final List<KeyValue<String,String>> expectedEntries = new ArrayList<>(Arrays.asList(entries));
-        expectedEntries.sort(new HashComparator(maskSize));
+        expectedEntries.sort(TestUtils.HashComparator.INSTANCE);
 
         final List<String> expectedValues = new ArrayList<>();
         for (final KeyValue<String,String> expectedEntry : expectedEntries) {
@@ -92,44 +90,6 @@ public class AtomicHashStoreValuesTest {
         }
 
         Assert.assertEquals(expectedValues, obtainedValues);
-
-    }
-
-
-
-
-    private static final class HashComparator implements Comparator<KeyValue<String,String>> {
-
-        private final int maskSize;
-        private HashComparator(final int maskSize) {
-            super();
-            this.maskSize = maskSize;
-        }
-
-        @Override
-        public int compare(final KeyValue<String, String> o1, final KeyValue<String, String> o2) {
-
-            final int h1 = AtomicHashStore.hash(o1.getKey());
-            final int h2 = AtomicHashStore.hash(o2.getKey());
-
-            if (h1 == h2) {
-                return 0;
-            }
-
-            final int mask = (1 << maskSize) - 1;
-
-            int level = 0;
-            while (true) {
-                final int s1 = (h1 >>> (level * maskSize)) & mask;
-                final int s2 = (h2 >>> (level * maskSize)) & mask;
-                final int comp = Integer.compare(s1, s2);
-                if (comp != 0) {
-                    return comp;
-                }
-                level++;
-            }
-
-        }
 
     }
 

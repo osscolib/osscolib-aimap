@@ -44,7 +44,7 @@ final class Collections {
 
         @Override
         public Iterator<V> iterator() {
-            return new Iterators.ValueIterator<>(this.store.root, this.store.maskSize);
+            return new Iterators.ValueIterator<>(this.store.root);
         }
 
         @Override

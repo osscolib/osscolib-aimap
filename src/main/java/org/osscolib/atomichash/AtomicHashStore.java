@@ -28,12 +28,10 @@ import java.util.Set;
 
 
 // TODO implement equals and hashCode()
-public final class AtomicHashStore<K,V> implements AtomicHash<K,V>, Iterable<Map.Entry<K,V>>, Serializable {
+public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializable {
 
     private static final long serialVersionUID = 6362537038828380833L;
 
-    final int mask;
-    final int maskSize;
     final Node<K,V> root;
 
     transient Sets.StoreEntrySet<K,V> entrySet = null;
@@ -42,16 +40,18 @@ public final class AtomicHashStore<K,V> implements AtomicHash<K,V>, Iterable<Map
 
 
 
-    AtomicHashStore(final int mask, final Node<K,V> root) {
+    public AtomicHashStore() {
+        this(null);
+    }
+
+
+    private AtomicHashStore(final Node<K,V> root) {
         super();
-        this.mask = mask;
-        this.maskSize = (31 - Integer.numberOfLeadingZeros(mask + 1)); // maskSize = log2(mask + 1)
         this.root = root;
     }
 
 
 
-    @Override
     public int size() {
         if (this.root == null) {
             return 0;
@@ -61,16 +61,14 @@ public final class AtomicHashStore<K,V> implements AtomicHash<K,V>, Iterable<Map
 
 
 
-    @Override
     public boolean containsKey(final Object key) {
-        return getEntry(key) != null;
+        return getEntry(key, this.root) != null;
     }
 
 
-    @Override
     public boolean containsValue(final Object value) {
         // Using an iterator here is actually not a bad-performing option, as we cannot do random access on values
-        final Iterators.ValueIterator valueIterator = new Iterators.ValueIterator(this.root, this.maskSize);
+        final Iterators.ValueIterator valueIterator = new Iterators.ValueIterator(this.root);
         while (valueIterator.hasNext()) {
             if (Objects.equals(valueIterator.next(), value)) {
                 return true;
@@ -81,37 +79,41 @@ public final class AtomicHashStore<K,V> implements AtomicHash<K,V>, Iterable<Map
 
 
 
-    @Override
     public V get(final Object key) {
-        final Entry<K,V> entry = getEntry(key);
+        final Entry<K,V> entry = getEntry(key, this.root);
         return entry != null ? entry.value : null;
     }
 
 
 
     Entry<K,V> getEntry(final Object key) {
+        return getEntry(key, this.root);
+    }
+
+
+
+    private static <K,V> Entry<K,V> getEntry(final Object key, final Node<K,V> root) {
         final int hash = hash(key);
-        final int m  = this.mask, msize = this.maskSize;
-        Node<K,V> node = this.root;
-        NodeData<K,V> data = null;
-        for (int mh = hash; node != null && (data = node.data) == null; mh = mh >>> msize) {
-            node = node.children[mh & m];
+        Node<K,V> node = root;
+        for (Level level = Level.LEVEL0; node != null && node.data == null; level = level.next) {
+            node = node.children[level.pos(hash)];
         }
+        final NodeData<K,V> data = (node != null)? node.data : null;
         return (data != null && data.hash == hash) ? getEntry(key, data) : null;
     }
 
 
-    private Entry<K,V> getEntry(final Object key, final NodeData<K,V> data) {
+    private static <K,V> Entry<K,V> getEntry(final Object key, final NodeData<K,V> data) {
         return (data.entry == null) ? getMultiEntry(key, data.entries) : getSingleEntry(key, data.entry);
     }
 
 
-    private Entry<K,V> getSingleEntry(final Object key, final Entry<K,V> entry) {
+    private static <K,V> Entry<K,V> getSingleEntry(final Object key, final Entry<K,V> entry) {
         return Objects.equals(entry.key, key) ? entry : null;
     }
 
 
-    private Entry<K,V> getMultiEntry(final Object key, final Entry<K,V>[] entries) {
+    private static <K,V> Entry<K,V> getMultiEntry(final Object key, final Entry<K,V>[] entries) {
         for (int i = 0; i < entries.length; i++) {
             // TODO Performance degradation with large number of collisions -> adopt some kind of tree?
             if (Objects.equals(entries[i].key, key)) {
@@ -137,14 +139,14 @@ public final class AtomicHashStore<K,V> implements AtomicHash<K,V>, Iterable<Map
 
         } else {
 
-            newRoot = this.root.put(hash, 0, this.mask, entry);
+            newRoot = this.root.put(hash, Level.LEVEL0, entry);
             if (this.root == newRoot) {
                 return this;
             }
 
         }
 
-        return new AtomicHashStore<K,V>(this.mask, newRoot);
+        return new AtomicHashStore<K,V>(newRoot);
 
     }
 
@@ -155,12 +157,12 @@ public final class AtomicHashStore<K,V> implements AtomicHash<K,V>, Iterable<Map
             return this;
         }
 
-        final Node newRoot = this.root.remove(hash(key), 0, this.mask, key);
+        final Node newRoot = this.root.remove(hash(key), Level.LEVEL0, key);
         if (this.root == newRoot) {
             return this;
         }
 
-        return new AtomicHashStore<K,V>(this.mask, newRoot);
+        return new AtomicHashStore<K,V>(newRoot);
 
     }
 
@@ -168,7 +170,7 @@ public final class AtomicHashStore<K,V> implements AtomicHash<K,V>, Iterable<Map
 
     @Override
     public Iterator<Map.Entry<K,V>> iterator() {
-        return new Iterators.EntryIterator<>(this.root, this.maskSize);
+        return new Iterators.EntryIterator<>(this.root);
     }
 
 
@@ -205,9 +207,9 @@ public final class AtomicHashStore<K,V> implements AtomicHash<K,V>, Iterable<Map
 
 
 
-    // TODO wouldn't this provoke a set of keys such as consecutive floats without decimals to unbalance the tree a lot?
     static int hash(final Object key) {
-        return Objects.hashCode(key);
+        int h;
+        return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
     }
 
 

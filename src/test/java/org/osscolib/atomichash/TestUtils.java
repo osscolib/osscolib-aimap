@@ -21,6 +21,7 @@ package org.osscolib.atomichash;
 
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.commons.lang3.RandomStringUtils;
@@ -129,6 +130,37 @@ public final class TestUtils {
         }
         return accessOrder;
     }
+
+
+    static final class HashComparator implements Comparator<KeyValue<String,String>> {
+
+        static final HashComparator INSTANCE = new HashComparator();
+
+        @Override
+        public int compare(final KeyValue<String, String> o1, final KeyValue<String, String> o2) {
+
+            final int h1 = AtomicHashStore.hash(o1.getKey());
+            final int h2 = AtomicHashStore.hash(o2.getKey());
+
+            if (h1 == h2) {
+                return 0;
+            }
+
+            Level level = Level.LEVEL0;
+            while (true) {
+                final int s1 = level.pos(h1);
+                final int s2 = level.pos(h2);
+                final int comp = Integer.compare(s1, s2);
+                if (comp != 0) {
+                    return comp;
+                }
+                level = level.next;
+            }
+
+        }
+
+    }
+
 
 
 

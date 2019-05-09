@@ -32,7 +32,7 @@ public class AtomicHashStoreReadWriteTest {
 
     @Before
     public void initStore() {
-        this.store = AtomicHash.<String,String>build().asFluentMap();
+        this.store = new AtomicHashStore<>();
     }
 
 

@@ -29,9 +29,9 @@ final class PrettyPrinter {
         final StringBuilder stringBuilder = new StringBuilder();
         if (store.root != null) {
             if (store.root.children == null) {
-                printData(0, store.maskSize, stringBuilder, store.root.data.hash, store.root.data.entry, store.root.data.entries);
+                printData(0, Level.LEVEL0, stringBuilder, store.root.data.hash, store.root.data.entry, store.root.data.entries);
             } else {
-                printNode(0, store.maskSize, stringBuilder, store.root.children);
+                printNode(0, Level.LEVEL0, stringBuilder, store.root.children);
             }
         }
         return stringBuilder.toString();
@@ -55,13 +55,13 @@ final class PrettyPrinter {
 
 
     private static <K,V> void printNode(
-            final int level, final int maskSize, final StringBuilder stringBuilder, final Node<K,V>[] children) {
+            final int levelidx, final Level level, final StringBuilder stringBuilder, final Node<K,V>[] children) {
 
-        stringBuilder.append(indentForLevel(level));
+        stringBuilder.append(indentForLevel(levelidx));
         stringBuilder.append(
                 String.format("[%2d | %032d] {",
-                        level,
-                        new BigInteger(Integer.toBinaryString(((1 << maskSize) - 1) << (level * maskSize)))));
+                        levelidx,
+                        new BigInteger(Integer.toBinaryString(level.mask << level.shift))));
         if (children.length == 0) {
             stringBuilder.append("}");
         } else {
@@ -70,14 +70,14 @@ final class PrettyPrinter {
                 final Node<K,V> child = children[i];
                 if (child != null) {
                     if (child.children == null) {
-                        printData(level + 1, maskSize, stringBuilder, child.data.hash, child.data.entry, child.data.entries);
+                        printData(levelidx + 1, level.next, stringBuilder, child.data.hash, child.data.entry, child.data.entries);
                     } else {
-                        printNode(level + 1, maskSize, stringBuilder, child.children);
+                        printNode(levelidx + 1, level.next, stringBuilder, child.children);
                     }
                     stringBuilder.append('\n');
                 }
             }
-            stringBuilder.append(indentForLevel(level));
+            stringBuilder.append(indentForLevel(levelidx));
             stringBuilder.append('}');
         }
 
@@ -85,40 +85,40 @@ final class PrettyPrinter {
 
 
     private static <K,V> void printData(
-            final int level, final int maskSize, final StringBuilder stringBuilder,
+            final int levelidx, final Level level, final StringBuilder stringBuilder,
             final int hash, final Entry<K,V> entry, final Entry<K,V>[] entries) {
 
-        stringBuilder.append(indentForLevel(level));
+        stringBuilder.append(indentForLevel(levelidx));
         stringBuilder.append(
                 String.format("[%2d | %032d] {\n",
-                        level,
-                        new BigInteger(Integer.toBinaryString(((1 << maskSize) - 1) << (level * maskSize)))));
+                        levelidx,
+                        new BigInteger(Integer.toBinaryString(level.mask << level.shift))));
 
-        printEntries(level + 1, stringBuilder, hash, entry, entries);
+        printEntries(levelidx + 1, stringBuilder, hash, entry, entries);
         stringBuilder.append('\n');
 
-        stringBuilder.append(indentForLevel(level));
+        stringBuilder.append(indentForLevel(levelidx));
         stringBuilder.append('}');
 
     }
 
 
     private static <K,V> void printEntries(
-            final int level, final StringBuilder stringBuilder,
+            final int levelidx, final StringBuilder stringBuilder,
             final int hash, final Entry<K,V> entry, final Map.Entry<K,V>[] entries) {
 
-        stringBuilder.append(indentForLevel(level));
+        stringBuilder.append(indentForLevel(levelidx));
         stringBuilder.append(String.format("[%032d] (", new BigInteger(Integer.toBinaryString(hash))));
         if (entries == null) {
             stringBuilder.append(String.format(" %s )", printEntry(entry)));
         } else {
             stringBuilder.append('\n');
             for (int i = 0; i < entries.length; i++) {
-                stringBuilder.append(indentForLevel(level + 1));
+                stringBuilder.append(indentForLevel(levelidx + 1));
                 stringBuilder.append(printEntry(entries[i]));
                 stringBuilder.append('\n');
             }
-            stringBuilder.append(indentForLevel(level));
+            stringBuilder.append(indentForLevel(levelidx));
             stringBuilder.append(")");
         }
 

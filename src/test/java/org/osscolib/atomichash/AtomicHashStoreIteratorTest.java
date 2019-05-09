@@ -21,7 +21,6 @@ package org.osscolib.atomichash;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -47,15 +46,8 @@ public class AtomicHashStoreIteratorTest {
 
 
     private void testIterator(final int size) {
-        testIterator(size, AtomicHash.<String, String>build().withSmallSize().asFluentMap(), 2);
-        testIterator(size, AtomicHash.<String, String>build().withMediumSize().asFluentMap(), 4);
-        testIterator(size, AtomicHash.<String, String>build().withLargeSize().asFluentMap(), 8);
-    }
 
-
-    private void testIterator(final int size, final AtomicHashStore<String,String> st, final int maskSize) {
-
-        AtomicHashStore<String,String> store = st;
+        AtomicHashStore<String,String> store = new AtomicHashStore<>();
 
         final KeyValue<String,String>[] entries = TestUtils.generateStringStringKeyValues(size, 20, 0);
 
@@ -64,7 +56,7 @@ public class AtomicHashStoreIteratorTest {
         }
 
         final List<KeyValue<String,String>> expected = new ArrayList<>(Arrays.asList(entries));
-        expected.sort(new HashComparator(maskSize));
+        expected.sort(TestUtils.HashComparator.INSTANCE);
 
         final List<KeyValue<String,String>> obtained = new ArrayList<>();
         for (final Map.Entry<String,String> entry : store) {
@@ -72,43 +64,6 @@ public class AtomicHashStoreIteratorTest {
         }
 
         Assert.assertEquals(expected, obtained);
-
-    }
-
-
-
-    private static final class HashComparator implements Comparator<KeyValue<String,String>> {
-
-        private final int maskSize;
-        private HashComparator(final int maskSize) {
-            super();
-            this.maskSize = maskSize;
-        }
-
-        @Override
-        public int compare(final KeyValue<String, String> o1, final KeyValue<String, String> o2) {
-
-            final int h1 = AtomicHashStore.hash(o1.getKey());
-            final int h2 = AtomicHashStore.hash(o2.getKey());
-
-            if (h1 == h2) {
-                return 0;
-            }
-
-            final int mask = (1 << maskSize) - 1;
-
-            int level = 0;
-            while (true) {
-                final int s1 = (h1 >>> (level * maskSize)) & mask;
-                final int s2 = (h2 >>> (level * maskSize)) & mask;
-                final int comp = Integer.compare(s1, s2);
-                if (comp != 0) {
-                    return comp;
-                }
-                level++;
-            }
-
-        }
 
     }
 

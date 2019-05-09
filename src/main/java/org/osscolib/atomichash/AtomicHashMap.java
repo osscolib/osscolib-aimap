@@ -22,7 +22,7 @@ package org.osscolib.atomichash;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicReference;
 
-public final class AtomicHashMap<K,V> implements AtomicHash<K,V>, Serializable {
+public class AtomicHashMap<K,V> implements Serializable {
 
     private static final long serialVersionUID = 2626373528770987645L;
 
@@ -30,30 +30,26 @@ public final class AtomicHashMap<K,V> implements AtomicHash<K,V>, Serializable {
 
 
 
-    AtomicHashMap(final int maskSize, final Node<K,V> root) {
+    AtomicHashMap() {
         super();
         this.innerMap = new AtomicReference<>();
-        this.innerMap.set(new AtomicHashStore<>(maskSize, root));
+        this.innerMap.set(new AtomicHashStore<>());
     }
 
 
 
-    @Override
     public int size() {
         return this.innerMap.get().size();
     }
 
-    @Override
     public boolean containsKey(final Object key) {
         return this.innerMap.get().containsKey(key);
     }
 
-    @Override
     public boolean containsValue(final Object value) {
         return this.innerMap.get().containsValue(value);
     }
 
-    @Override
     public V get(final Object key) {
         return this.innerMap.get().get(key);
     }

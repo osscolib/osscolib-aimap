@@ -24,22 +24,20 @@ import java.util.Arrays;
 final class NodeBuilder {
 
 
-    static <K,V> Node<K,V> build(final int shift, final int mask,
-                                 final NodeData<K,V> originalData, final NodeData<K,V> newData) {
+    static <K,V> Node<K,V> build(final Level level, final NodeData<K,V> originalData, final NodeData<K,V> newData) {
 
         // Next, compute the new position that the two DataSlots (existing and new) will occupy
-        final int originalChildPos = Node.pos(shift, mask, originalData.hash);
-        final int newChildPos = Node.pos(shift, mask, newData.hash);
+        final int originalChildPos = level.pos(originalData.hash);
+        final int newChildPos = level.pos(newData.hash);
 
         // We initialise the new children array
-        final Node<K,V>[] newChildren = new Node[mask + 1]; // 2^maskSize
+        final Node<K,V>[] newChildren = new Node[level.mask + 1]; // 2^maskSize
 
         // If both data slots would be assigned the same child node position, then we need to drill down further
         if (originalChildPos == newChildPos) {
 
             // We will need a new level to be created, but applying a narrower range
-            final Node<K,V> newBranchChild =
-                    build(Node.incShift(shift, mask), mask, originalData, newData);
+            final Node<K,V> newBranchChild = build(level.next, originalData, newData);
 
             // Finally assign the BranchNode to its new position
             newChildren[newChildPos] = newBranchChild;
@@ -64,12 +62,12 @@ final class NodeBuilder {
 
 
 
-    static <K,V> Node<K,V> build(final int shift, final int mask,
+    static <K,V> Node<K,V> build(final Level level,
                                  final int originalChildrenSize, final Node<K,V>[] originalChildren,
                                  final NodeData<K,V> newData) {
 
         // Next, compute the new position that the two DataSlots (existing and new) will occupy
-        final int newChildPos = Node.pos(shift, mask, newData.hash);
+        final int newChildPos = level.pos(newData.hash);
 
         // If the data slot would be assigned an already used position, then ranges weren't properly computed
         // and the "put" operation that originated this should have been delegated to the child in that position

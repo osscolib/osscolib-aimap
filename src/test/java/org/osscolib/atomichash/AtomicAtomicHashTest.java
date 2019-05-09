@@ -25,163 +25,158 @@ public class AtomicAtomicHashTest {
 
     public static void main(String[] args) {
 
-        AtomicHashStore<String,Object> m =
-                AtomicHash
-                        .<String,Object>build()
-                        .withMediumSize()
-//                        .withIndexing(0, 2, key -> Math.abs(key.hashCode() % 3))
-                        .asFluentMap();
+        AtomicHashStore<String,Object> st = new AtomicHashStore<>();
 
         System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
+        System.out.println(PrettyPrinter.prettyPrint(st));
 
 
 
-        m = m.put("Hello", 21);
-
-        System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
-
-
-        m = m.put("helloworld", 23);
+        st = st.put("Hello", 21);
 
         System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
+        System.out.println(PrettyPrinter.prettyPrint(st));
 
 
-        m = m.put("iFlloworld", 52);
-
-        System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
-
-
-
-        m = m.put("j'lloworld", 31);
+        st = st.put("helloworld", 23);
 
         System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
+        System.out.println(PrettyPrinter.prettyPrint(st));
 
-        m = m.put("lloworld", 99);
 
-        System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
-
-        m = m.put("IFllo", 423);
+        st = st.put("iFlloworld", 52);
 
         System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
+        System.out.println(PrettyPrinter.prettyPrint(st));
 
-        m = m.put("n.oworld", 941);
 
-        System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
 
-        m = m.put("Aloha", 3413);
+        st = st.put("j'lloworld", 31);
 
         System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
+        System.out.println(PrettyPrinter.prettyPrint(st));
 
-
-        m = m.put("IFllo", 987);
-
-        System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
-
-        m = m.put("Hello", 23142);
+        st = st.put("lloworld", 99);
 
         System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
+        System.out.println(PrettyPrinter.prettyPrint(st));
 
-        m = m.put("Ola", 2341233);
-
-        System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
-
-        m = m.put("Hola", 2341233);
+        st = st.put("IFllo", 423);
 
         System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
+        System.out.println(PrettyPrinter.prettyPrint(st));
+
+        st = st.put("n.oworld", 941);
+
+        System.out.println();
+        System.out.println(PrettyPrinter.prettyPrint(st));
+
+        st = st.put("Aloha", 3413);
+
+        System.out.println();
+        System.out.println(PrettyPrinter.prettyPrint(st));
+
+
+        st = st.put("IFllo", 987);
+
+        System.out.println();
+        System.out.println(PrettyPrinter.prettyPrint(st));
+
+        st = st.put("Hello", 23142);
+
+        System.out.println();
+        System.out.println(PrettyPrinter.prettyPrint(st));
+
+        st = st.put("Ola", 2341233);
+
+        System.out.println();
+        System.out.println(PrettyPrinter.prettyPrint(st));
+
+        st = st.put("Hola", 2341233);
+
+        System.out.println();
+        System.out.println(PrettyPrinter.prettyPrint(st));
 
 
         System.out.println();
-        System.out.println(m.get("IFllo"));
-        System.out.println(m.get("lloworld"));
-        System.out.println(m.get("Hello"));
-        System.out.println(m.get("Aloha"));
+        System.out.println(st.get("IFllo"));
+        System.out.println(st.get("lloworld"));
+        System.out.println(st.get("Hello"));
+        System.out.println(st.get("Aloha"));
 
-        m = m.remove("Hello");
-
-        System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
-
-        m = m.remove("IFllo");
+        st = st.remove("Hello");
 
         System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
+        System.out.println(PrettyPrinter.prettyPrint(st));
 
-        m = m.remove("IFllo");
-
-        System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
-
-        m = m.remove("Aloha");
+        st = st.remove("IFllo");
 
         System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
+        System.out.println(PrettyPrinter.prettyPrint(st));
 
-        m = m.remove("j'lloworld");
-
-        System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
-
-        m = m.remove("iFlloworld");
+        st = st.remove("IFllo");
 
         System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
+        System.out.println(PrettyPrinter.prettyPrint(st));
 
-        m = m.remove("Ola");
-
-        System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
-
-        m = m.remove("helloworld");
+        st = st.remove("Aloha");
 
         System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
+        System.out.println(PrettyPrinter.prettyPrint(st));
 
-        m = m.remove("lloworld");
-
-        System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
-
-        m = m.remove("n.oworld");
+        st = st.remove("j'lloworld");
 
         System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
+        System.out.println(PrettyPrinter.prettyPrint(st));
 
-        m = m.remove("Hola");
-
-        System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
-
-        m = m.put(null, "Something null!");
+        st = st.remove("iFlloworld");
 
         System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
+        System.out.println(PrettyPrinter.prettyPrint(st));
 
-        m = m.put(null, "Something other null!");
-
-        System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
-
-        System.out.println(m.get(null));
-        System.out.println(m.get("Hola"));
-        System.out.println(m.get("n.oworld"));
-
-        m = m.remove(null);
+        st = st.remove("Ola");
 
         System.out.println();
-        System.out.println(PrettyPrinter.prettyPrint(m));
+        System.out.println(PrettyPrinter.prettyPrint(st));
+
+        st = st.remove("helloworld");
+
+        System.out.println();
+        System.out.println(PrettyPrinter.prettyPrint(st));
+
+        st = st.remove("lloworld");
+
+        System.out.println();
+        System.out.println(PrettyPrinter.prettyPrint(st));
+
+        st = st.remove("n.oworld");
+
+        System.out.println();
+        System.out.println(PrettyPrinter.prettyPrint(st));
+
+        st = st.remove("Hola");
+
+        System.out.println();
+        System.out.println(PrettyPrinter.prettyPrint(st));
+
+        st = st.put(null, "Something null!");
+
+        System.out.println();
+        System.out.println(PrettyPrinter.prettyPrint(st));
+
+        st = st.put(null, "Something other null!");
+
+        System.out.println();
+        System.out.println(PrettyPrinter.prettyPrint(st));
+
+        System.out.println(st.get(null));
+        System.out.println(st.get("Hola"));
+        System.out.println(st.get("n.oworld"));
+
+        st = st.remove(null);
+
+        System.out.println();
+        System.out.println(PrettyPrinter.prettyPrint(st));
 
     }
 

@@ -69,27 +69,18 @@ final class Node<K,V> implements Serializable {
     }
 
 
-    static int pos(final int shift, final int mask, final int hash) {
-        return (hash >> shift) & mask;
-    }
-
-    static int incShift(final int shift, final int mask) {
-        final int maskSize = (31 - Integer.numberOfLeadingZeros(mask + 1)); // maskSize = log2(mask + 1)
-        return shift + maskSize;
-    }
 
 
-
-    Node<K,V> put(final int hash, final int shift, final int mask, final Entry<K, V> entry) {
+    Node<K,V> put(final int hash, final Level level, final Entry<K, V> entry) {
 
         if (this.data == null) {
 
-            final int pos = pos(shift, mask, hash);
+            final int pos = level.pos(hash);
             final Node<K,V> child = this.children[pos];
 
             if (child != null) {
 
-                final Node<K,V> newNode = child.put(hash, incShift(shift, mask), mask, entry);
+                final Node<K,V> newNode = child.put(hash, level.next, entry);
 
                 if (newNode == child) {
                     return this;
@@ -104,7 +95,7 @@ final class Node<K,V> implements Serializable {
 
             // Nothing currently in the selected node, so let's add the new data
             final NodeData<K,V> newData = new NodeData<>(hash, entry);
-            return NodeBuilder.build(shift, mask, this.count, this.children, newData);
+            return NodeBuilder.build(level, this.count, this.children, newData);
 
         }
 
@@ -125,18 +116,18 @@ final class Node<K,V> implements Serializable {
         // We need to add a new node in the same range, so this has to be converted into a branch
 
         final NodeData<K,V> newData = new NodeData<>(hash, entry);
-        return NodeBuilder.build(shift, mask, this.data, newData);
+        return NodeBuilder.build(level, this.data, newData);
 
     }
 
 
 
 
-    Node<K,V> remove(final int hash, final int shift, final int mask, final Object key) {
+    Node<K,V> remove(final int hash, final Level level, final Object key) {
 
         if (this.data == null) {
 
-            final int pos = pos(shift, mask, hash);
+            final int pos = level.pos(hash);
             final Node<K,V> child = this.children[pos];
 
             if (child == null) {
@@ -144,7 +135,7 @@ final class Node<K,V> implements Serializable {
                 return this;
             }
 
-            final Node<K,V> newChild = child.remove(hash, incShift(shift, mask), mask, key);
+            final Node<K,V> newChild = child.remove(hash, level.next, key);
             if (newChild == child) {
                 return this;
             }
@@ -186,7 +177,6 @@ final class Node<K,V> implements Serializable {
         return null;
 
     }
-
 
 
 }

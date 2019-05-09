@@ -44,7 +44,7 @@ final class Sets {
 
         @Override
         public Iterator<Map.Entry<K, V>> iterator() {
-            return new Iterators.EntryIterator<>(this.store.root, this.store.maskSize);
+            return new Iterators.EntryIterator<>(this.store.root);
         }
 
         @Override
@@ -78,7 +78,7 @@ final class Sets {
 
         @Override
         public Iterator<K> iterator() {
-            return new Iterators.KeyIterator<>(this.store.root, this.store.maskSize);
+            return new Iterators.KeyIterator<>(this.store.root);
         }
 
         @Override
