@@ -51,7 +51,7 @@ public class AtomicHashStoreEntrySetTest {
         AtomicHashStore<String,String> st = AtomicHash.<String,String>build().asFluentMap();
         final int maskSize = 4;
 
-        final KeyValue<String,String>[] kvs = TestUtils.generateStringStringKeyValues(size);
+        final KeyValue<String,String>[] kvs = TestUtils.generateStringStringKeyValues(size, 20, 0);
 
         for (int i = 0; i < kvs.length; i++) {
             st = st.put(kvs[i].getKey(), kvs[i].getValue());

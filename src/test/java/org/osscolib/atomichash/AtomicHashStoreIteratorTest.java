@@ -57,7 +57,7 @@ public class AtomicHashStoreIteratorTest {
 
         AtomicHashStore<String,String> store = st;
 
-        final KeyValue<String,String>[] entries = TestUtils.generateStringStringKeyValues(size);
+        final KeyValue<String,String>[] entries = TestUtils.generateStringStringKeyValues(size, 20, 0);
 
         for (int i = 0; i < entries.length; i++) {
             store = store.put(entries[i].getKey(), entries[i].getValue());

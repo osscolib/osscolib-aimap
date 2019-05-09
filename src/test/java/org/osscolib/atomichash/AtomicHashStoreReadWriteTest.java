@@ -120,7 +120,7 @@ public class AtomicHashStoreReadWriteTest {
     public void test03() throws Exception {
 
         final KeyValue<String,String>[] entries =
-                TestUtils.generateStringStringKeyValues(10000);
+                TestUtils.generateStringStringKeyValues(10000, 30, 100);
 
         AtomicHashStore<String,String> st = this.store;
 
@@ -128,15 +128,9 @@ public class AtomicHashStoreReadWriteTest {
             st = add(st, entries[i].getKey(), entries[i].getValue());
         }
 
-        Assert.assertEquals(entries.length, st.size());
-
         final int[] accesses = TestUtils.generateInts(1000000, 0, entries.length);
 
         int pos;
-        for (int i = 0; i < accesses.length; i++) {
-            pos = accesses[i];
-            Assert.assertEquals(entries[pos].getValue(), st.get(entries[pos].getKey()));
-        }
         int size = st.size();
         boolean exists;
         for (int i = 0; i < accesses.length; i++) {
@@ -148,7 +142,6 @@ public class AtomicHashStoreReadWriteTest {
             }
             Assert.assertEquals(size, st.size());
         }
-        Assert.assertEquals(0, st.size());
 
     }
 
