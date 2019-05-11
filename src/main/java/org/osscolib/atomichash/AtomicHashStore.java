@@ -86,8 +86,8 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
 
 
-    Entry<K,V> getEntry(final Object key, final Node<K,V> root) {
-        
+    static <K,V> Entry<K,V> getEntry(final Object key, final Node<K,V> root) {
+
         final int hash = hash(key);
 
         Node<K,V> node = root;
