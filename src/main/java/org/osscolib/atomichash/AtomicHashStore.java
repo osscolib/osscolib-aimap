@@ -86,41 +86,42 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
 
 
-    Entry<K,V> getEntry(final Object key) {
-        return getEntry(key, this.root);
-    }
-
-
-
-    private static <K,V> Entry<K,V> getEntry(final Object key, final Node<K,V> root) {
+    Entry<K,V> getEntry(final Object key, final Node<K,V> root) {
+        
         final int hash = hash(key);
+
         Node<K,V> node = root;
-        for (Level level = Level.LEVEL0; node != null && node.data == null; level = level.next) {
-            node = node.children[level.pos(hash)];
+        Node<K,V>[] children;
+
+        for (Level level = Level.LEVEL0; node != null && (children = node.children) != null; level = level.next) {
+            node = children[level.pos(hash)];
         }
-        final NodeData<K,V> data = (node != null)? node.data : null;
-        return (data != null && data.hash == hash) ? getEntry(key, data) : null;
-    }
 
+        if (node == null) {
+            return null;
+        }
 
-    private static <K,V> Entry<K,V> getEntry(final Object key, final NodeData<K,V> data) {
-        return (data.entry == null) ? getMultiEntry(key, data.entries) : getSingleEntry(key, data.entry);
-    }
+        final NodeData<K,V> data = node.data;
 
+        if (data.hash != hash) {
+            return null;
+        }
 
-    private static <K,V> Entry<K,V> getSingleEntry(final Object key, final Entry<K,V> entry) {
-        return Objects.equals(entry.key, key) ? entry : null;
-    }
+        final Entry<K,V> e = data.entry;
+        if (e != null) {
+            return Objects.equals(e.key, key) ? e : null;
+        }
 
-
-    private static <K,V> Entry<K,V> getMultiEntry(final Object key, final Entry<K,V>[] entries) {
-        for (int i = 0; i < entries.length; i++) {
+        final Entry<K,V>[] es = data.entries;
+        for (int i = 0; i < es.length; i++) {
             // TODO Performance degradation with large number of collisions -> adopt some kind of tree?
-            if (Objects.equals(entries[i].key, key)) {
-                return entries[i];
+            if (Objects.equals(es[i].key, key)) {
+                return es[i];
             }
         }
+
         return null;
+
     }
 
 
