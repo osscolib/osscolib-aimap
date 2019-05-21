@@ -33,17 +33,17 @@ final class NodeData<K,V> implements Serializable {
 
 
 
-    NodeData(final int hash, final Entry<K,V> entry) {
+    NodeData(final Entry<K,V> entry) {
         super();
-        this.hash = hash;
+        this.hash = entry.hash;
         this.entry = entry;
         this.entries = null;
     }
 
 
-    NodeData(final int hash, final Entry<K,V>[] entries) {
+    NodeData(final Entry<K,V>[] entries) {
         super();
-        this.hash = hash;
+        this.hash = entries[0].hash;
         this.entry = null;
         this.entries = entries;
     }
@@ -58,12 +58,12 @@ final class NodeData<K,V> implements Serializable {
 
 
 
-    NodeData<K,V> put(final int hash, final Entry<K,V> newEntry) {
-        return (this.entry == null) ? putMulti(hash, newEntry) : putSingle(hash, newEntry);
+    NodeData<K,V> put(final Entry<K,V> newEntry) {
+        return (this.entry == null) ? putMulti(newEntry) : putSingle(newEntry);
     }
 
 
-    private NodeData<K,V> putMulti(final int hash, final Entry<K,V> newEntry) {
+    private NodeData<K,V> putMulti(final Entry<K,V> newEntry) {
 
         // TODO We should improve this to avoid linear performance depending on the amount of collisions. This was also fixed in HashMap in Java 8 to avoid DoS
 
@@ -82,17 +82,17 @@ final class NodeData<K,V> implements Serializable {
             }
             final Entry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length);
             newEntries[pos] = newEntry;
-            return new NodeData<>(hash, newEntries);
+            return new NodeData<>(newEntries);
         }
 
         final Entry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length + 1);
         newEntries[this.entries.length] = newEntry;
-        return new NodeData<>(hash, newEntries);
+        return new NodeData<>(newEntries);
 
     }
 
 
-    private NodeData<K,V> putSingle(final int hash, final Entry<K,V> newEntry) {
+    private NodeData<K,V> putSingle(final Entry<K,V> newEntry) {
 
         if (this.entry.key == newEntry.key && this.entry.value == newEntry.value) {
             // No need to perform any modifications, we might avoid a rewrite of a tree path!
@@ -100,23 +100,23 @@ final class NodeData<K,V> implements Serializable {
         }
         if (Objects.equals(this.entry.key, newEntry.key)) {
             // We are replacing the previous value for a new one
-            return new NodeData<>(hash, newEntry);
+            return new NodeData<>(newEntry);
         }
         // There is an hash collision, but this is a different slot, so we need to go multi value
         final Entry<K,V>[] newEntries = new Entry[] { this.entry, newEntry};
-        return new NodeData<>(hash, newEntries);
+        return new NodeData<>(newEntries);
 
     }
 
 
 
 
-    NodeData<K,V> remove(final int hash, final Object key) {
-        return (this.entry == null) ? removeMulti(hash, key) : removeSingle(hash, key);
+    NodeData<K,V> remove(final Object key) {
+        return (this.entry == null) ? removeMulti(key) : removeSingle(key);
     }
 
 
-    private NodeData<K,V> removeMulti(final int hash, final Object key) {
+    private NodeData<K,V> removeMulti(final Object key) {
 
         int pos = -1;
         for (int i = 0; i < this.entries.length; i++) {
@@ -129,12 +129,12 @@ final class NodeData<K,V> implements Serializable {
             if (this.entries.length == 2) {
                 // There are only two items in the multi value, and we are removing one, so now its single value
                 final Entry<K,V> remainingEntry = this.entries[pos == 0? 1 : 0];
-                return new NodeData<>(hash, remainingEntry);
+                return new NodeData<>(remainingEntry);
             }
             final Entry<K,V>[] newEntries = new Entry[this.entries.length - 1];
             System.arraycopy(this.entries, 0, newEntries, 0, pos);
             System.arraycopy(this.entries, pos + 1, newEntries, pos, (this.entries.length - (pos + 1)));
-            return new NodeData<>(hash, newEntries);
+            return new NodeData<>(newEntries);
         }
 
         return this;
@@ -142,7 +142,7 @@ final class NodeData<K,V> implements Serializable {
     }
 
 
-    private NodeData<K,V> removeSingle(final int hash, final Object key) {
+    private NodeData<K,V> removeSingle(final Object key) {
         return Objects.equals(this.entry.key,key) ? null : this;
     }
 

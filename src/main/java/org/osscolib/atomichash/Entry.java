@@ -27,14 +27,28 @@ final class Entry<K,V> implements Map.Entry<K,V>, Serializable {
 
     private static final long serialVersionUID = -4165737057742605795L;
 
+    final int hash;
     final K key;
     final V value;
 
+
+
+
+    static int hash(final Object key) {
+        int h;
+        return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+    }
+
+
+
+
     Entry(final K key, final V value) {
         super();
+        this.hash = hash(key);
         this.key = key;
         this.value = value;
     }
+
 
     @Override
     public K getKey() {

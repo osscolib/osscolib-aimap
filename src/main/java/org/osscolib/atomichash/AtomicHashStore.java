@@ -88,7 +88,7 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
     static <K,V> Entry<K,V> getEntry(final Object key, final Node<K,V> root) {
 
-        final int hash = hash(key);
+        final int hash = Entry.hash(key);
 
         Node<K,V> node = root;
         Node<K,V>[] children;
@@ -129,18 +129,17 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
     public AtomicHashStore<K,V> put(final K key, final V value) {
 
-        final int hash = hash(key);
         final Entry<K,V> entry = new Entry(key, value);
 
         final Node newRoot;
         if (this.root == null) {
 
-            final NodeData<K,V> newData = new NodeData<>(hash, entry);
+            final NodeData<K,V> newData = new NodeData<>(entry);
             newRoot = new Node<>(newData);
 
         } else {
 
-            newRoot = this.root.put(hash, Level.LEVEL0, entry);
+            newRoot = this.root.put(Level.LEVEL0, entry);
             if (this.root == newRoot) {
                 return this;
             }
@@ -152,13 +151,25 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
     }
 
 
+
+    public AtomicHashStore<K,V> putAll(final Map<? extends K, ? extends V> map) {
+        // TODO Turn the map into an array of Entry, call Node.putAll with 0, len.
+        // TODO Then each node will either forward the corresponding part of the array to their children,
+        // TODO or handle it themselves. At a node level, processing can probably be made iterative. That should
+        // TODO be fine as long as we don't create more than one children array.
+        return this;
+    }
+
+
+
+
     public AtomicHashStore<K,V> remove(final Object key) {
 
         if (this.root == null) {
             return this;
         }
 
-        final Node newRoot = this.root.remove(hash(key), Level.LEVEL0, key);
+        final Node newRoot = this.root.remove(Level.LEVEL0, Entry.hash(key), key);
         if (this.root == newRoot) {
             return this;
         }
@@ -205,14 +216,6 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
         this.valueCollection = new Collections.StoreValueCollection<>(this);
         return this.valueCollection;
     }
-
-
-
-    static int hash(final Object key) {
-        int h;
-        return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
-    }
-
 
 
 }

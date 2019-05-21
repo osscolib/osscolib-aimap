@@ -139,8 +139,8 @@ public final class TestUtils {
         @Override
         public int compare(final KeyValue<String, String> o1, final KeyValue<String, String> o2) {
 
-            final int h1 = AtomicHashStore.hash(o1.getKey());
-            final int h2 = AtomicHashStore.hash(o2.getKey());
+            final int h1 = Entry.hash(o1.getKey());
+            final int h2 = Entry.hash(o2.getKey());
 
             if (h1 == h2) {
                 return 0;

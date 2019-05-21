@@ -71,16 +71,16 @@ final class Node<K,V> implements Serializable {
 
 
 
-    Node<K,V> put(final int hash, final Level level, final Entry<K, V> entry) {
+    Node<K,V> put(final Level level, final Entry<K, V> entry) {
 
         if (this.data == null) {
 
-            final int pos = level.pos(hash);
+            final int pos = level.pos(entry.hash);
             final Node<K,V> child = this.children[pos];
 
             if (child != null) {
 
-                final Node<K,V> newNode = child.put(hash, level.next, entry);
+                final Node<K,V> newNode = child.put(level.next, entry);
 
                 if (newNode == child) {
                     return this;
@@ -94,16 +94,16 @@ final class Node<K,V> implements Serializable {
             }
 
             // Nothing currently in the selected node, so let's add the new data
-            final NodeData<K,V> newData = new NodeData<>(hash, entry);
+            final NodeData<K,V> newData = new NodeData<>(entry);
             return NodeBuilder.build(level, this.count, this.children, newData);
 
         }
 
         // Not a branch -- this is a node with data
 
-        if (this.data.hash == hash) {
+        if (this.data.hash == entry.hash) {
 
-            final NodeData<K,V> newData = this.data.put(hash, entry);
+            final NodeData<K,V> newData = this.data.put(entry);
             if (newData == this.data) {
                 // Nothing was added because the entry already existed
                 return this;
@@ -115,15 +115,21 @@ final class Node<K,V> implements Serializable {
 
         // We need to add a new node in the same range, so this has to be converted into a branch
 
-        final NodeData<K,V> newData = new NodeData<>(hash, entry);
+        final NodeData<K,V> newData = new NodeData<>(entry);
         return NodeBuilder.build(level, this.data, newData);
 
     }
 
 
 
+    Node<K,V> putAll(final Level level, final Entry<K, V>[] entries, final int offset, final int len) {
+        return this;
+    }
 
-    Node<K,V> remove(final int hash, final Level level, final Object key) {
+
+
+
+    Node<K,V> remove(final Level level, final int hash, final Object key) {
 
         if (this.data == null) {
 
@@ -135,7 +141,7 @@ final class Node<K,V> implements Serializable {
                 return this;
             }
 
-            final Node<K,V> newChild = child.remove(hash, level.next, key);
+            final Node<K,V> newChild = child.remove(level.next, hash, key);
             if (newChild == child) {
                 return this;
             }
@@ -161,7 +167,7 @@ final class Node<K,V> implements Serializable {
             return this;
         }
 
-        final NodeData<K,V> newData = this.data.remove(hash, key);
+        final NodeData<K,V> newData = this.data.remove(key);
 
         if (newData == this.data) {
             // No changes needed (key not found)
