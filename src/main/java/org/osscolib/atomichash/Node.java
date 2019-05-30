@@ -94,8 +94,8 @@ final class Node<K,V> implements Serializable {
             }
 
             // Nothing currently in the selected node, so let's add the new data
-            final NodeData<K,V> newData = new NodeData<>(entry);
-            return NodeBuilder.build(level, this.count, this.children, newData);
+            final Node<K,V>[] newChildren = NodeBuilder.buildChildren(level, this.children, entry);
+            return new Node<>(this.count + 1, newChildren);
 
         }
 
@@ -122,8 +122,86 @@ final class Node<K,V> implements Serializable {
 
 
 
-    Node<K,V> putAll(final Level level, final Entry<K, V>[] entries, final int offset, final int len) {
-        return this;
+    Node<K,V> putAll(final Level level, final Entry<K, V>[] entries, final int start, final int end) {
+        // TODO Then each node will either forward the corresponding part of the array to their children,
+        // TODO or handle it themselves. At a node level, processing can probably be made iterative. That should
+        // TODO be fine as long as we don't create more than one children array.
+
+
+        if (start == end) {
+            return this;
+        }
+
+        if (start + 1 == end) {
+            // Simplify to a normal "put" operation
+            return put(level, entries[start]);
+        }
+
+
+        Node<K,V>[] children = this.children;
+        Node<K,V> child;
+
+
+        if (children == null) {
+            // This is a data node
+            // TODO convert this data node to a branch node
+            return this;
+        }
+
+
+        int newCount = this.count;
+        Node<K,V>[] newChildren = null;
+        Node<K,V> newChild;
+
+
+        int i = start;
+        int x;
+
+        int ipos = level.pos(entries[i].hash);
+        int currentPos;
+
+        while (i < end) {
+
+            x = i;
+            currentPos = ipos;
+            while (ipos == currentPos && ++i < end) {
+                ipos = level.pos(entries[i].hash);
+            }
+
+            // We determined that entries[x..i) corresponds to children[currentPos]
+
+            child = children[currentPos];
+
+            if (child != null) {
+
+                newChild = child.putAll(level.next, entries, x, i);
+
+                if (newChild != child) {
+                    if (newChildren == null) {
+                        newChildren = Arrays.copyOf(children, children.length);
+                    }
+                    newChildren[currentPos] = newChild;
+                }
+
+            } else { // currently there is no child at currentPos
+
+                if (newChildren == null) {
+                    newChildren = Arrays.copyOf(children, children.length);
+                }
+
+                newChildren = NodeBuilder.buildChildren(level, newChildren, entries, x, i);
+                newCount++;
+
+            }
+
+        }
+
+        if (newChildren == null) {
+            return this;
+        }
+
+        return new Node(newCount, newChildren);
+
     }
 
 

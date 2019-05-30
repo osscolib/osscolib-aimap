@@ -20,6 +20,7 @@
 package org.osscolib.atomichash;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -131,7 +132,7 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
         final Entry<K,V> entry = new Entry(key, value);
 
-        final Node newRoot;
+        final Node<K,V> newRoot;
         if (this.root == null) {
 
             final NodeData<K,V> newData = new NodeData<>(entry);
@@ -146,18 +147,33 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
         }
 
-        return new AtomicHashStore<K,V>(newRoot);
+        return new AtomicHashStore<>(newRoot);
 
     }
 
 
 
     public AtomicHashStore<K,V> putAll(final Map<? extends K, ? extends V> map) {
-        // TODO Turn the map into an array of Entry, call Node.putAll with 0, len.
-        // TODO Then each node will either forward the corresponding part of the array to their children,
-        // TODO or handle it themselves. At a node level, processing can probably be made iterative. That should
-        // TODO be fine as long as we don't create more than one children array.
-        return this;
+
+        final int mapSize = map.size();
+        if (mapSize == 0) {
+            return this;
+        }
+
+        final Entry<K,V>[] entries = new Entry[mapSize];
+        int i = 0;
+        for (final Map.Entry<? extends K,? extends V> entry : map.entrySet()) {
+            entries[i++] = new Entry<>(entry.getKey(), entry.getValue());
+        }
+
+        // Entry implements Comparable, so we can use this to order on hash
+        Arrays.sort(entries);
+
+        final Node<K,V> newRoot =
+                this.root.putAll(Level.LEVEL0, entries, 0, entries.length);
+
+        return new AtomicHashStore<>(newRoot);
+
     }
 
 

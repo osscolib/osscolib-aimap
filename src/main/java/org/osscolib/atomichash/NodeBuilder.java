@@ -62,9 +62,10 @@ final class NodeBuilder {
 
 
 
-    static <K,V> Node<K,V> build(final Level level,
-                                 final int originalChildrenSize, final Node<K,V>[] originalChildren,
-                                 final NodeData<K,V> newData) {
+    static <K,V> Node<K,V>[] buildChildren(
+                                final Level level, final Node<K,V>[] originalChildren, final Entry<K,V> entry) {
+
+        final NodeData<K,V> newData = new NodeData<>(entry);
 
         // Next, compute the new position that the two DataSlots (existing and new) will occupy
         final int newChildPos = level.pos(newData.hash);
@@ -86,7 +87,39 @@ final class NodeBuilder {
         // Finally assign the DataSlotNode to its position as new children
         newChildren[newChildPos] = newDataSlotNode;
 
-        return new Node<>(originalChildrenSize + 1, newChildren);
+        return newChildren;
+
+    }
+
+
+
+    static <K,V> Node<K,V>[] buildChildren(
+                                final Level level, final Node<K,V>[] originalChildren,
+                                final Entry<K,V>[] entries, final int start, final int end) {
+
+        final NodeData<K,V> newData = new NodeData<K, V>(entry);
+
+        // Next, compute the new position that the two DataSlots (existing and new) will occupy
+        final int newChildPos = level.pos(newData.hash);
+
+        // If the data slot would be assigned an already used position, then ranges weren't properly computed
+        // and the "put" operation that originated this should have been delegated to the child in that position
+        if (originalChildren[newChildPos] != null) {
+            throw new IllegalStateException(
+                    "Children ranges have not been properly computed: adding a data slot as a sibling to a node " +
+                            "that should actually contain it");
+        }
+
+        // Data slots are assigned different positions, so we need to create a new children array
+        final Node<K,V>[] newChildren = Arrays.copyOf(originalChildren, originalChildren.length);
+
+        // Now we have the full data, we can build the new DataSlotNode
+        final Node<K,V> newDataSlotNode = new Node<>(newData);
+
+        // Finally assign the DataSlotNode to its position as new children
+        newChildren[newChildPos] = newDataSlotNode;
+
+        return newChildren;
 
     }
 

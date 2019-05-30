@@ -23,7 +23,7 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 
-final class Entry<K,V> implements Map.Entry<K,V>, Serializable {
+final class Entry<K,V> implements Map.Entry<K,V>, Serializable, Comparable<Entry<K,V>> {
 
     private static final long serialVersionUID = -4165737057742605795L;
 
@@ -86,6 +86,11 @@ final class Entry<K,V> implements Map.Entry<K,V>, Serializable {
     public int hashCode() {
         // Implemented according to the java.util.Map.Entry specification
         return Objects.hashCode(this.key) ^ Objects.hashCode(this.value);
+    }
+
+    @Override
+    public int compareTo(final Entry<K, V> o) {
+        return Integer.compare(this.hash, o.hash);
     }
 
 }
