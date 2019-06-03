@@ -162,6 +162,8 @@ public class AtomicHashStoreReadWriteTest {
 
         store2 = store.put(key, value);
 
+        TestUtils.validateStoreWellFormed(store2);
+
         final boolean newContainsKey = store2.containsKey(key);
         final boolean newContainsValue = store2.containsValue(value);
         final V newValue = store2.get(key);
@@ -188,6 +190,8 @@ public class AtomicHashStoreReadWriteTest {
         Assert.assertSame(value, newValue);
 
         store3 = store2.remove(key);
+
+        TestUtils.validateStoreWellFormed(store3);
 
         Assert.assertTrue(store2.containsKey(key));
         Assert.assertTrue(store2.containsValue(value));
@@ -222,6 +226,8 @@ public class AtomicHashStoreReadWriteTest {
 
         store2 = store.remove(key);
 
+        TestUtils.validateStoreWellFormed(store2);
+
         final boolean newContainsKey = store2.containsKey(key);
         final V newValue = store2.get(key);
         final int newSize = store2.size();
@@ -239,6 +245,8 @@ public class AtomicHashStoreReadWriteTest {
         Assert.assertNull(newValue);
 
         store3 = store2.put(key, null);
+
+        TestUtils.validateStoreWellFormed(store3);
 
         Assert.assertFalse(store2.containsKey(key));
         Assert.assertEquals(newSize, store2.size());

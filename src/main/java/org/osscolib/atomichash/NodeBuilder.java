@@ -24,68 +24,27 @@ import java.util.Arrays;
 final class NodeBuilder {
 
 
-    static <K,V> Node<K,V> build(final Level level, final NodeData<K,V> originalData, final NodeData<K,V> newData) {
+    static <K,V> Node<K,V>[] addChild(final Node<K,V>[] children, final boolean childrenMutable,
+                                      final Level level,
+                                      final int newEntryPos, final Entry<K,V> newEntry) {
 
-        // Next, compute the new position that the two DataSlots (existing and new) will occupy
-        final int originalChildPos = level.pos(originalData.hash);
-        final int newChildPos = level.pos(newData.hash);
+        // Check the current status of the position to be used
+        final Node<K,V> childInPos = children[newEntryPos];
 
-        // We initialise the new children array
-        final Node<K,V>[] newChildren = new Node[level.mask + 1]; // 2^maskSize
-
-        // If both data slots would be assigned the same child node position, then we need to drill down further
-        if (originalChildPos == newChildPos) {
-
-            // We will need a new level to be created, but applying a narrower range
-            final Node<K,V> newBranchChild = build(level.next, originalData, newData);
-
-            // Finally assign the BranchNode to its new position
-            newChildren[newChildPos] = newBranchChild;
-
-            return new Node<>(1, newChildren);
-
+        // There is something in the selected pos, so we need to delegate
+        final Node<K,V> newChild;
+        if (childInPos != null) {
+            newChild = childInPos.put(level.next, newEntry);
+            if (childInPos == newChild) {
+                return children;
+            }
+        } else {
+            newChild = new Node<>(new NodeData<>(newEntry));
         }
 
-        // Data slots are assigned different positions, so we need to create a normal (multi-children) branch
-
-        // Now we have the full data, we can build the new DataSlotNodes
-        final Node<K,V> originalDataSlotNode = new Node<>(originalData);
-        final Node<K,V> newDataSlotNode = new Node<>(newData);
-
-        // Finally assign the DataSlotNodes to their positions as new children
-        newChildren[originalChildPos] = originalDataSlotNode;
-        newChildren[newChildPos] = newDataSlotNode;
-
-        return new Node<>(2, newChildren);
-
-    }
-
-
-
-    static <K,V> Node<K,V>[] buildChildren(
-                                final Level level, final Node<K,V>[] originalChildren, final Entry<K,V> entry) {
-
-        final NodeData<K,V> newData = new NodeData<>(entry);
-
-        // Next, compute the new position that the two DataSlots (existing and new) will occupy
-        final int newChildPos = level.pos(newData.hash);
-
-        // If the data slot would be assigned an already used position, then ranges weren't properly computed
-        // and the "put" operation that originated this should have been delegated to the child in that position
-        if (originalChildren[newChildPos] != null) {
-            throw new IllegalStateException(
-                    "Children ranges have not been properly computed: adding a data slot as a sibling to a node " +
-                    "that should actually contain it");
-        }
-
-        // Data slots are assigned different positions, so we need to create a new children array
-        final Node<K,V>[] newChildren = Arrays.copyOf(originalChildren, originalChildren.length);
-
-        // Now we have the full data, we can build the new DataSlotNode
-        final Node<K,V> newDataSlotNode = new Node<>(newData);
-
-        // Finally assign the DataSlotNode to its position as new children
-        newChildren[newChildPos] = newDataSlotNode;
+        final Node<K,V>[] newChildren =
+                (childrenMutable? children : Arrays.copyOf(children, children.length));
+        newChildren[newEntryPos] = newChild;
 
         return newChildren;
 
@@ -93,35 +52,43 @@ final class NodeBuilder {
 
 
 
-    static <K,V> Node<K,V>[] buildChildren(
-                                final Level level, final Node<K,V>[] originalChildren,
-                                final Entry<K,V>[] entries, final int start, final int end) {
-
-        final NodeData<K,V> newData = new NodeData<K, V>(entry);
-
-        // Next, compute the new position that the two DataSlots (existing and new) will occupy
-        final int newChildPos = level.pos(newData.hash);
-
-        // If the data slot would be assigned an already used position, then ranges weren't properly computed
-        // and the "put" operation that originated this should have been delegated to the child in that position
-        if (originalChildren[newChildPos] != null) {
-            throw new IllegalStateException(
-                    "Children ranges have not been properly computed: adding a data slot as a sibling to a node " +
-                            "that should actually contain it");
-        }
-
-        // Data slots are assigned different positions, so we need to create a new children array
-        final Node<K,V>[] newChildren = Arrays.copyOf(originalChildren, originalChildren.length);
-
-        // Now we have the full data, we can build the new DataSlotNode
-        final Node<K,V> newDataSlotNode = new Node<>(newData);
-
-        // Finally assign the DataSlotNode to its position as new children
-        newChildren[newChildPos] = newDataSlotNode;
-
-        return newChildren;
-
-    }
+//    static <K,V> Node<K,V>[] build(final Level level,
+//                                   final int currentDataPos, final NodeData<K,V> currentData, // might be null
+//                                   final int entriesPos, final Entry<K,V>[] entries, final int start, final int end) {
+//
+//        // Next, compute the new position that the two DataSlots (existing and new) will occupy
+//        final int originalChildPos = level.pos(originalData.hash);
+//        final int newChildPos = level.pos(newData.hash);
+//
+//        // We initialise the new children array
+//        final Node<K,V>[] newChildren = new Node[level.mask + 1]; // 2^maskSize
+//
+//        // If both data slots would be assigned the same child node position, then we need to drill down further
+//        if (originalChildPos == newChildPos) {
+//
+//            // We will need a new level to be created, but applying a narrower range
+//            final Node<K,V> newBranchChild = build(level.next, originalData, newData);
+//
+//            // Finally assign the BranchNode to its new position
+//            newChildren[newChildPos] = newBranchChild;
+//
+//            return new Node<>(1, newChildren);
+//
+//        }
+//
+//        // Data slots are assigned different positions, so we need to create a normal (multi-children) branch
+//
+//        // Now we have the full data, we can build the new DataSlotNodes
+//        final Node<K,V> originalDataSlotNode = new Node<>(originalData);
+//        final Node<K,V> newDataSlotNode = new Node<>(newData);
+//
+//        // Finally assign the DataSlotNodes to their positions as new children
+//        newChildren[originalChildPos] = originalDataSlotNode;
+//        newChildren[newChildPos] = newDataSlotNode;
+//
+//        return new Node<>(2, newChildren);
+//
+//    }
 
 
 

@@ -53,6 +53,7 @@ public class AtomicHashStoreKeySetTest {
         for (int i = 0; i < kvs.length; i++) {
             st = st.put(kvs[i].getKey(), kvs[i].getValue());
         }
+        TestUtils.validateStoreWellFormed(st);
 
         final Set<String> keySet = st.keySet();
         Assert.assertEquals(kvs.length, keySet.size());
@@ -64,10 +65,12 @@ public class AtomicHashStoreKeySetTest {
 
         final int oldSize = keySet.size();
         st = st.put(null, "some null");
+        TestUtils.validateStoreWellFormed(st);
         // The keySet of a Store is not affected by modifications on that store (because it is immutable). Note this
         // is the contrary of what should happen with a Map
         Assert.assertEquals(oldSize, keySet.size());
         st = st.remove(null);
+        TestUtils.validateStoreWellFormed(st);
         Assert.assertEquals(oldSize, keySet.size());
 
         testIterator(kvs, keySet);

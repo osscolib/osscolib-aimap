@@ -54,6 +54,7 @@ public class AtomicHashStoreIteratorTest {
         for (int i = 0; i < entries.length; i++) {
             store = store.put(entries[i].getKey(), entries[i].getValue());
         }
+        TestUtils.validateStoreWellFormed(store);
 
         final List<KeyValue<String,String>> expected = new ArrayList<>(Arrays.asList(entries));
         expected.sort(TestUtils.HashComparator.INSTANCE);

@@ -26,15 +26,13 @@ final class Node<K,V> implements Serializable {
 
     private static final long serialVersionUID = 6914544628900109073L;
 
-    final int count;
     final NodeData<K,V> data;
     final Node<K,V>[] children; // can contain many nulls
 
 
 
-    Node(final int count, final Node<K,V>[] children) {
+    Node(final Node<K,V>[] children) {
         super();
-        this.count = count;
         this.children = children;
         this.data = null;
     }
@@ -42,7 +40,6 @@ final class Node<K,V> implements Serializable {
 
     Node(final NodeData<K,V> data) {
         super();
-        this.count = 0;
         this.children = null;
         this.data = data;
     }
@@ -73,52 +70,37 @@ final class Node<K,V> implements Serializable {
 
     Node<K,V> put(final Level level, final Entry<K, V> entry) {
 
-        if (this.data == null) {
-
-            final int pos = level.pos(entry.hash);
-            final Node<K,V> child = this.children[pos];
-
-            if (child != null) {
-
-                final Node<K,V> newNode = child.put(level.next, entry);
-
-                if (newNode == child) {
-                    return this;
-                }
-
-                final Node<K,V>[] newNodes = Arrays.copyOf(this.children, this.children.length);
-                newNodes[pos] = newNode;
-
-                return new Node<>(this.count, newNodes);
-
-            }
-
-            // Nothing currently in the selected node, so let's add the new data
-            final Node<K,V>[] newChildren = NodeBuilder.buildChildren(level, this.children, entry);
-            return new Node<>(this.count + 1, newChildren);
-
-        }
-
-        // Not a branch -- this is a node with data
-
-        if (this.data.hash == entry.hash) {
-
+        // If possible, we will delegate to the NodeData
+        if (this.data != null && this.data.hash == entry.hash) {
             final NodeData<K,V> newData = this.data.put(entry);
             if (newData == this.data) {
                 // Nothing was added because the entry already existed
                 return this;
             }
-
             return new Node<>(newData);
-
         }
 
-        // We need to add a new node in the same range, so this has to be converted into a branch
+        Node<K,V>[] newChildren = this.children;
+        boolean newChildrenMutable = false;
+        if (newChildren == null) {
+            newChildren = new Node[level.mask + 1];
+            newChildren[level.pos(this.data.hash)] = new Node<>(this.data);
+            newChildrenMutable = true;
+        }
 
-        final NodeData<K,V> newData = new NodeData<>(entry);
-        return NodeBuilder.build(level, this.data, newData);
+        final int newEntryPos = level.pos(entry.hash);
+        newChildren = NodeBuilder.addChild(newChildren, newChildrenMutable, level, newEntryPos, entry);
+        if (newChildren == this.children){
+            return this;
+        }
+
+        return new Node<>(newChildren);
 
     }
+
+
+    // entries comes from a Map, so we know 100% sure there are no repeated keys. That means if an entries
+    // fragment to be set into a Node has > 1 entries, for sure it will mean the data needs to be put into a node
 
 
 
@@ -128,79 +110,79 @@ final class Node<K,V> implements Serializable {
         // TODO be fine as long as we don't create more than one children array.
 
 
-        if (start == end) {
+//        if (start == end) {
             return this;
-        }
-
-        if (start + 1 == end) {
-            // Simplify to a normal "put" operation
-            return put(level, entries[start]);
-        }
-
-
-        Node<K,V>[] children = this.children;
-        Node<K,V> child;
-
-
-        if (children == null) {
-            // This is a data node
-            // TODO convert this data node to a branch node
-            return this;
-        }
-
-
-        int newCount = this.count;
-        Node<K,V>[] newChildren = null;
-        Node<K,V> newChild;
-
-
-        int i = start;
-        int x;
-
-        int ipos = level.pos(entries[i].hash);
-        int currentPos;
-
-        while (i < end) {
-
-            x = i;
-            currentPos = ipos;
-            while (ipos == currentPos && ++i < end) {
-                ipos = level.pos(entries[i].hash);
-            }
-
-            // We determined that entries[x..i) corresponds to children[currentPos]
-
-            child = children[currentPos];
-
-            if (child != null) {
-
-                newChild = child.putAll(level.next, entries, x, i);
-
-                if (newChild != child) {
-                    if (newChildren == null) {
-                        newChildren = Arrays.copyOf(children, children.length);
-                    }
-                    newChildren[currentPos] = newChild;
-                }
-
-            } else { // currently there is no child at currentPos
-
-                if (newChildren == null) {
-                    newChildren = Arrays.copyOf(children, children.length);
-                }
-
-                newChildren = NodeBuilder.buildChildren(level, newChildren, entries, x, i);
-                newCount++;
-
-            }
-
-        }
-
-        if (newChildren == null) {
-            return this;
-        }
-
-        return new Node(newCount, newChildren);
+//        }
+//
+//        if (start + 1 == end) {
+//            // Simplify to a normal "put" operation
+//            return put(level, entries[start]);
+//        }
+//
+//
+//        Node<K,V>[] children = this.children;
+//        Node<K,V> child;
+//
+//
+//        if (children == null) {
+//            // This is a data node
+//            // TODO convert this data node to a branch node
+//            return this;
+//        }
+//
+//
+//        int newCount = this.count;
+//        Node<K,V>[] newChildren = null;
+//        Node<K,V> newChild;
+//
+//
+//        int i = start;
+//        int x;
+//
+//        int ipos = level.pos(entries[i].hash);
+//        int currentPos;
+//
+//        while (i < end) {
+//
+//            x = i;
+//            currentPos = ipos;
+//            while (ipos == currentPos && ++i < end) {
+//                ipos = level.pos(entries[i].hash);
+//            }
+//
+//            // We determined that entries[x..i) corresponds to children[currentPos]
+//
+//            child = children[currentPos];
+//
+//            if (child != null) {
+//
+//                newChild = child.putAll(level.next, entries, x, i);
+//
+//                if (newChild != child) {
+//                    if (newChildren == null) {
+//                        newChildren = Arrays.copyOf(children, children.length);
+//                    }
+//                    newChildren[currentPos] = newChild;
+//                }
+//
+//            } else { // currently there is no child at currentPos
+//
+//                if (newChildren == null) {
+//                    newChildren = Arrays.copyOf(children, children.length);
+//                }
+//
+//                newChildren = NodeBuilder.buildChildren(level, newChildren, entries, x, i);
+//                newCount++;
+//
+//            }
+//
+//        }
+//
+//        if (newChildren == null) {
+//            return this;
+//        }
+//
+//        return new Node(newCount, newChildren);
 
     }
 
@@ -224,7 +206,7 @@ final class Node<K,V> implements Serializable {
                 return this;
             }
 
-            if (newChild == null && this.count == 1) {
+            if (newChild == null && onlyOneChild(this.children)) {
                 // This branch has become empty
                 return null;
             }
@@ -233,9 +215,7 @@ final class Node<K,V> implements Serializable {
             final Node<K,V>[] newChildren = Arrays.copyOf(this.children, this.children.length);
             newChildren[pos] = newChild;
 
-            final int newChildrenSize = (newChild == null? this.count - 1 : this.count);
-
-            return new Node<>(newChildrenSize, newChildren);
+            return new Node<>(newChildren);
 
         }
 
@@ -262,5 +242,20 @@ final class Node<K,V> implements Serializable {
 
     }
 
+
+
+
+    private static <K,V> boolean onlyOneChild(final Node<K,V>[] children) {
+        boolean found = false;
+        for (int i = 0; i < children.length; i++) {
+            if (children[i] != null) {
+                if (found) {
+                    return false;
+                }
+                found = true;
+            }
+        }
+        return true;
+    }
 
 }

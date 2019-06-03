@@ -164,6 +164,74 @@ public final class TestUtils {
 
 
 
+    public static <K,V> void validateStoreWellFormed(final AtomicHashStore<K,V> store) {
+        if (store.root == null) {
+            return;
+        }
+        validateNodesWellFormed(Level.LEVEL0, new int[Level.LEVEL_COUNT], 0, store.root);
+    }
+
+    private static <K,V> void validateNodesWellFormed(final Level level, final int[] poslevels, final int poslevelsi, final Node<K,V> node) {
+
+        if (node.data != null) {
+
+            if (node.children != null) {
+                throw new IllegalStateException("Node has both data and children");
+            }
+
+            int n = 0;
+            Level l = Level.LEVEL0;
+            while (n < poslevelsi) {
+                if (poslevels[n] != l.pos(node.data.hash)) {
+                    throw new IllegalStateException("Node data position does not match");
+                }
+                n++;
+                l = l.next;
+            }
+
+            if (node.data.entry != null) {
+                if (node.data.entries != null) {
+                    throw new IllegalStateException("Node data has both single and multiple entry data");
+                }
+                if (node.data.hash != node.data.entry.hash) {
+                    throw new IllegalStateException("Node data hash does not correspond with hash in its single entry");
+                }
+            } else if (node.data.entries != null) {
+                for (int i = 0; i < node.data.entries.length; i++) {
+                    if (node.data.hash != node.data.entries[i].hash) {
+                        throw new IllegalStateException("Node data hash does not correspond with hash in one of the multivalued entries");
+                    }
+                }
+            } else {
+                throw new IllegalStateException("Node data has neither single nor multiple entry data");
+            }
+
+        } else if (node.children != null) {
+
+            if (node.children.length != (level.mask + 1)) {
+                throw new IllegalStateException("Node children array has the incorrect size");
+            }
+            boolean allNull = true;
+            for (int i = 0; i < node.children.length; i++) {
+                if (node.children[i] != null) {
+                    allNull = false;
+                    poslevels[poslevelsi] = i;
+                    validateNodesWellFormed(level.next, poslevels, poslevelsi + 1, node.children[i]);
+                }
+            }
+            if (allNull) {
+                throw new IllegalStateException("Node has a children array with all nulls");
+            }
+
+        } else {
+            throw new IllegalStateException("Node has neither data nor children");
+        }
+
+    }
+
+
+
+
     private TestUtils() {
         super();
     }
