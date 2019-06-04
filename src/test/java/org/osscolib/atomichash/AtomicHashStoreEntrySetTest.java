@@ -54,6 +54,9 @@ public class AtomicHashStoreEntrySetTest {
         for (int i = 0; i < kvs.length; i++) {
             st = st.put(kvs[i].getKey(), kvs[i].getValue());
         }
+
+        final String snap11 = PrettyPrinter.prettyPrint(st);
+
         TestUtils.validateStoreWellFormed(st);
 
         final Set<Map.Entry<String,String>> entrySet = st.entrySet();
@@ -63,6 +66,8 @@ public class AtomicHashStoreEntrySetTest {
             Assert.assertTrue(entrySet.contains(new Entry(kvs[i].getKey(), kvs[i].getValue())));
         }
 
+        final String snap12 = PrettyPrinter.prettyPrint(st);
+        Assert.assertEquals(snap11, snap12);
 
         final int oldSize = entrySet.size();
         st = st.put(null, "some null");

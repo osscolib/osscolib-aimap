@@ -92,7 +92,7 @@ final class PrettyPrinter {
         stringBuilder.append(
                 String.format("[%2d | %032d] {\n",
                         levelidx,
-                        new BigInteger(Integer.toBinaryString(level.mask << level.shift))));
+                        (level != null? new BigInteger(Integer.toBinaryString(level.mask << level.shift)) : 0)));
 
         printEntries(levelidx + 1, stringBuilder, hash, entry, entries);
         stringBuilder.append('\n');

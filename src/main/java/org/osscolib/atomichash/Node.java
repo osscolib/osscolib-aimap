@@ -70,10 +70,12 @@ final class Node<K,V> implements Serializable {
 
     Node<K,V> put(final Level level, final Entry<K, V> entry) {
 
+        final NodeData<K,V> data = this.data;
+
         // If possible, we will delegate to the NodeData
-        if (this.data != null && this.data.hash == entry.hash) {
-            final NodeData<K,V> newData = this.data.put(entry);
-            if (newData == this.data) {
+        if (data != null && data.hash == entry.hash) {
+            final NodeData<K,V> newData = data.put(entry);
+            if (newData == data) {
                 // Nothing was added because the entry already existed
                 return this;
             }
@@ -84,7 +86,7 @@ final class Node<K,V> implements Serializable {
         boolean newChildrenMutable = false;
         if (newChildren == null) {
             newChildren = new Node[level.mask + 1];
-            newChildren[level.pos(this.data.hash)] = new Node<>(this.data);
+            newChildren[level.pos(data.hash)] = new Node<>(data);
             newChildrenMutable = true;
         }
 
@@ -99,93 +101,91 @@ final class Node<K,V> implements Serializable {
     }
 
 
-    // entries comes from a Map, so we know 100% sure there are no repeated keys. That means if an entries
-    // fragment to be set into a Node has > 1 entries, for sure it will mean the data needs to be put into a node
-
-
 
     Node<K,V> putAll(final Level level, final Entry<K, V>[] entries, final int start, final int end) {
-        // TODO Then each node will either forward the corresponding part of the array to their children,
-        // TODO or handle it themselves. At a node level, processing can probably be made iterative. That should
-        // TODO be fine as long as we don't create more than one children array.
 
-
-//        if (start == end) {
+        if (start == end) {
             return this;
-//        }
-//
-//        if (start + 1 == end) {
-//            // Simplify to a normal "put" operation
-//            return put(level, entries[start]);
-//        }
-//
-//
-//        Node<K,V>[] children = this.children;
-//        Node<K,V> child;
-//
-//
-//        if (children == null) {
-//            // This is a data node
-//            // TODO convert this data node to a branch node
-//            return this;
-//        }
-//
-//
-//        int newCount = this.count;
-//        Node<K,V>[] newChildren = null;
-//        Node<K,V> newChild;
-//
-//
-//        int i = start;
-//        int x;
-//
-//        int ipos = level.pos(entries[i].hash);
-//        int currentPos;
-//
-//        while (i < end) {
-//
-//            x = i;
-//            currentPos = ipos;
-//            while (ipos == currentPos && ++i < end) {
-//                ipos = level.pos(entries[i].hash);
-//            }
-//
-//            // We determined that entries[x..i) corresponds to children[currentPos]
-//
-//            child = children[currentPos];
-//
-//            if (child != null) {
-//
-//                newChild = child.putAll(level.next, entries, x, i);
-//
-//                if (newChild != child) {
-//                    if (newChildren == null) {
-//                        newChildren = Arrays.copyOf(children, children.length);
-//                    }
-//                    newChildren[currentPos] = newChild;
-//                }
-//
-//            } else { // currently there is no child at currentPos
-//
-//                if (newChildren == null) {
-//                    newChildren = Arrays.copyOf(children, children.length);
-//                }
-//
-//                newChildren = NodeBuilder.buildChildren(level, newChildren, entries, x, i);
-//                newCount++;
-//
-//            }
-//
-//        }
-//
-//        if (newChildren == null) {
-//            return this;
-//        }
-//
-//        return new Node(newCount, newChildren);
+        }
+
+        if (start + 1 == end) {
+            // Re-route to a normal "put" operation
+            return put(level, entries[start]);
+        }
+
+        Node<K,V>[] newChildren = this.children;
+        boolean newChildrenMutable = false;
+
+        if (newChildren == null) {
+            // This is a data node, and we know there are at least two different keys that need to be inserted here.
+            // Unless all the entries we are adding have the same hash as the existing data entry, we will need to
+            // turn that data entry into a Node.
+
+            final NodeData<K,V> data = this.data;
+            if (allHashesMatch(data.hash, entries, start, end)) {
+                // All hashes match! so we need to delegate entirely to the NodeData
+                NodeData<K,V> newData = data;
+                for (int i = start; i < end; i++) {
+                    newData = newData.put(entries[i]);
+                }
+                if (newData == data) {
+                    // Nothing was added because all entries already existed -- this should actually never happen
+                    return this;
+                }
+                return new Node<>(newData);
+            }
+
+            // Not all hashes matched (usual case), so given we have > 1 keys to be inserted in this node, we
+            // are sure we will need to turn this Node's data into a nested node
+            newChildren = new Node[level.mask + 1];
+            newChildren[level.pos(data.hash)] = new Node<>(data);
+            newChildrenMutable = true;
+
+        }
+
+        // We will need to segment all the selected entries, determining the position to be assigned to each segment
+
+        int i = start;
+        int x;
+
+        int ipos = level.pos(entries[i].hash);
+        int currentPos;
+
+        while (i < end) {
+
+            x = i;
+            currentPos = ipos;
+            while (ipos == currentPos && ++i < end) {
+                ipos = level.pos(entries[i].hash);
+            }
+
+            // We determined that entries[x..i) corresponds to children[currentPos]
+
+            newChildren = NodeBuilder.addChildren(newChildren, newChildrenMutable, level, currentPos, entries, x, i);
+            if (newChildren != this.children){
+                newChildrenMutable = true;
+            }
+
+        }
+
+        if (newChildren == this.children) {
+            return this;
+        }
+
+        return new Node(newChildren);
 
     }
 
+
+
+    private static <K,V> boolean allHashesMatch(final int hash, final Entry<K,V>[] entries, final int start, final int end) {
+        for (int i = start; i < end; i++) {
+            if (entries[i].hash != hash) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 
 

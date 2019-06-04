@@ -23,9 +23,12 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 
 // TODO implement equals and hashCode()
@@ -160,18 +163,27 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
             return this;
         }
 
-        final Entry<K,V>[] entries = new Entry[mapSize];
-        int i = 0;
-        for (final Map.Entry<? extends K,? extends V> entry : map.entrySet()) {
-            entries[i++] = new Entry<>(entry.getKey(), entry.getValue());
+        if (mapSize == 1) {
+            final Map.Entry<? extends K, ? extends V> singleEntry = map.entrySet().iterator().next();
+            return put(singleEntry.getKey(), singleEntry.getValue());
         }
 
-        // Entry implements Comparable, so we can use this to order on hash
-        Arrays.sort(entries);
+        final Entry<K,V>[] entries =
+                map.entrySet().stream()
+                        .map(e -> new Entry<>(e.getKey(), e.getValue()))
+                        .sorted()
+                        .toArray(Entry[]::new);
 
-        final Node<K,V> newRoot =
-                this.root.putAll(Level.LEVEL0, entries, 0, entries.length);
+        int start = 0;
+        Node<K,V> newRoot = this.root;
 
+        if (newRoot == null) {
+            final NodeData<K,V> newData = new NodeData<>(entries[0]);
+            newRoot = new Node<>(newData);
+            start = 1;
+        }
+
+        newRoot = newRoot.putAll(Level.LEVEL0, entries, start, entries.length);
         return new AtomicHashStore<>(newRoot);
 
     }

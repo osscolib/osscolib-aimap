@@ -54,6 +54,9 @@ public class AtomicHashStoreIteratorTest {
         for (int i = 0; i < entries.length; i++) {
             store = store.put(entries[i].getKey(), entries[i].getValue());
         }
+
+        final String snap11 = PrettyPrinter.prettyPrint(store);
+
         TestUtils.validateStoreWellFormed(store);
 
         final List<KeyValue<String,String>> expected = new ArrayList<>(Arrays.asList(entries));
@@ -65,6 +68,9 @@ public class AtomicHashStoreIteratorTest {
         }
 
         Assert.assertEquals(expected, obtained);
+
+        final String snap12 = PrettyPrinter.prettyPrint(store);
+        Assert.assertEquals(snap11, snap12);
 
     }
 

@@ -160,7 +160,12 @@ public class AtomicHashStoreReadWriteTest {
             Assert.assertNull(oldValue);
         }
 
+        final String snap11 = PrettyPrinter.prettyPrint(store);
+
         store2 = store.put(key, value);
+
+        final String snap12 = PrettyPrinter.prettyPrint(store);
+        Assert.assertEquals(snap11, snap12);
 
         TestUtils.validateStoreWellFormed(store2);
 
@@ -189,7 +194,12 @@ public class AtomicHashStoreReadWriteTest {
         Assert.assertEquals((oldContainsKey) ? oldSize : (oldSize + 1), newSize);
         Assert.assertSame(value, newValue);
 
+        final String snap21 = PrettyPrinter.prettyPrint(store2);
+
         store3 = store2.remove(key);
+
+        final String snap22 = PrettyPrinter.prettyPrint(store2);
+        Assert.assertEquals(snap21, snap22);
 
         TestUtils.validateStoreWellFormed(store3);
 
@@ -224,7 +234,12 @@ public class AtomicHashStoreReadWriteTest {
             Assert.assertNull(oldValue);
         }
 
+        final String snap11 = PrettyPrinter.prettyPrint(store);
+
         store2 = store.remove(key);
+
+        final String snap12 = PrettyPrinter.prettyPrint(store);
+        Assert.assertEquals(snap11, snap12);
 
         TestUtils.validateStoreWellFormed(store2);
 
@@ -244,7 +259,12 @@ public class AtomicHashStoreReadWriteTest {
         Assert.assertEquals((!oldContainsKey) ? oldSize : (oldSize - 1), newSize);
         Assert.assertNull(newValue);
 
+        final String snap21 = PrettyPrinter.prettyPrint(store2);
+
         store3 = store2.put(key, null);
+
+        final String snap22 = PrettyPrinter.prettyPrint(store2);
+        Assert.assertEquals(snap21, snap22);
 
         TestUtils.validateStoreWellFormed(store3);
 
