@@ -259,35 +259,4 @@ final class Node<K,V> implements Serializable {
     }
 
 
-
-
-    // Things to note:
-    //     - A happened before B
-    //     - A and B can be the result of put, putAll or remove (no multi-remove) on ORIG
-    static <K,V> Node<K,V> merge(final Level level,
-                                 final Node<K,V> orignode, final Node<K,V> anode, final Node<K,V> bnode) {
-
-        // We will first try to detect unmodified (from orig) subtrees and, if found, return the modified one
-        if (orignode == anode) {
-            if (orignode == bnode) {
-                return orignode;
-            }
-            return bnode;
-        } else if (orignode == bnode) {
-            return anode;
-        }
-
-        // We need to actually merge because both a and b differed from orig
-        // If something was removed in a, we will not know at this level unless it's a itself who is null
-        // And given a and b are in order, in such case we will just take b
-        // If b is null, the removal made in b had to be orig itself ( there are no multiple removals )
-        // Note the only way we can reach here and b be null is that orig is a data node and we removed it in b
-
-
-        return orignode; // TODO Implement this!
-        
-    }
-
-
-
 }
