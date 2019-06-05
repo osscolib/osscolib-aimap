@@ -59,11 +59,24 @@ final class NodeData<K,V> implements Serializable {
 
 
     NodeData<K,V> put(final Entry<K,V> newEntry) {
-        return (this.entry == null) ? putMulti(newEntry) : putSingle(newEntry);
-    }
 
+        if (this.entry != null) {
+            // This is single-valued
 
-    private NodeData<K,V> putMulti(final Entry<K,V> newEntry) {
+            if (this.entry.key == newEntry.key && this.entry.value == newEntry.value) {
+                // No need to perform any modifications, we might avoid a rewrite of a tree path!
+                return this;
+            }
+            if (Objects.equals(this.entry.key, newEntry.key)) {
+                // We are replacing the previous value for a new one
+                return new NodeData<>(newEntry);
+            }
+            // There is an hash collision, but this is a different slot, so we need to go multi value
+            final Entry<K,V>[] newEntries = new Entry[] { this.entry, newEntry};
+            return new NodeData<>(newEntries);
+
+        }
+
 
         // TODO We should improve this to avoid linear performance depending on the amount of collisions. This was also fixed in HashMap in Java 8 to avoid DoS
 
@@ -87,23 +100,6 @@ final class NodeData<K,V> implements Serializable {
 
         final Entry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length + 1);
         newEntries[this.entries.length] = newEntry;
-        return new NodeData<>(newEntries);
-
-    }
-
-
-    private NodeData<K,V> putSingle(final Entry<K,V> newEntry) {
-
-        if (this.entry.key == newEntry.key && this.entry.value == newEntry.value) {
-            // No need to perform any modifications, we might avoid a rewrite of a tree path!
-            return this;
-        }
-        if (Objects.equals(this.entry.key, newEntry.key)) {
-            // We are replacing the previous value for a new one
-            return new NodeData<>(newEntry);
-        }
-        // There is an hash collision, but this is a different slot, so we need to go multi value
-        final Entry<K,V>[] newEntries = new Entry[] { this.entry, newEntry};
         return new NodeData<>(newEntries);
 
     }
