@@ -29,6 +29,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 
 
 // TODO implement equals and hashCode()
@@ -153,6 +154,32 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
         return new AtomicHashStore<>(newRoot);
 
     }
+
+
+
+
+
+    public AtomicHashStore<K,V> putIfAbsent(final K key, final V value) {
+        return putIfAbsent(key, value, null);
+    }
+
+
+    public AtomicHashStore<K,V> putIfAbsent(final K key, final V value, final Consumer<V> oldValueConsumer) {
+        // This is implemented according to the spec of Map#putIfAbsent(), which specifies that the new
+        // entry should be established only if the key doesn't currently exist or is mapped to null.
+        // Note however that Map#putIfAbsent() returns the old value associated with the key if there is
+        // such value, and this method cannot do that in order to keep streaming API capabilities. Instead,
+        // the oldValueConsumer will be called on the old value (be it null or non-null).
+        final V oldValue = get(key);
+        if (oldValueConsumer != null) {
+            oldValueConsumer.accept(oldValue);
+        }
+        if (oldValue == null) {
+            return put(key, value);
+        }
+        return this;
+    }
+
 
 
 
