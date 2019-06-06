@@ -53,10 +53,11 @@ final class Node<K,V> implements Serializable {
             return this.data.size();
         }
 
-        Node child;
+        Node<K,V>[] children = this.children;
+        Node<K,V> child;
         int size = 0;
-        for (int i = 0; i < this.children.length; i++) {
-            child = this.children[i];
+        for (int i = 0; i < children.length; i++) {
+            child = children[i];
             if (child != null) {
                 size += child.size();
             }
