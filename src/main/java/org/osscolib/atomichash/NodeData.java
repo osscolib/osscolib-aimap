@@ -77,7 +77,6 @@ final class NodeData<K,V> implements Serializable {
 
         }
 
-
         // TODO We should improve this to avoid linear performance depending on the amount of collisions. This was also fixed in HashMap in Java 8 to avoid DoS
 
         int pos = -1;
@@ -108,11 +107,11 @@ final class NodeData<K,V> implements Serializable {
 
 
     NodeData<K,V> remove(final Object key) {
-        return (this.entry == null) ? removeMulti(key) : removeSingle(key);
-    }
 
-
-    private NodeData<K,V> removeMulti(final Object key) {
+        if (this.entry != null) {
+            // This is single-valued
+            return Objects.equals(this.entry.key,key) ? null : this;
+        }
 
         int pos = -1;
         for (int i = 0; i < this.entries.length; i++) {
@@ -138,9 +137,6 @@ final class NodeData<K,V> implements Serializable {
     }
 
 
-    private NodeData<K,V> removeSingle(final Object key) {
-        return Objects.equals(this.entry.key,key) ? null : this;
-    }
 
 
 }
