@@ -26,7 +26,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class AtomicHashStoreReadWriteAllTest {
+public class AtomicHashStorePutAllTest {
 
     private AtomicHashStore<String,String> store;
 
@@ -191,6 +191,7 @@ public class AtomicHashStoreReadWriteAllTest {
             Assert.assertSame(ost.value, store.get(ok));
         });
         Assert.assertEquals(oldSize, store.size());
+
 
         newStatus.forEach((nk,nst) -> {
             final TestStatus<V> ost = oldStatus.get(nk);
