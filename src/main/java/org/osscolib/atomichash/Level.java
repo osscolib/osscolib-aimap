@@ -21,8 +21,9 @@ package org.osscolib.atomichash;
 
 final class Level {
 
-    static final int LEVEL_COUNT = 6;
+    static final int LEVEL_COUNT;
     static final Level LEVEL0;
+    static final Level[] LEVELS;
 
     final int mask;
     final int shift;
@@ -30,6 +31,7 @@ final class Level {
 
 
     static {
+
         // Direct references should give us better performance than an array (no boundaries checks!)
         final Level level5 = new Level(0xFF, 24,   null); // mask size = 8
         final Level level4 = new Level(0xFF, 16, level5); // mask size = 8
@@ -37,6 +39,21 @@ final class Level {
         final Level level2 = new Level( 0xF,  6, level3); // mask size = 4
         final Level level1 = new Level( 0xF,  2, level2); // mask size = 4
         LEVEL0 =             new Level( 0x3,  0, level1); // mask size = 2
+
+
+        int count = 1;
+        Level l = LEVEL0;
+        while ((l = l.next) != null) count++;
+
+        LEVEL_COUNT = count;
+
+        l = LEVEL0;
+        LEVELS = new Level[LEVEL_COUNT];
+        for (int i = 0; i < LEVELS.length; i++) {
+            LEVELS[i] = l;
+            l = l.next;
+        }
+
     }
 
 
