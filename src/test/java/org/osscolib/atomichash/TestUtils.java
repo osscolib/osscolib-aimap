@@ -132,6 +132,17 @@ public final class TestUtils {
     }
 
 
+    public static void randomizeArray(final int[] array) {
+        for (int i = 0 ; i < array.length; i++) {
+            final int i1 = RandomUtils.nextInt(0, array.length);
+            final int i2 = RandomUtils.nextInt(0, array.length);
+            final int temp = array[i1];
+            array[i1] = array[i2];
+            array[i2] = temp;
+        }
+    }
+
+
     static final class HashComparator implements Comparator<KeyValue<String,String>> {
 
         static final HashComparator INSTANCE = new HashComparator();

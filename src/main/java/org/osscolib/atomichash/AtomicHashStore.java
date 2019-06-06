@@ -261,7 +261,6 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
     }
 
 
-
     public Set<K> keySet() {
         Sets.StoreKeySet<K,V> keySet;
         if ((keySet = this.keySet) != null) {
@@ -282,4 +281,62 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
     }
 
 
+
+
+    @Override
+    public boolean equals(final Object o) {
+
+        if (o == this) {
+            return true;
+        }
+
+        if (!(o instanceof AtomicHashStore)) {
+            return false;
+        }
+
+        final AtomicHashStore<?,?> other = (AtomicHashStore<?,?>) o;
+
+        if (this.root == null) {
+            return other.root == null;
+        } else if (other.root == null) {
+            return false;
+        }
+
+        final Iterator<Map.Entry<K,V>> thisIter = this.iterator();
+
+        int count = 0;
+        Entry<K,V> thisEntry;
+        Entry<?,?> otherEntry;
+        while (thisIter.hasNext()) {
+
+            thisEntry = (Entry<K,V>) thisIter.next();
+            otherEntry = getEntry(thisEntry.key, other.root);
+
+            if (otherEntry == null) {
+                return false;
+            }
+
+            if (!Objects.equals(thisEntry.key, otherEntry.key) || !Objects.equals(thisEntry.value, otherEntry.value)) {
+                return false;
+            }
+
+            count++;
+
+        }
+
+        return count == other.size();
+
+    }
+
+
+    @Override
+    public int hashCode() {
+        int h = 0;
+        for (final Map.Entry<K, V> entry : entrySet()) {
+            h += entry.hashCode(); // Entry#hashCode() is properly implemented
+        }
+        return h;
+    }
+
 }
+
