@@ -62,6 +62,13 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
 
 
+
+    public boolean isEmpty() {
+        return this.root == null;
+    }
+
+
+
     public boolean containsKey(final Object key) {
         return getEntry(key, this.root) != null;
     }
@@ -227,6 +234,12 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
         return new AtomicHashStore<K,V>(newRoot);
 
+    }
+
+
+
+    public AtomicHashStore<K,V> clear() {
+        return new AtomicHashStore<>();
     }
 
 

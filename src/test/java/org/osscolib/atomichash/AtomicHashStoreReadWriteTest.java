@@ -42,8 +42,10 @@ public class AtomicHashStoreReadWriteTest {
         AtomicHashStore<String,String> st = this.store;
 
         Assert.assertEquals(0, st.size());
+        Assert.assertTrue(st.isEmpty());
         Assert.assertNull(st.get(null));
         st = add(st, "one", "ONE");
+        Assert.assertFalse(st.isEmpty());
         st = add(st, "one", "ONE");
         st = add(st, new String("one"), "ONE"); // Different String with same value checked on purpose
         Assert.assertEquals(1, st.size());
@@ -142,6 +144,42 @@ public class AtomicHashStoreReadWriteTest {
             }
             Assert.assertEquals(size, st.size());
         }
+
+    }
+
+
+    @Test
+    public void test04() throws Exception {
+
+        AtomicHashStore<String,String> st = this.store;
+
+        Assert.assertTrue(st.isEmpty());
+        st = add(st, "one", "ONE");
+        Assert.assertFalse(st.isEmpty());
+        st = remove(st, "one");
+        Assert.assertTrue(st.isEmpty());
+
+    }
+
+
+    @Test
+    public void test05() throws Exception {
+
+        AtomicHashStore<String,String> st = this.store;
+
+        Assert.assertTrue(st.isEmpty());
+        st = st.clear();
+        Assert.assertTrue(st.isEmpty());
+
+        st = add(st, "one", "ONE");
+        st = add(st, "two", "TWO");
+        st = add(st, "three", "THREE");
+        st = add(st, "four", "FOUR");
+        st = add(st, "five", "FIVE");
+
+        Assert.assertFalse(st.isEmpty());
+        st = st.clear();
+        Assert.assertTrue(st.isEmpty());
 
     }
 
