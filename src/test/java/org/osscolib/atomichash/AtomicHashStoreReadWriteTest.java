@@ -184,6 +184,50 @@ public class AtomicHashStoreReadWriteTest {
     }
 
 
+    @Test
+    public void test06() throws Exception {
+
+        AtomicHashStore<String,String> st = this.store;
+        AtomicHashStore<String,String> st2 = null;
+
+        Assert.assertTrue(st.isEmpty());
+        st = st.remove(null, null);
+        Assert.assertTrue(st.isEmpty());
+
+        st = add(st, "one", "ONE");
+
+        st2 = st.remove("one", "ONE");
+        Assert.assertTrue(st2.isEmpty());
+
+        st2 = st.remove("one", "ON");
+        Assert.assertSame(st, st2);
+
+        st2 = st.remove("one", null);
+        Assert.assertSame(st, st2);
+
+        st = st.put(null, "NULL");
+
+        st2 = st.remove(null, null);
+        Assert.assertEquals(2,st2.size());
+        Assert.assertSame(st, st2);
+
+        st2 = st.remove(null, "NULL");
+        Assert.assertEquals(1,st2.size());
+
+        st = st.put(null, null);
+        Assert.assertEquals(2,st.size());
+
+        st2 = st.remove(null, "NULL");
+        Assert.assertEquals(2,st2.size());
+        Assert.assertSame(st, st2);
+
+        st2 = st.remove(null, null);
+        Assert.assertEquals(1,st2.size());
+
+
+    }
+
+
 
     private static <K,V> AtomicHashStore<K,V> add(final AtomicHashStore<K,V> store, final K key, final V value) {
 
@@ -275,11 +319,15 @@ public class AtomicHashStoreReadWriteTest {
         final String snap11 = PrettyPrinter.prettyPrint(store);
 
         store2 = store.remove(key);
+        store3 = store.remove(key, oldValue);
+
+        Assert.assertTrue(store2.equals(store3));
 
         final String snap12 = PrettyPrinter.prettyPrint(store);
         Assert.assertEquals(snap11, snap12);
 
         TestUtils.validateStoreWellFormed(store2);
+        TestUtils.validateStoreWellFormed(store3);
 
         final boolean newContainsKey = store2.containsKey(key);
         final V newValue = store2.get(key);

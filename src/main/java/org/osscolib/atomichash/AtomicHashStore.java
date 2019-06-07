@@ -259,6 +259,22 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
         return this;
     }
 
+
+
+
+    public AtomicHashStore<K,V> remove(final K key, final V value) {
+
+        final Entry<K,V> entry = getEntry(key, this.root);
+        if (entry == null || !Objects.equals(entry.value, value)) {
+            return this;
+        }
+        return remove(key);
+
+    }
+
+
+
+
     public AtomicHashStore<K,V> clear() {
         return new AtomicHashStore<>();
     }
