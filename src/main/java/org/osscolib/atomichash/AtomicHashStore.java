@@ -188,6 +188,8 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
     public AtomicHashStore<K,V> putAll(final Map<? extends K, ? extends V> map) {
 
+        Objects.requireNonNull(map);
+
         final int mapSize = map.size();
         if (mapSize == 0) {
             return this;
@@ -198,22 +200,33 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
             return put(singleEntry.getKey(), singleEntry.getValue());
         }
 
-        final Entry<K,V>[] entries =
+        final Entry<K,V>[] orderedEntries =
                 map.entrySet().stream()
                         .map(e -> new Entry<>(e.getKey(), e.getValue()))
                         .sorted()
                         .toArray(Entry[]::new);
 
+        return putAll(orderedEntries);
+
+    }
+
+
+    private AtomicHashStore<K,V> putAll(final Entry<K,V>[] orderedEntries) {
+
+        if (orderedEntries.length == 0) {
+            return this;
+        }
+
         int start = 0;
         Node<K,V> newRoot = this.root;
 
         if (newRoot == null) {
-            final NodeData<K,V> newData = new NodeData<>(entries[0]);
+            final NodeData<K,V> newData = new NodeData<>(orderedEntries[0]);
             newRoot = new Node<>(newData);
             start = 1;
         }
 
-        newRoot = newRoot.putAll(Level.LEVEL0, entries, start, entries.length);
+        newRoot = newRoot.putAll(Level.LEVEL0, orderedEntries, start, orderedEntries.length);
         return new AtomicHashStore<>(newRoot);
 
     }
