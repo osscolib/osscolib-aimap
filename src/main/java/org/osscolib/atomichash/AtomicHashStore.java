@@ -93,6 +93,12 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
     }
 
 
+    public V getOrDefault(final Object key, final V defaultValue) {
+        final Entry<K,V> entry = getEntry(key, this.root);
+        return entry != null ? entry.value : defaultValue;
+    }
+
+
 
     static <K,V> Entry<K,V> getEntry(final Object key, final Node<K,V> root) {
 
