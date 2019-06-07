@@ -25,6 +25,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 
@@ -234,6 +236,41 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
 
 
+    public void forEach(final BiConsumer<? super K, ? super V> action) {
+        // NOTE There will be an additional forEach function (based on Map.Entry) coming from Iterable interface
+        Objects.requireNonNull(action);
+        Entry<K,V> entry;
+        final Iterator<Map.Entry<K,V>> iter = iterator();
+        while (iter.hasNext()) {
+            entry = (Entry<K,V>) iter.next();
+            action.accept(entry.key, entry.value);
+        }
+    }
+
+
+
+
+    public <W> AtomicHashStore<K,W> replaceAll(final BiFunction<? super K, ? super V, ? extends W> function) {
+        // NOTE that, as a difference with Map#replaceAll, in this case we can have our "action" function
+        // change the type of the values because we will be returning a different AtomicHashStore instance.
+
+        Objects.requireNonNull(function);
+
+        Entry<K,V> entry;
+        final Iterator<Map.Entry<K,V>> iter = iterator();
+
+        // The newly created array will still be considered to be ordered because keys won't change, and Entry
+        // ordering (Entry#compareTo()) is based entirely on keys.
+        final Entry<K,W>[] newOrderedEntries = new Entry[size()];
+        for (int i = 0; i < newOrderedEntries.length; i++) {
+            entry = (Entry<K,V>) iter.next();
+            newOrderedEntries[i] = new Entry<>(entry.key, function.apply(entry.key, entry.value));
+        }
+
+        final AtomicHashStore<K,W> store = new AtomicHashStore<>();
+        return store.putAll(newOrderedEntries);
+
+    }
 
 
 
