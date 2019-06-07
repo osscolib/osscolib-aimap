@@ -120,7 +120,7 @@ public class AtomicHashStorePutIfAbsentTest {
     public void test03() throws Exception {
 
         final KeyValue<String,String>[] entries =
-                TestUtils.generateStringStringKeyValues(10000, 30, 100);
+                TestUtils.generateStringStringKeyValues(1000, 30, 100);
 
         AtomicHashStore<String,String> st = this.store;
 
@@ -128,7 +128,7 @@ public class AtomicHashStorePutIfAbsentTest {
             st = add(st, entries[i].getKey(), entries[i].getValue());
         }
 
-        final int[] accesses = TestUtils.generateInts(1000000, 0, entries.length);
+        final int[] accesses = TestUtils.generateInts(1000, 0, entries.length);
 
         int pos;
         int size = st.size();
