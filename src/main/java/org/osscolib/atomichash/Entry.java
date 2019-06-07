@@ -90,7 +90,32 @@ final class Entry<K,V> implements Map.Entry<K,V>, Serializable, Comparable<Entry
 
     @Override
     public int compareTo(final Entry<K, V> o) {
-        return Integer.compare(this.hash, o.hash);
+
+        // We will need to order in the same way that entries would be returned by an iterator (tree inorder)
+        // NOTE this class therefore has a natural ordering that is inconsistent with equals()
+
+        final int h1 = this.hash;
+        final int h2 = o.hash;
+
+        if (h1 == h2) {
+            // Hash collisions are solved by comparing the key's identity hash code.
+            // NOTE it's important that we don't involve values here so that we can perform replaceAll
+            // operations without needing to reorder the entries after value changes.
+            return Integer.compare(
+                        System.identityHashCode(this.key),
+                        System.identityHashCode(o.key));
+        }
+
+        int comp;
+        Level level = Level.LEVEL0;
+        while (true) {
+            comp = Integer.compare(level.pos(h1), level.pos(h2));
+            if (comp != 0) {
+                return comp;
+            }
+            level = level.next;
+        }
+
     }
 
 }

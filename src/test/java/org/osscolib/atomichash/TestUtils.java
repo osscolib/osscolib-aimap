@@ -149,22 +149,15 @@ public final class TestUtils {
 
         @Override
         public int compare(final KeyValue<String, String> o1, final KeyValue<String, String> o2) {
+            // This emulates Entry#compareTo
 
-            int h1 = Entry.hash(o1.getKey());
-            int h2 = Entry.hash(o2.getKey());
+            final int h1 = Entry.hash(o1.getKey());
+            final int h2 = Entry.hash(o2.getKey());
 
             if (h1 == h2) {
-
-                h1 = System.identityHashCode(o1.getKey());
-                h2 = System.identityHashCode(o2.getKey());
-
-                final int comp = Integer.compare(h1, h2);
-                if (comp != 0) {
-                    return comp;
-                }
-
-                return Integer.compare(System.identityHashCode(o1.getValue()), System.identityHashCode(o2.getValue()));
-
+                return Integer.compare(
+                            System.identityHashCode(o1.getKey()),
+                            System.identityHashCode(o2.getKey()));
             }
 
             Level level = Level.LEVEL0;

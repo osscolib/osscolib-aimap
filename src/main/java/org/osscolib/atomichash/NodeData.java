@@ -21,7 +21,6 @@ package org.osscolib.atomichash;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Objects;
 
 final class NodeData<K,V> implements Serializable {
@@ -78,7 +77,7 @@ final class NodeData<K,V> implements Serializable {
             final Entry<K,V>[] newEntries = new Entry[] { this.entry, newEntry};
 
             // We will keep this array sorted in order to ease searches in large multi-valued nodes
-            Arrays.sort(newEntries, MultiEntryComparator.comparator());
+            Arrays.sort(newEntries);
 
             return new NodeData<>(newEntries);
 
@@ -104,7 +103,7 @@ final class NodeData<K,V> implements Serializable {
             newEntries[pos] = newEntry;
 
             // We will keep this array sorted in order to ease searches in large multi-valued nodes
-            Arrays.sort(newEntries, MultiEntryComparator.comparator());
+            Arrays.sort(newEntries);
 
             return new NodeData<>(newEntries);
 
@@ -114,7 +113,7 @@ final class NodeData<K,V> implements Serializable {
         newEntries[this.entries.length] = newEntry;
 
         // We will keep this array sorted in order to ease searches in large multi-valued nodes
-        Arrays.sort(newEntries, MultiEntryComparator.comparator());
+        Arrays.sort(newEntries);
 
         return new NodeData<>(newEntries);
 
@@ -150,38 +149,6 @@ final class NodeData<K,V> implements Serializable {
         }
 
         return this;
-
-    }
-
-
-
-    private static class MultiEntryComparator<K,V> implements Comparator<Entry<K,V>> {
-
-        private static MultiEntryComparator INSTANCE = new MultiEntryComparator<>();
-
-        private static <K,V> MultiEntryComparator<K,V> comparator() {
-            return INSTANCE;
-        }
-
-        private MultiEntryComparator() {
-            super();
-        }
-
-        @Override
-        public int compare(final Entry<K,V> o1, final Entry<K,V> o2) {
-
-            final int kcomp =
-                    Integer.compare(
-                        System.identityHashCode(o1.key), System.identityHashCode(o2.key));
-
-            if (kcomp != 0) {
-                return kcomp;
-            }
-
-            return Integer.compare(
-                        System.identityHashCode(o1.value), System.identityHashCode(o2.value));
-
-        }
 
     }
 
