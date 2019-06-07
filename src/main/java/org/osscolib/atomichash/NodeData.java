@@ -21,6 +21,7 @@ package org.osscolib.atomichash;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Objects;
 
 final class NodeData<K,V> implements Serializable {
@@ -67,12 +68,18 @@ final class NodeData<K,V> implements Serializable {
                 // No need to perform any modifications, we might avoid a rewrite of a tree path!
                 return this;
             }
+
             if (Objects.equals(this.entry.key, newEntry.key)) {
                 // We are replacing the previous value for a new one
                 return new NodeData<>(newEntry);
             }
+
             // There is an hash collision, but this is a different slot, so we need to go multi value
             final Entry<K,V>[] newEntries = new Entry[] { this.entry, newEntry};
+
+            // We will keep this array sorted in order to ease searches in large multi-valued nodes
+            Arrays.sort(newEntries, MultiEntryComparator.comparator());
+
             return new NodeData<>(newEntries);
 
         }
@@ -87,6 +94,7 @@ final class NodeData<K,V> implements Serializable {
             }
         }
         if (pos >= 0) {
+
             if (this.entries[pos].key == newEntry.key && this.entries[pos].value == newEntry.value) {
                 // No need to perform any modifications, we might avoid a rewrite of a tree path!
                 // Note this will only happen if key and value are actually the same object, not by object equality
@@ -94,11 +102,20 @@ final class NodeData<K,V> implements Serializable {
             }
             final Entry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length);
             newEntries[pos] = newEntry;
+
+            // We will keep this array sorted in order to ease searches in large multi-valued nodes
+            Arrays.sort(newEntries, MultiEntryComparator.comparator());
+
             return new NodeData<>(newEntries);
+
         }
 
         final Entry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length + 1);
         newEntries[this.entries.length] = newEntry;
+
+        // We will keep this array sorted in order to ease searches in large multi-valued nodes
+        Arrays.sort(newEntries, MultiEntryComparator.comparator());
+
         return new NodeData<>(newEntries);
 
     }
@@ -138,5 +155,34 @@ final class NodeData<K,V> implements Serializable {
 
 
 
+    private static class MultiEntryComparator<K,V> implements Comparator<Entry<K,V>> {
+
+        private static MultiEntryComparator INSTANCE = new MultiEntryComparator<>();
+
+        private static <K,V> MultiEntryComparator<K,V> comparator() {
+            return INSTANCE;
+        }
+
+        private MultiEntryComparator() {
+            super();
+        }
+
+        @Override
+        public int compare(final Entry<K,V> o1, final Entry<K,V> o2) {
+
+            final int kcomp =
+                    Integer.compare(
+                        System.identityHashCode(o1.key), System.identityHashCode(o2.key));
+
+            if (kcomp != 0) {
+                return kcomp;
+            }
+
+            return Integer.compare(
+                        System.identityHashCode(o1.value), System.identityHashCode(o2.value));
+
+        }
+
+    }
 
 }
