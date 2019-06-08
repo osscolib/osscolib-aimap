@@ -33,13 +33,12 @@ final class Level {
     static {
 
         // Direct references should give us better performance than an array (no boundaries checks!)
-        final Level level5 = new Level(0xFF, 24,   null); // mask size = 8
-        final Level level4 = new Level(0xFF, 16, level5); // mask size = 8
-        final Level level3 = new Level(0x3F, 10, level4); // mask size = 6
-        final Level level2 = new Level( 0xF,  6, level3); // mask size = 4
-        final Level level1 = new Level( 0xF,  2, level2); // mask size = 4
-        LEVEL0 =             new Level( 0x3,  0, level1); // mask size = 2
-
+        final Level level5 = new Level(0xFF, 24, null); // mask size = 8
+        final Level level4 = new Level(0x3F, 18, level5); // mask size = 6
+        final Level level3 = new Level(0x3F, 12, level4); // mask size = 6
+        final Level level2 = new Level(0x1F,  7, level3); // mask size = 5
+        final Level level1 = new Level( 0xF,  3, level2); // mask size = 4
+        LEVEL0 =             new Level( 0x7,  0, level1); // mask size = 3
 
         int count = 1;
         Level l = LEVEL0;

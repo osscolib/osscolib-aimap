@@ -108,13 +108,13 @@ final class Entry<K,V> implements Map.Entry<K,V>, Serializable, Comparable<Entry
 
         int comp;
         Level level = Level.LEVEL0;
-        while (true) {
+        do {
             comp = Integer.compare(level.pos(h1), level.pos(h2));
             if (comp != 0) {
                 return comp;
             }
             level = level.next;
-        }
+        } while (true);
 
     }
 
