@@ -182,10 +182,6 @@ public class AtomicHashStorePutIfAbsentTest {
             } else if (oldValue == null) {
                 Assert.assertNotSame(store, store2);
             }
-            if (oldContainsValue && oldValue != null) {
-                Assert.assertSame(oldValue, newValue);
-                Assert.assertEquals(oldSize, newSize);
-            }
         }
 
         Assert.assertEquals(oldContainsKey, store.containsKey(key));
