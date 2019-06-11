@@ -261,6 +261,47 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
 
 
+    public AtomicHashStore<K,V> replace(final K key, final V value) {
+        return replace(key, value, (Consumer<V>)null);
+    }
+
+
+    public AtomicHashStore<K,V> replace(final K key, final V value, final Consumer<V> oldValueConsumer) {
+        final Entry<K,V> entry = getEntry(key, this.root);
+        if (entry == null) {
+            if (oldValueConsumer != null) {
+                oldValueConsumer.accept(null);
+            }
+            return this;
+        }
+        return put(key, value, oldValueConsumer);
+    }
+
+
+
+
+    public AtomicHashStore<K,V> replace(final K key, final V oldValue, final V newValue) {
+        return replace(key, oldValue, newValue, null);
+    }
+
+
+    public AtomicHashStore<K,V> replace(final K key, final V oldValue, final V newValue, final Consumer<Boolean> successConsumer) {
+        final Entry<K,V> entry = getEntry(key, this.root);
+        if (entry == null || !Objects.equals(entry.value, oldValue)) {
+            if (successConsumer != null) {
+                successConsumer.accept(Boolean.FALSE);
+            }
+            return this;
+        }
+        if (successConsumer != null) {
+            successConsumer.accept(Boolean.TRUE);
+        }
+        return put(key, newValue);
+    }
+
+
+
+
     public <W> AtomicHashStore<K,W> replaceAll(final BiFunction<? super K, ? super V, ? extends W> function) {
         // NOTE that, as a difference with Map#replaceAll, in this case we can have our "action" function
         // change the type of the values because we will be returning a different AtomicHashStore instance.
