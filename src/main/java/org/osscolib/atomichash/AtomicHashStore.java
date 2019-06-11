@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 
 // TODO implement equals and hashCode()
@@ -245,6 +246,31 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
 
 
+
+    public AtomicHashStore<K,V> remove(final K key, final V value) {
+        return remove(key, value, null);
+    }
+
+
+    public AtomicHashStore<K,V> remove(final K key, final V value, final Consumer<Boolean> successConsumer) {
+
+        final Entry<K,V> entry = getEntry(key, this.root);
+        if (entry == null || !Objects.equals(entry.value, value)) {
+            if (successConsumer != null) {
+                successConsumer.accept(Boolean.FALSE);
+            }
+            return this;
+        }
+        if (successConsumer != null) {
+            successConsumer.accept(Boolean.TRUE);
+        }
+        return remove(key);
+
+    }
+
+
+
+
     public void forEach(final BiConsumer<? super K, ? super V> action) {
         // NOTE There will be an additional forEach function (based on Map.Entry) coming from Iterable interface
         // This method returns void because that's what forEach is meant to return, and this is consistent with the
@@ -348,13 +374,91 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
 
 
-    public AtomicHashStore<K,V> remove(final K key, final V value) {
+    public AtomicHashStore<K,V> computeIfAbsent(
+            final K key, final Function<? super K, ? extends V> mappingFunction) {
+        return computeIfAbsent(key, mappingFunction, null);
+    }
+
+
+    public AtomicHashStore<K,V> computeIfAbsent(
+                final K key, final Function<? super K, ? extends V> mappingFunction, final Consumer<V> valueConsumer) {
+        // This is implemented according to the spec of Map#computeIfAbsent(), but in order to keep streaming API
+        // capabilities, a consumer can be specified for what the equivalent method in java.util.Map would return.
+        Objects.requireNonNull(mappingFunction);
+        final V oldValue = get(key);
+        final V value = (oldValue != null ? oldValue : mappingFunction.apply(key));
+        if (valueConsumer != null) {
+            valueConsumer.accept(value);
+        }
+        if (oldValue != value) {
+            return put(key, value);
+        }
+        return this;
+    }
+
+
+
+
+    public AtomicHashStore<K,V> computeIfPresent(
+            final K key, final Function<? super K, ? extends V> mappingFunction) {
+        return computeIfPresent(key, mappingFunction, null);
+    }
+
+
+    public AtomicHashStore<K,V> computeIfPresent(
+            final K key, final Function<? super K, ? extends V> mappingFunction, final Consumer<V> valueConsumer) {
+        // This is implemented according to the spec of Map#computeIfPresent(), but in order to keep streaming API
+        // capabilities, a consumer can be specified for what the equivalent method in java.util.Map would return.
+        Objects.requireNonNull(mappingFunction);
+        final V oldValue = get(key);
+        if (oldValue != null) {
+            final V newValue = mappingFunction.apply(key);
+            if (valueConsumer != null) {
+                valueConsumer.accept(newValue);
+            }
+            if (newValue != null) {
+                return put(key, newValue);
+            }
+            return remove(key);
+        }
+        if (valueConsumer != null) {
+            valueConsumer.accept(null);
+        }
+        return this;
+    }
+
+
+
+
+    public AtomicHashStore<K,V> compute(
+            final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        return compute(key, remappingFunction, null);
+    }
+
+    public AtomicHashStore<K,V> compute(
+            final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction,
+            final Consumer<V> valueConsumer) {
+        // This is implemented according to the spec of Map#compute(), but in order to keep streaming API
+        // capabilities, a consumer can be specified for what the equivalent method in java.util.Map would return.
+
+        Objects.requireNonNull(remappingFunction);
 
         final Entry<K,V> entry = getEntry(key, this.root);
-        if (entry == null || !Objects.equals(entry.value, value)) {
+        final V oldValue = (entry != null ? entry.value : null);
+
+        final V newValue = remappingFunction.apply(key, oldValue);
+
+        if (valueConsumer != null) {
+            valueConsumer.accept(newValue);
+        }
+
+        if (newValue == null) {
+            if (entry != null) {
+                return remove(key);
+            }
             return this;
         }
-        return remove(key);
+        return put(key, newValue);
 
     }
 
