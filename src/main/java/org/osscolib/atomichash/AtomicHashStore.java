@@ -464,6 +464,39 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
 
 
+    public AtomicHashStore<K,V> merge(
+            final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        return merge(key, value, remappingFunction, null);
+    }
+
+
+    public AtomicHashStore<K,V> merge(
+            final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction,
+            final Consumer<V> valueConsumer) {
+        // This is implemented according to the spec of Map#merge(), but in order to keep streaming API
+        // capabilities, a consumer can be specified for what the equivalent method in java.util.Map would return.
+
+        Objects.requireNonNull(remappingFunction);
+        Objects.requireNonNull(value);
+
+        final V oldValue = get(key);
+        final V newValue = (oldValue == null) ? value : remappingFunction.apply(oldValue, value);
+
+        if (valueConsumer != null) {
+            valueConsumer.accept(newValue);
+        }
+
+        if (newValue == null) {
+            return remove(key);
+        }
+
+        return put(key, newValue);
+
+    }
+
+
+
+
     public AtomicHashStore<K,V> clear() {
         return new AtomicHashStore<>();
     }
