@@ -31,7 +31,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 
-// TODO implement equals and hashCode()
 public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializable {
 
     private static final long serialVersionUID = 6362537038828380833L;
@@ -386,7 +385,7 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
         // capabilities, a consumer can be specified for what the equivalent method in java.util.Map would return.
         Objects.requireNonNull(mappingFunction);
         final V oldValue = get(key);
-        final V value = (oldValue != null ? oldValue : mappingFunction.apply(key));
+        final V value = (oldValue != null) ? oldValue : mappingFunction.apply(key);
         if (valueConsumer != null) {
             valueConsumer.accept(value);
         }
@@ -444,7 +443,7 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
         Objects.requireNonNull(remappingFunction);
 
         final Entry<K,V> entry = getEntry(key, this.root);
-        final V oldValue = (entry != null ? entry.value : null);
+        final V oldValue = (entry != null) ? entry.value : null;
 
         final V newValue = remappingFunction.apply(key, oldValue);
 
