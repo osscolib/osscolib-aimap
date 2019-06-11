@@ -247,6 +247,8 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
     public void forEach(final BiConsumer<? super K, ? super V> action) {
         // NOTE There will be an additional forEach function (based on Map.Entry) coming from Iterable interface
+        // This method returns void because that's what forEach is meant to return, and this is consistent with the
+        // other (Iterable's) forEach.
         Objects.requireNonNull(action);
         Entry<K,V> entry;
         final Iterator<Map.Entry<K,V>> iter = iterator();
@@ -290,11 +292,8 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
 
     public AtomicHashStore<K,V> putIfAbsent(final K key, final V value, final Consumer<V> oldValueConsumer) {
-        // This is implemented according to the spec of Map#putIfAbsent(), which specifies that the new
-        // entry should be established only if the key doesn't currently exist or is mapped to null.
-        // Note however that Map#putIfAbsent() returns the old value associated with the key if there is
-        // such value, and this method cannot do that in order to keep streaming API capabilities. Instead,
-        // the oldValueConsumer will be called on the old value (be it null or non-null).
+        // This is implemented according to the spec of Map#putIfAbsent(), but in order to keep streaming API
+        // capabilities, a consumer can be specified for what the equivalent method in java.util.Map would return.
         final V oldValue = get(key);
         if (oldValueConsumer != null) {
             oldValueConsumer.accept(oldValue);
