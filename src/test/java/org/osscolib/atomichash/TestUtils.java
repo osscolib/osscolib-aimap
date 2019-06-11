@@ -245,6 +245,13 @@ public final class TestUtils {
 
 
 
+    public static class ValueRef<V> {
+        public V val = null;
+        public boolean b = false;
+    }
+
+
+
 
     private TestUtils() {
         super();

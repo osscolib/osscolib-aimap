@@ -142,8 +142,12 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
 
 
-
     public AtomicHashStore<K,V> put(final K key, final V value) {
+        return put(key, value, null);
+    }
+
+
+    public AtomicHashStore<K,V> put(final K key, final V value, final Consumer<V> oldValueConsumer) {
 
         final Entry<K,V> entry = new Entry(key, value);
 
@@ -155,7 +159,7 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
         } else {
 
-            newRoot = this.root.put(Level.LEVEL0, entry);
+            newRoot = this.root.put(Level.LEVEL0, entry, oldValueConsumer);
             if (this.root == newRoot) {
                 return this;
             }
@@ -220,12 +224,17 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
 
     public AtomicHashStore<K,V> remove(final Object key) {
+        return remove(key, null);
+    }
+
+
+    public AtomicHashStore<K,V> remove(final Object key, final Consumer<V> oldValueConsumer) {
 
         if (this.root == null) {
             return this;
         }
 
-        final Node newRoot = this.root.remove(Level.LEVEL0, Entry.hash(key), key);
+        final Node newRoot = this.root.remove(Level.LEVEL0, Entry.hash(key), key, oldValueConsumer);
         if (this.root == newRoot) {
             return this;
         }

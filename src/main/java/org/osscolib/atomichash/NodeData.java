@@ -22,6 +22,7 @@ package org.osscolib.atomichash;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 final class NodeData<K,V> implements Serializable {
 
@@ -58,19 +59,29 @@ final class NodeData<K,V> implements Serializable {
 
 
 
-    NodeData<K,V> put(final Entry<K,V> newEntry) {
+    NodeData<K,V> put(final Entry<K,V> newEntry, final Consumer<V> oldValueConsumer) {
 
         if (this.entry != null) {
             // This is single-valued
 
             if (this.entry.key == newEntry.key && this.entry.value == newEntry.value) {
                 // No need to perform any modifications, we might avoid a rewrite of a tree path!
+                if (oldValueConsumer != null) {
+                    oldValueConsumer.accept(this.entry.value);
+                }
                 return this;
             }
 
             if (Objects.equals(this.entry.key, newEntry.key)) {
                 // We are replacing the previous value for a new one
+                if (oldValueConsumer != null) {
+                    oldValueConsumer.accept(this.entry.value);
+                }
                 return new NodeData<>(newEntry);
+            }
+
+            if (oldValueConsumer != null) {
+                oldValueConsumer.accept(null);
             }
 
             // There is an hash collision, but this is a different slot, so we need to go multi value
@@ -94,11 +105,16 @@ final class NodeData<K,V> implements Serializable {
         }
         if (pos >= 0) {
 
+            if (oldValueConsumer != null) {
+                oldValueConsumer.accept(this.entries[pos].value);
+            }
+
             if (this.entries[pos].key == newEntry.key && this.entries[pos].value == newEntry.value) {
                 // No need to perform any modifications, we might avoid a rewrite of a tree path!
                 // Note this will only happen if key and value are actually the same object, not by object equality
                 return this;
             }
+
             final Entry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length);
             newEntries[pos] = newEntry;
 
@@ -107,6 +123,10 @@ final class NodeData<K,V> implements Serializable {
 
             return new NodeData<>(newEntries);
 
+        }
+
+        if (oldValueConsumer != null) {
+            oldValueConsumer.accept(null);
         }
 
         final Entry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length + 1);
@@ -122,11 +142,23 @@ final class NodeData<K,V> implements Serializable {
 
 
 
-    NodeData<K,V> remove(final Object key) {
+    NodeData<K,V> remove(final Object key, final Consumer<V> oldValueConsumer) {
 
         if (this.entry != null) {
             // This is single-valued
-            return Objects.equals(this.entry.key,key) ? null : this;
+
+            if (Objects.equals(this.entry.key,key)) {
+                if (oldValueConsumer != null) {
+                    oldValueConsumer.accept(this.entry.value);
+                }
+                return null;
+            }
+
+            if (oldValueConsumer != null) {
+                oldValueConsumer.accept(null);
+            }
+            return this;
+
         }
 
         int pos = -1;
@@ -136,16 +168,29 @@ final class NodeData<K,V> implements Serializable {
                 break;
             }
         }
+
         if (pos >= 0) {
+
+            if (oldValueConsumer != null) {
+                oldValueConsumer.accept(this.entries[pos].value);
+            }
+
             if (this.entries.length == 2) {
                 // There are only two items in the multi value, and we are removing one, so now its single value
                 final Entry<K,V> remainingEntry = this.entries[pos == 0? 1 : 0];
                 return new NodeData<>(remainingEntry);
             }
+
             final Entry<K,V>[] newEntries = new Entry[this.entries.length - 1];
             System.arraycopy(this.entries, 0, newEntries, 0, pos);
             System.arraycopy(this.entries, pos + 1, newEntries, pos, (this.entries.length - (pos + 1)));
+
             return new NodeData<>(newEntries);
+
+        }
+
+        if (oldValueConsumer != null) {
+            oldValueConsumer.accept(null);
         }
 
         return this;

@@ -20,13 +20,15 @@
 package org.osscolib.atomichash;
 
 import java.util.Arrays;
+import java.util.function.Consumer;
 
 final class NodeBuilder {
 
 
     static <K,V> Node<K,V>[] addChild(final Node<K,V>[] children, final boolean childrenMutable,
                                       final Level level,
-                                      final int newEntryPos, final Entry<K,V> newEntry) {
+                                      final int newEntryPos, final Entry<K,V> newEntry,
+                                      final Consumer<V> valueConsumer) {
 
         // Check the current status of the position to be used
         final Node<K,V> childInPos = children[newEntryPos];
@@ -34,7 +36,7 @@ final class NodeBuilder {
         // There is something in the selected pos, so we need to delegate
         final Node<K,V> newChild;
         if (childInPos != null) {
-            newChild = childInPos.put(level.next, newEntry);
+            newChild = childInPos.put(level.next, newEntry, valueConsumer);
             if (childInPos == newChild) {
                 return children;
             }
@@ -58,7 +60,7 @@ final class NodeBuilder {
         // ASSERTION: We know for sure that (end - start) > 1. We would have been re-routed to a simple "put" if not.
 
         if (start + 1 == end) {
-            return addChild(children, childrenMutable, level, newEntryPos, newEntries[start]);
+            return addChild(children, childrenMutable, level, newEntryPos, newEntries[start], null);
         }
 
         // Check the current status of the position to be used

@@ -190,24 +190,39 @@ public class AtomicHashStoreReadWriteTest {
         AtomicHashStore<String,String> st = this.store;
         AtomicHashStore<String,String> st2 = null;
 
+        TestUtils.ValueRef ref = new TestUtils.ValueRef();
+        ref.b = true;
+
         Assert.assertTrue(st.isEmpty());
-        st = st.remove(null, null);
+        st = st.remove(null, (String)null);
         Assert.assertTrue(st.isEmpty());
+
+        st = st.remove(null, (String)null, b -> ref.b = b);
+        Assert.assertTrue(st.isEmpty());
+        Assert.assertFalse(ref.b);
 
         st = add(st, "one", "ONE");
 
         st2 = st.remove("one", "ONE");
         Assert.assertTrue(st2.isEmpty());
 
+        st2 = st.remove("one", "ONE", b -> ref.b = b);
+        Assert.assertTrue(st2.isEmpty());
+        Assert.assertTrue(ref.b);
+
         st2 = st.remove("one", "ON");
         Assert.assertSame(st, st2);
 
-        st2 = st.remove("one", null);
+        st2 = st.remove("one", "ON", b -> ref.b = b);
+        Assert.assertSame(st, st2);
+        Assert.assertFalse(ref.b);
+
+        st2 = st.remove("one", (String)null);
         Assert.assertSame(st, st2);
 
         st = st.put(null, "NULL");
 
-        st2 = st.remove(null, null);
+        st2 = st.remove(null, (String)null);
         Assert.assertEquals(2,st2.size());
         Assert.assertSame(st, st2);
 
@@ -221,7 +236,7 @@ public class AtomicHashStoreReadWriteTest {
         Assert.assertEquals(2,st2.size());
         Assert.assertSame(st, st2);
 
-        st2 = st.remove(null, null);
+        st2 = st.remove(null, (String)null);
         Assert.assertEquals(1,st2.size());
 
 
@@ -232,6 +247,7 @@ public class AtomicHashStoreReadWriteTest {
     private static <K,V> AtomicHashStore<K,V> add(final AtomicHashStore<K,V> store, final K key, final V value) {
 
         AtomicHashStore<K,V> store2, store3;
+        final TestUtils.ValueRef<V> ref = new TestUtils.ValueRef<>();
 
         final boolean oldContainsKey = store.containsKey(key);
         final boolean oldContainsValue = store.containsValue(value);
@@ -244,12 +260,19 @@ public class AtomicHashStoreReadWriteTest {
 
         final String snap11 = PrettyPrinter.prettyPrint(store);
 
-        store2 = store.put(key, value);
+
+        store2 = store.put(key, value, (v) -> ref.val = v);
+        store3 = store.put(key, value);
 
         final String snap12 = PrettyPrinter.prettyPrint(store);
         Assert.assertEquals(snap11, snap12);
 
         TestUtils.validateStoreWellFormed(store2);
+        TestUtils.validateStoreWellFormed(store3);
+
+        Assert.assertTrue(store2.equals(store3));
+
+        Assert.assertEquals(oldValue, ref.val);
 
         final boolean newContainsKey = store2.containsKey(key);
         final boolean newContainsValue = store2.containsValue(value);
@@ -306,7 +329,7 @@ public class AtomicHashStoreReadWriteTest {
 
     private static <K,V> AtomicHashStore<K,V> remove(final AtomicHashStore<K,V> store, final K key) {
 
-        AtomicHashStore<K,V> store2, store3;
+        AtomicHashStore<K,V> store2, store3, store4, store5;
 
         final boolean oldContainsKey = store.containsKey(key);
         final V oldValue = store.get(key);
@@ -321,7 +344,21 @@ public class AtomicHashStoreReadWriteTest {
         store2 = store.remove(key);
         store3 = store.remove(key, oldValue);
 
+        TestUtils.ValueRef<V> ref = new TestUtils.ValueRef();
+        store4 = store.remove(key, (v) -> ref.val = v);
+        if (!oldContainsKey) {
+            Assert.assertNull(ref.val);
+        } else {
+            Assert.assertEquals(oldValue, ref.val);
+        }
+
+        store5 = store.remove(key, oldValue, (b) -> ref.b = b);
+
+        Assert.assertEquals(oldContainsKey, ref.b);
+
         Assert.assertTrue(store2.equals(store3));
+        Assert.assertTrue(store2.equals(store4));
+        Assert.assertTrue(store2.equals(store5));
 
         final String snap12 = PrettyPrinter.prettyPrint(store);
         Assert.assertEquals(snap11, snap12);

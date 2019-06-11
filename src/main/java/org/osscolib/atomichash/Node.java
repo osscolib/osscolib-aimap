@@ -21,6 +21,7 @@ package org.osscolib.atomichash;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.function.Consumer;
 
 final class Node<K,V> implements Serializable {
 
@@ -69,13 +70,13 @@ final class Node<K,V> implements Serializable {
 
 
 
-    Node<K,V> put(final Level level, final Entry<K, V> entry) {
+    Node<K,V> put(final Level level, final Entry<K, V> entry, final Consumer<V> oldValueConsumer) {
 
         final NodeData<K,V> data = this.data;
 
         // If possible, we will delegate to the NodeData
         if (data != null && data.hash == entry.hash) {
-            final NodeData<K,V> newData = data.put(entry);
+            final NodeData<K,V> newData = data.put(entry, oldValueConsumer);
             if (newData == data) {
                 // Nothing was added because the entry already existed
                 return this;
@@ -92,7 +93,7 @@ final class Node<K,V> implements Serializable {
         }
 
         final int newEntryPos = level.pos(entry.hash);
-        newChildren = NodeBuilder.addChild(newChildren, newChildrenMutable, level, newEntryPos, entry);
+        newChildren = NodeBuilder.addChild(newChildren, newChildrenMutable, level, newEntryPos, entry, oldValueConsumer);
         if (newChildren == this.children){
             return this;
         }
@@ -111,7 +112,7 @@ final class Node<K,V> implements Serializable {
 
         if (start + 1 == end) {
             // Re-route to a normal "put" operation
-            return put(level, entries[start]);
+            return put(level, entries[start], null);
         }
 
         Node<K,V>[] newChildren = this.children;
@@ -127,7 +128,7 @@ final class Node<K,V> implements Serializable {
                 // All hashes match! so we need to delegate entirely to the NodeData
                 NodeData<K,V> newData = data;
                 for (int i = start; i < end; i++) {
-                    newData = newData.put(entries[i]);
+                    newData = newData.put(entries[i], null);
                 }
                 if (newData == data) {
                     // Nothing was added because all entries already existed -- this should actually never happen
@@ -190,7 +191,7 @@ final class Node<K,V> implements Serializable {
 
 
 
-    Node<K,V> remove(final Level level, final int hash, final Object key) {
+    Node<K,V> remove(final Level level, final int hash, final Object key, final Consumer<V> oldValueConsumer) {
 
         if (this.data == null) {
 
@@ -202,7 +203,7 @@ final class Node<K,V> implements Serializable {
                 return this;
             }
 
-            final Node<K,V> newChild = child.remove(level.next, hash, key);
+            final Node<K,V> newChild = child.remove(level.next, hash, key, oldValueConsumer);
             if (newChild == child) {
                 return this;
             }
@@ -226,7 +227,7 @@ final class Node<K,V> implements Serializable {
             return this;
         }
 
-        final NodeData<K,V> newData = this.data.remove(key);
+        final NodeData<K,V> newData = this.data.remove(key, oldValueConsumer);
 
         if (newData == this.data) {
             // No changes needed (key not found)
