@@ -98,6 +98,7 @@
         <!-- A project-name-based approach is adopted for the module name (instead of a reverse-DNS one)      -->
         <!-- NOTE we cannot use ${project.artifactId} here because it contains '-', a forbidden char          -->
         <module.name>osscolib.atomichash</module.name>
+        <errorprone.core.version>2.3.3</errorprone.core.version>
         <test.junit.version>4.12</test.junit.version>
         <test.commons-lang3.version>3.8.1</test.commons-lang3.version>
     </properties>
@@ -149,6 +150,7 @@
                     <source>${maven.compile.source}</source>
                     <target>${maven.compile.target}</target>
                     <encoding>${project.build.sourceEncoding}</encoding>
+                    <showWarnings>true</showWarnings>
                 </configuration>
             </plugin>
 
@@ -284,6 +286,40 @@
         </plugins>
 
     </build>
+
+    <profiles>
+        <profile>
+            <!-- NOTE due to errorprone restrictions, this profile will only work when executed -->
+            <!-- with JDK 9 or newer.                                                           -->
+            <id>errorprone</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>3.8.0</version>
+                        <configuration>
+                            <source>${maven.compile.source}</source>
+                            <target>${maven.compile.target}</target>
+                            <encoding>${project.build.sourceEncoding}</encoding>
+                            <showWarnings>true</showWarnings>
+                            <compilerArgs combine.children="append">
+                                <arg>-XDcompilePolicy=simple</arg>
+                                <arg>-Xplugin:ErrorProne</arg>
+                            </compilerArgs>
+                            <annotationProcessorPaths>
+                                <path>
+                                    <groupId>com.google.errorprone</groupId>
+                                    <artifactId>error_prone_core</artifactId>
+                                    <version>${errorprone.core.version}</version>
+                                </path>
+                            </annotationProcessorPaths>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <dependencies>
 
