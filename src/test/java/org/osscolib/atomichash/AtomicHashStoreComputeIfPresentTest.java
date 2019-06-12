@@ -150,7 +150,7 @@ public class AtomicHashStoreComputeIfPresentTest {
         final String snap11 = PrettyPrinter.prettyPrint(store);
 
         final Map<String,V> m = new HashMap<>();
-        store2 = store.computeIfPresent(key, (k) -> value, (v) -> { m.put("VALUE", v);});
+        store2 = store.computeIfPresent(key, (k,v) -> value, (v) -> { m.put("VALUE", v);});
         if (oldContainsKey) {
             Assert.assertEquals(value, m.get("VALUE"));
             Assert.assertEquals(value, store2.get(key));
@@ -160,7 +160,7 @@ public class AtomicHashStoreComputeIfPresentTest {
         }
 
 
-        store2 = store.computeIfPresent(key, (k) -> value);
+        store2 = store.computeIfPresent(key, (k,v) -> value);
 
 
         final String snap12 = PrettyPrinter.prettyPrint(store);

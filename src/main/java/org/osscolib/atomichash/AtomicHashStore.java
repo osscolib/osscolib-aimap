@@ -241,12 +241,12 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
 
 
 
-    public AtomicHashStore<K,V> remove(final K key, final V value) {
+    public AtomicHashStore<K,V> remove(final Object key, final Object value) {
         return remove(key, value, null);
     }
 
 
-    public AtomicHashStore<K,V> remove(final K key, final V value, final Consumer<Boolean> successConsumer) {
+    public AtomicHashStore<K,V> remove(final Object key, final Object value, final Consumer<Boolean> successConsumer) {
 
         final HashEntry<K,V> entry = getEntry(key, this.root);
         if (entry == null || !Objects.equals(entry.value, value)) {
@@ -394,19 +394,20 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
 
 
     public AtomicHashStore<K,V> computeIfPresent(
-            final K key, final Function<? super K, ? extends V> mappingFunction) {
-        return computeIfPresent(key, mappingFunction, null);
+            final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        return computeIfPresent(key, remappingFunction, null);
     }
 
 
     public AtomicHashStore<K,V> computeIfPresent(
-            final K key, final Function<? super K, ? extends V> mappingFunction, final Consumer<V> valueConsumer) {
+            final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction,
+            final Consumer<V> valueConsumer) {
         // This is implemented according to the spec of Map#computeIfPresent(), but in order to keep streaming API
         // capabilities, a consumer can be specified for what the equivalent method in java.util.Map would return.
-        Objects.requireNonNull(mappingFunction);
+        Objects.requireNonNull(remappingFunction);
         final V oldValue = get(key);
         if (oldValue != null) {
-            final V newValue = mappingFunction.apply(key);
+            final V newValue = remappingFunction.apply(key, oldValue);
             if (valueConsumer != null) {
                 valueConsumer.accept(newValue);
             }
