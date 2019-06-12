@@ -20,9 +20,16 @@
 package org.osscolib.atomichash;
 
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
-public class AtomicHashMap<K,V> implements Serializable {
+public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
 
     private static final long serialVersionUID = 2626373528770987645L;
 
@@ -30,28 +37,240 @@ public class AtomicHashMap<K,V> implements Serializable {
 
 
 
-    AtomicHashMap() {
+    public AtomicHashMap() {
         super();
         this.innerMap = new AtomicReference<>();
-        this.innerMap.set(new AtomicHashStore<>());
+        this.innerMap.set(AtomicHashStore.of());
+    }
+
+
+    private AtomicHashMap(final AtomicHashStore<K,V> store) {
+        super();
+        this.innerMap = new AtomicReference<>();
+        this.innerMap.set(store);
     }
 
 
 
+
+    AtomicHashStore<K,V> get() {
+        return this.innerMap.get();
+    }
+
+
+
+
+    @Override
     public int size() {
-        return this.innerMap.get().size();
+        return get().size();
     }
 
+
+
+
+    @Override
+    public boolean isEmpty() {
+        return get().isEmpty();
+    }
+
+
+
+
+    @Override
     public boolean containsKey(final Object key) {
-        return this.innerMap.get().containsKey(key);
+        return get().containsKey(key);
     }
 
+
+
+
+    @Override
     public boolean containsValue(final Object value) {
-        return this.innerMap.get().containsValue(value);
+        return get().containsValue(value);
     }
 
+
+
+
+    @Override
     public V get(final Object key) {
-        return this.innerMap.get().get(key);
+        return get().get(key);
+    }
+
+
+    @Override
+    public V getOrDefault(final Object key, final V defaultValue) {
+        return get().getOrDefault(key, defaultValue);
+    }
+
+
+
+
+    @Override
+    public V put(final K key, final V value) {
+        final ValueConsumer<V> vc = new ValueConsumer<>();
+        AtomicHashStore<K,V> store;
+        do {
+            store = get();
+        } while(!this.innerMap.compareAndSet(store, store.put(key, value, vc)));
+        return vc.val;
+    }
+
+
+
+
+    @Override
+    public void putAll(final Map<? extends K, ? extends V> m) {
+        AtomicHashStore<K,V> store;
+        do {
+            store = get();
+        } while(!this.innerMap.compareAndSet(store, store.putAll(m)));
+    }
+
+
+
+
+    @Override
+    public V putIfAbsent(final K key, final V value) {
+        final ValueConsumer<V> vc = new ValueConsumer<>();
+        AtomicHashStore<K,V> store;
+        do {
+            store = get();
+        } while(!this.innerMap.compareAndSet(store, store.putIfAbsent(key, value, vc)));
+        return vc.val;
+    }
+
+
+
+
+    @Override
+    public V remove(final Object key) {
+        final ValueConsumer<V> vc = new ValueConsumer<>();
+        AtomicHashStore<K,V> store;
+        do {
+            store = get();
+        } while(!this.innerMap.compareAndSet(store, store.remove(key, vc)));
+        return vc.val;
+    }
+
+
+    @Override
+    public boolean remove(final Object key, final Object value) {
+        final BooleanConsumer bc = new BooleanConsumer();
+        AtomicHashStore<K,V> store;
+        do {
+            store = get();
+        } while(!this.innerMap.compareAndSet(store, store.remove(key, value, bc)));
+        return bc.val;
+    }
+
+
+
+
+    @Override
+    public void forEach(final BiConsumer<? super K, ? super V> action) {
+        get().forEach(action);
+    }
+
+
+
+
+    @Override
+    public V replace(final K key, final V value) {
+        final ValueConsumer<V> vc = new ValueConsumer<>();
+        AtomicHashStore<K,V> store;
+        do {
+            store = get();
+        } while(!this.innerMap.compareAndSet(store, store.replace(key, value, vc)));
+        return vc.val;
+    }
+
+
+    @Override
+    public boolean replace(final K key, final V oldValue, final V newValue) {
+        final BooleanConsumer bc = new BooleanConsumer();
+        AtomicHashStore<K,V> store;
+        do {
+            store = get();
+        } while(!this.innerMap.compareAndSet(store, store.replace(key, oldValue, newValue, bc)));
+        return bc.val;
+    }
+
+
+
+
+    @Override
+    public void replaceAll(final BiFunction<? super K, ? super V, ? extends V> function) {
+        AtomicHashStore<K,V> store;
+        do {
+            store = get();
+        } while(!this.innerMap.compareAndSet(store, store.replaceAll(function)));
+    }
+
+
+
+
+    @Override
+    public V computeIfAbsent(final K key, final Function<? super K, ? extends V> mappingFunction) {
+        final ValueConsumer<V> vc = new ValueConsumer<>();
+        AtomicHashStore<K,V> store;
+        do {
+            store = get();
+        } while(!this.innerMap.compareAndSet(store, store.computeIfAbsent(key, mappingFunction, vc)));
+        return vc.val;
+    }
+
+
+
+
+    @Override
+    public V computeIfPresent(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        final ValueConsumer<V> vc = new ValueConsumer<>();
+        AtomicHashStore<K,V> store;
+        do {
+            store = get();
+        } while(!this.innerMap.compareAndSet(store, store.computeIfPresent(key, remappingFunction, vc)));
+        return vc.val;
+    }
+
+
+
+
+    @Override
+    public V compute(final K key, final BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        final ValueConsumer<V> vc = new ValueConsumer<>();
+        AtomicHashStore<K,V> store;
+        do {
+            store = get();
+        } while(!this.innerMap.compareAndSet(store, store.compute(key, remappingFunction, vc)));
+        return vc.val;
+    }
+
+
+
+
+    @Override
+    public V merge(final K key, final V value, final BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        final ValueConsumer<V> vc = new ValueConsumer<>();
+        AtomicHashStore<K,V> store;
+        do {
+            store = get();
+        } while(!this.innerMap.compareAndSet(store, store.merge(key, value, remappingFunction, vc)));
+        return vc.val;
+    }
+
+
+
+
+    @Override
+    public void clear() {
+        AtomicHashStore<K,V> store;
+        do {
+            store = get();
+        } while(!this.innerMap.compareAndSet(store, store.clear()));
+    }
+
+
 
     @Override
     public Set<Map.Entry<K,V>> entrySet() {
@@ -70,5 +289,64 @@ public class AtomicHashMap<K,V> implements Serializable {
         return new Collections.MapValueCollection<>(this.innerMap.get()); // TODO Correctly implement this
     }
 
+
+
+
+    public static <K, V> AtomicHashMap<K, V> copyOf(final AtomicHashMap<? extends K, ? extends V> map) {
+        return new AtomicHashMap<>((AtomicHashStore<K, V>) map.get());
+    }
+
+
+
+
+    @Override
+    public boolean equals(final Object o) {
+
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof AtomicHashMap)) {
+            return false;
+        }
+        final AtomicHashMap<?,?> other = (AtomicHashMap<?,?>) o;
+
+        final AtomicHashStore<K,V> st = get();
+        final AtomicHashStore<?,?> ost = other.get();
+
+        return st.equals(ost);
+
+    }
+
+
+    @Override
+    public int hashCode() {
+        return get().hashCode();
+    }
+
+
+
+
+    private static class ValueConsumer<V> implements Consumer<V> {
+
+        private V val = null;
+
+        @Override
+        public void accept(final V v) {
+            this.val = v;
+        }
+
+    }
+
+    private static class BooleanConsumer implements Consumer<Boolean> {
+
+        private boolean val = false;
+
+        @Override
+        public void accept(final Boolean v) {
+            this.val = (v != null && v.booleanValue());
+        }
+
+    }
 
 }

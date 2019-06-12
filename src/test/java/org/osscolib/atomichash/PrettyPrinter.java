@@ -24,7 +24,11 @@ import java.util.Map;
 
 final class PrettyPrinter {
 
-    
+
+    static <K,V> String prettyPrint(final AtomicHashMap<K,V> map) {
+        return prettyPrint(map.get());
+    }
+
     static <K,V> String prettyPrint(final AtomicHashStore<K,V> store) {
         final StringBuilder stringBuilder = new StringBuilder();
         if (store.root != null) {
