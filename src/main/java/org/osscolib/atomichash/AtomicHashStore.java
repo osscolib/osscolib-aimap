@@ -33,6 +33,7 @@ import java.util.function.Function;
 public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>>, Serializable {
 
     private static final long serialVersionUID = 6362537038828380833L;
+    private static final AtomicHashStore INSTANCE = new AtomicHashStore<>();
 
     final Node<K,V> root;
 
@@ -234,6 +235,10 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
             return this;
         }
 
+        if (newRoot == null) {
+            return INSTANCE;
+        }
+
         return new AtomicHashStore<K,V>(newRoot);
 
     }
@@ -339,7 +344,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
             newOrderedEntries[i] = new HashEntry<>(entry.key, function.apply(entry.key, entry.value));
         }
 
-        final AtomicHashStore<K,W> store = new AtomicHashStore<>();
+        final AtomicHashStore<K,W> store = of();
         return store.putAll(newOrderedEntries);
 
     }
@@ -494,7 +499,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
 
 
     public AtomicHashStore<K,V> clear() {
-        return new AtomicHashStore<>();
+        return of();
     }
 
 
@@ -561,6 +566,231 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
         }
         return h;
     }
+
+
+
+
+    public static <K,V> AtomicHashStore<K, V> of() {
+        return INSTANCE;
+    }
+
+
+    public static <K, V> AtomicHashStore<K, V> of(
+            final K k1, final V v1) {
+
+        final AtomicHashStore<K,V> base = of();
+        return base.put(k1, v1);
+
+    }
+
+
+    public static <K,V> AtomicHashStore<K, V> of(
+            final K k1, final V v1, final K k2, final V v2) {
+
+        final HashEntry<K,V>[] entries = new HashEntry[2];
+        entries[0] = new HashEntry<>(k1,v1);
+        entries[1] = new HashEntry<>(k2,v2);
+
+        Arrays.sort(entries);
+
+        final AtomicHashStore<K,V> base = of();
+        return base.putAll(entries);
+
+    }
+
+
+    public static <K,V> AtomicHashStore<K, V> of(
+            final K k1, final V v1, final K k2, final V v2, final K k3, final V v3) {
+
+        final HashEntry<K,V>[] entries = new HashEntry[3];
+        entries[0] = new HashEntry<>(k1,v1);
+        entries[1] = new HashEntry<>(k2,v2);
+        entries[2] = new HashEntry<>(k3,v3);
+
+        Arrays.sort(entries);
+
+        final AtomicHashStore<K,V> base = of();
+        return base.putAll(entries);
+
+    }
+
+
+    public static <K,V> AtomicHashStore<K, V> of(
+            final K k1, final V v1, final K k2, final V v2, final K k3, final V v3, final K k4, final V v4) {
+
+        final HashEntry<K,V>[] entries = new HashEntry[4];
+        entries[0] = new HashEntry<>(k1,v1);
+        entries[1] = new HashEntry<>(k2,v2);
+        entries[2] = new HashEntry<>(k3,v3);
+        entries[3] = new HashEntry<>(k4,v4);
+
+        Arrays.sort(entries);
+
+        final AtomicHashStore<K,V> base = of();
+        return base.putAll(entries);
+
+    }
+
+
+    public static <K,V> AtomicHashStore<K, V> of(
+            final K k1, final V v1, final K k2, final V v2, final K k3, final V v3, final K k4, final V v4,
+            final K k5, final V v5) {
+
+        final HashEntry<K,V>[] entries = new HashEntry[5];
+        entries[0] = new HashEntry<>(k1,v1);
+        entries[1] = new HashEntry<>(k2,v2);
+        entries[2] = new HashEntry<>(k3,v3);
+        entries[3] = new HashEntry<>(k4,v4);
+        entries[4] = new HashEntry<>(k5,v5);
+
+        Arrays.sort(entries);
+
+        final AtomicHashStore<K,V> base = of();
+        return base.putAll(entries);
+
+    }
+
+
+    public static <K,V> AtomicHashStore<K, V> of(
+            final K k1, final V v1, final K k2, final V v2, final K k3, final V v3, final K k4, final V v4,
+            final K k5, final V v5, final K k6, final V v6) {
+
+        final HashEntry<K,V>[] entries = new HashEntry[6];
+        entries[0] = new HashEntry<>(k1,v1);
+        entries[1] = new HashEntry<>(k2,v2);
+        entries[2] = new HashEntry<>(k3,v3);
+        entries[3] = new HashEntry<>(k4,v4);
+        entries[4] = new HashEntry<>(k5,v5);
+        entries[5] = new HashEntry<>(k6,v6);
+
+        Arrays.sort(entries);
+
+        final AtomicHashStore<K,V> base = of();
+        return base.putAll(entries);
+
+    }
+
+
+    public static <K,V> AtomicHashStore<K, V> of(
+            final K k1, final V v1, final K k2, final V v2, final K k3, final V v3, final K k4, final V v4,
+            final K k5, final V v5, final K k6, final V v6, final K k7, final V v7) {
+
+        final HashEntry<K,V>[] entries = new HashEntry[7];
+        entries[0] = new HashEntry<>(k1,v1);
+        entries[1] = new HashEntry<>(k2,v2);
+        entries[2] = new HashEntry<>(k3,v3);
+        entries[3] = new HashEntry<>(k4,v4);
+        entries[4] = new HashEntry<>(k5,v5);
+        entries[5] = new HashEntry<>(k6,v6);
+        entries[6] = new HashEntry<>(k7,v7);
+
+        Arrays.sort(entries);
+
+        final AtomicHashStore<K,V> base = of();
+        return base.putAll(entries);
+
+    }
+
+
+    public static <K,V> AtomicHashStore<K, V> of(
+            final K k1, final V v1, final K k2, final V v2, final K k3, final V v3, final K k4, final V v4,
+            final K k5, final V v5, final K k6, final V v6, final K k7, final V v7, final K k8, final V v8) {
+
+        final HashEntry<K,V>[] entries = new HashEntry[8];
+        entries[0] = new HashEntry<>(k1,v1);
+        entries[1] = new HashEntry<>(k2,v2);
+        entries[2] = new HashEntry<>(k3,v3);
+        entries[3] = new HashEntry<>(k4,v4);
+        entries[4] = new HashEntry<>(k5,v5);
+        entries[5] = new HashEntry<>(k6,v6);
+        entries[6] = new HashEntry<>(k7,v7);
+        entries[7] = new HashEntry<>(k8,v8);
+
+        Arrays.sort(entries);
+
+        final AtomicHashStore<K,V> base = of();
+        return base.putAll(entries);
+
+    }
+
+
+    public static <K,V> AtomicHashStore<K, V> of(
+            final K k1, final V v1, final K k2, final V v2, final K k3, final V v3, final K k4, final V v4,
+            final K k5, final V v5, final K k6, final V v6, final K k7, final V v7, final K k8, final V v8,
+            final K k9, final V v9) {
+
+        final HashEntry<K,V>[] entries = new HashEntry[9];
+        entries[0] = new HashEntry<>(k1,v1);
+        entries[1] = new HashEntry<>(k2,v2);
+        entries[2] = new HashEntry<>(k3,v3);
+        entries[3] = new HashEntry<>(k4,v4);
+        entries[4] = new HashEntry<>(k5,v5);
+        entries[5] = new HashEntry<>(k6,v6);
+        entries[6] = new HashEntry<>(k7,v7);
+        entries[7] = new HashEntry<>(k8,v8);
+        entries[8] = new HashEntry<>(k9,v9);
+
+        Arrays.sort(entries);
+
+        final AtomicHashStore<K,V> base = of();
+        return base.putAll(entries);
+
+    }
+
+
+    public static <K,V> AtomicHashStore<K, V> of(
+            final K k1, final V v1, final K k2, final V v2, final K k3, final V v3, final K k4, final V v4,
+            final K k5, final V v5, final K k6, final V v6, final K k7, final V v7, final K k8, final V v8,
+            final K k9, final V v9, final K k10, final V v10) {
+
+        final HashEntry<K,V>[] entries = new HashEntry[10];
+        entries[0] = new HashEntry<>(k1,v1);
+        entries[1] = new HashEntry<>(k2,v2);
+        entries[2] = new HashEntry<>(k3,v3);
+        entries[3] = new HashEntry<>(k4,v4);
+        entries[4] = new HashEntry<>(k5,v5);
+        entries[5] = new HashEntry<>(k6,v6);
+        entries[6] = new HashEntry<>(k7,v7);
+        entries[7] = new HashEntry<>(k8,v8);
+        entries[8] = new HashEntry<>(k9,v9);
+        entries[9] = new HashEntry<>(k10,v10);
+
+        Arrays.sort(entries);
+
+        final AtomicHashStore<K,V> base = of();
+        return base.putAll(entries);
+
+    }
+
+
+    public static <K,V> AtomicHashStore<K, V> ofEntries(final Entry<? extends K, ? extends V>... entries) {
+
+        if (entries.length == 0) {
+            return of();
+        }
+
+        if (entries.length == 1) {
+            return of(entries[0].getKey(), entries[0].getValue());
+        }
+
+        final HashEntry<K,V>[] entriesArr = new HashEntry[entries.length];
+        Entry<? extends K,? extends V> entry;
+        for (int i = 0; i < entries.length; i++) {
+            entry = entries[i];
+            if (entry instanceof HashEntry) {
+                entriesArr[i] = (HashEntry<K,V>) entry;
+            } else {
+                entriesArr[i] = new HashEntry<>(entry.getKey(), entry.getValue());
+            }
+        }
+
+        Arrays.sort(entriesArr);
+
+        final AtomicHashStore<K,V> base = of();
+        return base.putAll(entriesArr);
+
+    }
+
 
 
 

@@ -33,7 +33,7 @@ public class AtomicHashStoreComputeIfAbsentTest {
 
     @Before
     public void initStore() {
-        this.store = new AtomicHashStore<>();
+        this.store = AtomicHashStore.of();
     }
 
 
