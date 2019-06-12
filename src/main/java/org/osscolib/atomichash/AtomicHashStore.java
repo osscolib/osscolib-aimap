@@ -20,26 +20,21 @@
 package org.osscolib.atomichash;
 
 import java.io.Serializable;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 
-public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializable {
+public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>>, Serializable {
 
     private static final long serialVersionUID = 6362537038828380833L;
 
     final Node<K,V> root;
-
-    transient Sets.StoreEntrySet<K,V> entrySet = null;
-    transient Sets.StoreKeySet<K,V> keySet = null;
-    transient Collections.StoreValueCollection<K,V> valueCollection = null;
 
 
 
@@ -90,21 +85,21 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
 
     public V get(final Object key) {
-        final Entry<K,V> entry = getEntry(key, this.root);
+        final HashEntry<K,V> entry = getEntry(key, this.root);
         return entry != null ? entry.value : null;
     }
 
 
     public V getOrDefault(final Object key, final V defaultValue) {
-        final Entry<K,V> entry = getEntry(key, this.root);
+        final HashEntry<K,V> entry = getEntry(key, this.root);
         return entry != null ? entry.value : defaultValue;
     }
 
 
 
-    static <K,V> Entry<K,V> getEntry(final Object key, final Node<K,V> root) {
+    static <K,V> HashEntry<K,V> getEntry(final Object key, final Node<K,V> root) {
 
-        final int hash = Entry.hash(key);
+        final int hash = HashEntry.hash(key);
 
         Node<K,V> node = root;
         Node<K,V>[] children;
@@ -123,12 +118,12 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
             return null;
         }
 
-        final Entry<K,V> e = data.entry;
+        final HashEntry<K,V> e = data.entry;
         if (e != null) {
             return Objects.equals(e.key, key) ? e : null;
         }
 
-        final Entry<K,V>[] es = data.entries;
+        final HashEntry<K,V>[] es = data.entries;
         for (int i = 0; i < es.length; i++) {
             // TODO Performance degradation with large number of collisions -> adopt some kind of tree?
             if (Objects.equals(es[i].key, key)) {
@@ -149,7 +144,7 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
     public AtomicHashStore<K,V> put(final K key, final V value, final Consumer<V> oldValueConsumer) {
 
-        final Entry<K,V> entry = new Entry(key, value);
+        final HashEntry<K,V> entry = new HashEntry(key, value);
 
         final Node<K,V> newRoot;
         if (this.root == null) {
@@ -189,18 +184,18 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
             return put(singleEntry.getKey(), singleEntry.getValue());
         }
 
-        final Entry<K,V>[] orderedEntries =
+        final HashEntry<K,V>[] orderedEntries =
                 map.entrySet().stream()
-                        .map(e -> new Entry<>(e.getKey(), e.getValue()))
+                        .map(e -> new HashEntry<>(e.getKey(), e.getValue()))
                         .sorted()
-                        .toArray(Entry[]::new);
+                        .toArray(HashEntry[]::new);
 
         return putAll(orderedEntries);
 
     }
 
 
-    private AtomicHashStore<K,V> putAll(final Entry<K,V>[] orderedEntries) {
+    private AtomicHashStore<K,V> putAll(final HashEntry<K,V>[] orderedEntries) {
 
         if (orderedEntries.length == 0) {
             return this;
@@ -234,7 +229,7 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
             return this;
         }
 
-        final Node newRoot = this.root.remove(Level.LEVEL0, Entry.hash(key), key, oldValueConsumer);
+        final Node newRoot = this.root.remove(Level.LEVEL0, HashEntry.hash(key), key, oldValueConsumer);
         if (this.root == newRoot) {
             return this;
         }
@@ -253,7 +248,7 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
     public AtomicHashStore<K,V> remove(final K key, final V value, final Consumer<Boolean> successConsumer) {
 
-        final Entry<K,V> entry = getEntry(key, this.root);
+        final HashEntry<K,V> entry = getEntry(key, this.root);
         if (entry == null || !Objects.equals(entry.value, value)) {
             if (successConsumer != null) {
                 successConsumer.accept(Boolean.FALSE);
@@ -271,14 +266,14 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
 
     public void forEach(final BiConsumer<? super K, ? super V> action) {
-        // NOTE There will be an additional forEach function (based on Map.Entry) coming from Iterable interface
+        // NOTE There will be an additional forEach function (based on Entry) coming from Iterable interface
         // This method returns void because that's what forEach is meant to return, and this is consistent with the
         // other (Iterable's) forEach.
         Objects.requireNonNull(action);
-        Entry<K,V> entry;
-        final Iterator<Map.Entry<K,V>> iter = iterator();
+        HashEntry<K,V> entry;
+        final Iterator<Entry<K,V>> iter = iterator();
         while (iter.hasNext()) {
-            entry = (Entry<K,V>) iter.next();
+            entry = (HashEntry<K,V>) iter.next();
             action.accept(entry.key, entry.value);
         }
     }
@@ -292,7 +287,7 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
 
     public AtomicHashStore<K,V> replace(final K key, final V value, final Consumer<V> oldValueConsumer) {
-        final Entry<K,V> entry = getEntry(key, this.root);
+        final HashEntry<K,V> entry = getEntry(key, this.root);
         if (entry == null) {
             if (oldValueConsumer != null) {
                 oldValueConsumer.accept(null);
@@ -311,7 +306,7 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
 
     public AtomicHashStore<K,V> replace(final K key, final V oldValue, final V newValue, final Consumer<Boolean> successConsumer) {
-        final Entry<K,V> entry = getEntry(key, this.root);
+        final HashEntry<K,V> entry = getEntry(key, this.root);
         if (entry == null || !Objects.equals(entry.value, oldValue)) {
             if (successConsumer != null) {
                 successConsumer.accept(Boolean.FALSE);
@@ -333,15 +328,15 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
         Objects.requireNonNull(function);
 
-        Entry<K,V> entry;
-        final Iterator<Map.Entry<K,V>> iter = iterator();
+        HashEntry<K,V> entry;
+        final Iterator<Entry<K,V>> iter = iterator();
 
         // The newly created array will still be considered to be ordered because keys won't change, and Entry
         // ordering (Entry#compareTo()) is based entirely on keys.
-        final Entry<K,W>[] newOrderedEntries = new Entry[size()];
+        final HashEntry<K,W>[] newOrderedEntries = new HashEntry[size()];
         for (int i = 0; i < newOrderedEntries.length; i++) {
-            entry = (Entry<K,V>) iter.next();
-            newOrderedEntries[i] = new Entry<>(entry.key, function.apply(entry.key, entry.value));
+            entry = (HashEntry<K,V>) iter.next();
+            newOrderedEntries[i] = new HashEntry<>(entry.key, function.apply(entry.key, entry.value));
         }
 
         final AtomicHashStore<K,W> store = new AtomicHashStore<>();
@@ -442,7 +437,7 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
         Objects.requireNonNull(remappingFunction);
 
-        final Entry<K,V> entry = getEntry(key, this.root);
+        final HashEntry<K,V> entry = getEntry(key, this.root);
         final V oldValue = (entry != null) ? entry.value : null;
 
         final V newValue = remappingFunction.apply(key, oldValue);
@@ -504,39 +499,8 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
 
 
     @Override
-    public Iterator<Map.Entry<K,V>> iterator() {
-        return new Iterators.EntryIterator<>(this.root);
-    }
-
-
-
-    public Set<Map.Entry<K,V>> entrySet() {
-        Sets.StoreEntrySet<K,V> entrySet;
-        if ((entrySet = this.entrySet) != null) {
-            return entrySet;
-        }
-        this.entrySet = new Sets.StoreEntrySet<>(this);
-        return this.entrySet;
-    }
-
-
-    public Set<K> keySet() {
-        Sets.StoreKeySet<K,V> keySet;
-        if ((keySet = this.keySet) != null) {
-            return keySet;
-        }
-        this.keySet = new Sets.StoreKeySet<>(this);
-        return this.keySet;
-    }
-
-
-    public Collection<V> values() {
-        Collections.StoreValueCollection<K,V> valueCollection;
-        if ((valueCollection = this.valueCollection) != null) {
-            return valueCollection;
-        }
-        this.valueCollection = new Collections.StoreValueCollection<>(this);
-        return this.valueCollection;
+    public Iterator<Entry<K,V>> iterator() {
+        return new Iterators.StoreEntryIterator<>(this.root);
     }
 
 
@@ -561,14 +525,14 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
             return false;
         }
 
-        final Iterator<Map.Entry<K,V>> thisIter = this.iterator();
+        final Iterator<Entry<K,V>> thisIter = this.iterator();
 
         int count = 0;
-        Entry<K,V> thisEntry;
-        Entry<?,?> otherEntry;
+        HashEntry<K,V> thisEntry;
+        HashEntry<?,?> otherEntry;
         while (thisIter.hasNext()) {
 
-            thisEntry = (Entry<K,V>) thisIter.next();
+            thisEntry = (HashEntry<K,V>) thisIter.next();
             otherEntry = getEntry(thisEntry.key, other.root);
 
             if (otherEntry == null) {
@@ -591,10 +555,23 @@ public class AtomicHashStore<K,V> implements Iterable<Map.Entry<K,V>>, Serializa
     @Override
     public int hashCode() {
         int h = 0;
-        for (final Map.Entry<K, V> entry : entrySet()) {
-            h += entry.hashCode(); // Entry#hashCode() is properly implemented
+        for (final Entry<K, V> entry : this) {
+            h += entry.hashCode(); // HashEntry#hashCode() is properly implemented
         }
         return h;
+    }
+
+
+
+    public static <K,V> Entry<K,V> entry(final K key, final V value) {
+        return new HashEntry<>(key, value);
+    }
+
+
+
+    public interface Entry<K,V> extends Map.Entry<K,V> {
+        // Nothing to be added to the Map.Entry interface. This is just meant to make
+        // the API of the AtomicHashStore independent from Map.
     }
 
 }

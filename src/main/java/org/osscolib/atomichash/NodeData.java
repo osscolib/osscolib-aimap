@@ -29,12 +29,12 @@ final class NodeData<K,V> implements Serializable {
     private static final long serialVersionUID = -3351803095783536070L;
 
     final int hash;
-    final Entry<K,V> entry;
-    final Entry<K,V>[] entries;
+    final HashEntry<K,V> entry;
+    final HashEntry<K,V>[] entries;
 
 
 
-    NodeData(final Entry<K,V> entry) {
+    NodeData(final HashEntry<K,V> entry) {
         super();
         this.hash = entry.hash;
         this.entry = entry;
@@ -42,7 +42,7 @@ final class NodeData<K,V> implements Serializable {
     }
 
 
-    NodeData(final Entry<K,V>[] entries) {
+    NodeData(final HashEntry<K,V>[] entries) {
         super();
         this.hash = entries[0].hash;
         this.entry = null;
@@ -59,7 +59,7 @@ final class NodeData<K,V> implements Serializable {
 
 
 
-    NodeData<K,V> put(final Entry<K,V> newEntry, final Consumer<V> oldValueConsumer) {
+    NodeData<K,V> put(final HashEntry<K,V> newEntry, final Consumer<V> oldValueConsumer) {
 
         if (this.entry != null) {
             // This is single-valued
@@ -85,7 +85,7 @@ final class NodeData<K,V> implements Serializable {
             }
 
             // There is an hash collision, but this is a different slot, so we need to go multi value
-            final Entry<K,V>[] newEntries = new Entry[] { this.entry, newEntry};
+            final HashEntry<K,V>[] newEntries = new HashEntry[] { this.entry, newEntry};
 
             // We will keep this array sorted in order to ease searches in large multi-valued nodes
             Arrays.sort(newEntries);
@@ -115,7 +115,7 @@ final class NodeData<K,V> implements Serializable {
                 return this;
             }
 
-            final Entry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length);
+            final HashEntry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length);
             newEntries[pos] = newEntry;
 
             // We will keep this array sorted in order to ease searches in large multi-valued nodes
@@ -129,7 +129,7 @@ final class NodeData<K,V> implements Serializable {
             oldValueConsumer.accept(null);
         }
 
-        final Entry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length + 1);
+        final HashEntry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length + 1);
         newEntries[this.entries.length] = newEntry;
 
         // We will keep this array sorted in order to ease searches in large multi-valued nodes
@@ -177,11 +177,11 @@ final class NodeData<K,V> implements Serializable {
 
             if (this.entries.length == 2) {
                 // There are only two items in the multi value, and we are removing one, so now its single value
-                final Entry<K,V> remainingEntry = this.entries[pos == 0? 1 : 0];
+                final HashEntry<K,V> remainingEntry = this.entries[pos == 0? 1 : 0];
                 return new NodeData<>(remainingEntry);
             }
 
-            final Entry<K,V>[] newEntries = new Entry[this.entries.length - 1];
+            final HashEntry<K,V>[] newEntries = new HashEntry[this.entries.length - 1];
             System.arraycopy(this.entries, 0, newEntries, 0, pos);
             System.arraycopy(this.entries, pos + 1, newEntries, pos, (this.entries.length - (pos + 1)));
 

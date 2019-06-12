@@ -28,7 +28,7 @@ import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class AtomicHashStoreEntrySetTest {
+public class AtomicHashMapEntrySetTest {
 
 
     @Test
@@ -47,36 +47,25 @@ public class AtomicHashStoreEntrySetTest {
 
     private void testEntrySet(final int size) {
 
-        AtomicHashStore<String,String> st = new AtomicHashStore<>();
+        AtomicHashMap<String,String> m = new AtomicHashMap<>();
 
         final KeyValue<String,String>[] kvs = TestUtils.generateStringStringKeyValues(size, 20, 0);
 
         for (int i = 0; i < kvs.length; i++) {
-            st = st.put(kvs[i].getKey(), kvs[i].getValue());
+            m.put(kvs[i].getKey(), kvs[i].getValue());
         }
 
-        final String snap11 = PrettyPrinter.prettyPrint(st);
-
-        TestUtils.validateStoreWellFormed(st);
-
-        final Set<Map.Entry<String,String>> entrySet = st.entrySet();
+        final Set<Map.Entry<String,String>> entrySet = m.entrySet();
         Assert.assertEquals(kvs.length, entrySet.size());
 
         for (int i = 0; i < kvs.length; i++) {
-            Assert.assertTrue(entrySet.contains(new Entry(kvs[i].getKey(), kvs[i].getValue())));
+            Assert.assertTrue(entrySet.contains(new HashEntry(kvs[i].getKey(), kvs[i].getValue())));
         }
 
-        final String snap12 = PrettyPrinter.prettyPrint(st);
-        Assert.assertEquals(snap11, snap12);
-
         final int oldSize = entrySet.size();
-        st = st.put(null, "some null");
-        TestUtils.validateStoreWellFormed(st);
+        m.put(null, "some null");
         // The entrySet of a Store is not affected by modifications on that store (because it is immutable). Note this
         // is the contrary of what should happen with a Map
-        Assert.assertEquals(oldSize, entrySet.size());
-        st = st.remove(null);
-        TestUtils.validateStoreWellFormed(st);
         Assert.assertEquals(oldSize, entrySet.size());
 
         testIterator(kvs, entrySet);

@@ -86,7 +86,7 @@ final class PrettyPrinter {
 
     private static <K,V> void printData(
             final int levelidx, final Level level, final StringBuilder stringBuilder,
-            final int hash, final Entry<K,V> entry, final Entry<K,V>[] entries) {
+            final int hash, final HashEntry<K,V> entry, final HashEntry<K,V>[] entries) {
 
         stringBuilder.append(indentForLevel(levelidx));
         stringBuilder.append(
@@ -105,7 +105,7 @@ final class PrettyPrinter {
 
     private static <K,V> void printEntries(
             final int levelidx, final StringBuilder stringBuilder,
-            final int hash, final Entry<K,V> entry, final Map.Entry<K,V>[] entries) {
+            final int hash, final HashEntry<K,V> entry, final Map.Entry<K,V>[] entries) {
 
         stringBuilder.append(indentForLevel(levelidx));
         stringBuilder.append(String.format("[%032d] (", new BigInteger(Integer.toBinaryString(hash))));

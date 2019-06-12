@@ -70,7 +70,7 @@ final class Node<K,V> implements Serializable {
 
 
 
-    Node<K,V> put(final Level level, final Entry<K, V> entry, final Consumer<V> oldValueConsumer) {
+    Node<K,V> put(final Level level, final HashEntry<K, V> entry, final Consumer<V> oldValueConsumer) {
 
         final NodeData<K,V> data = this.data;
 
@@ -104,7 +104,7 @@ final class Node<K,V> implements Serializable {
 
 
 
-    Node<K,V> putAll(final Level level, final Entry<K, V>[] entries, final int start, final int end) {
+    Node<K,V> putAll(final Level level, final HashEntry<K, V>[] entries, final int start, final int end) {
 
         if (start == end) {
             return this;
@@ -180,7 +180,7 @@ final class Node<K,V> implements Serializable {
 
 
 
-    private static <K,V> boolean allHashesMatch(final int hash, final Entry<K,V>[] entries, final int start, final int end) {
+    private static <K,V> boolean allHashesMatch(final int hash, final HashEntry<K,V>[] entries, final int start, final int end) {
         for (int i = start; i < end; i++) {
             if (entries[i].hash != hash) {
                 return false;

@@ -33,8 +33,8 @@ abstract class Iterators<K,V> {
     private int stackSize;
     private int[] currentChild;
 
-    private Entry<K,V> entry;
-    private Entry<K,V>[] entries;
+    private HashEntry<K,V> entry;
+    private HashEntry<K,V>[] entries;
     private int entriesPos;
 
 
@@ -73,8 +73,8 @@ abstract class Iterators<K,V> {
     }
 
 
-    public Map.Entry<K,V> nextEntry() {
-        final Entry<K,V> n = this.entry;
+    public HashEntry<K,V> nextEntry() {
+        final HashEntry<K,V> n = this.entry;
         computeNext();
         return n;
     }
@@ -160,11 +160,27 @@ abstract class Iterators<K,V> {
 
 
 
-    final static class EntryIterator<K,V>
+    final static class StoreEntryIterator<K,V>
+            extends Iterators<K,V>
+            implements Iterator<AtomicHashStore.Entry<K,V>>{
+
+        StoreEntryIterator(final Node<K, V> root) {
+            super(root);
+        }
+
+        @Override
+        public AtomicHashStore.Entry<K, V> next() {
+            return super.nextEntry();
+        }
+
+    }
+
+
+    final static class MapEntryIterator<K,V>
             extends Iterators<K,V>
             implements Iterator<Map.Entry<K,V>>{
 
-        EntryIterator(final Node<K, V> root) {
+        MapEntryIterator(final Node<K, V> root) {
             super(root);
         }
 

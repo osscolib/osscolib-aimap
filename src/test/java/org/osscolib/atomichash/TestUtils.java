@@ -151,8 +151,8 @@ public final class TestUtils {
         public int compare(final KeyValue<String, String> o1, final KeyValue<String, String> o2) {
             // This emulates Entry#compareTo
 
-            final int h1 = Entry.hash(o1.getKey());
-            final int h2 = Entry.hash(o2.getKey());
+            final int h1 = HashEntry.hash(o1.getKey());
+            final int h2 = HashEntry.hash(o2.getKey());
 
             if (h1 == h2) {
                 return Integer.compare(

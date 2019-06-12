@@ -134,7 +134,8 @@ public class AtomicHashStoreEqualsHashCodeTest {
 
     private static void check(final AtomicHashStore<String,String> store) {
 
-        final List<Map.Entry<String,String>> entries = new ArrayList<>(store.entrySet());
+        final List<AtomicHashStore.Entry<String,String>> entries = new ArrayList<>();
+        store.forEach(e -> entries.add(e));
 
         final int[] positions = new int[entries.size()];
         for (int i = 0; i < positions.length; i++) {

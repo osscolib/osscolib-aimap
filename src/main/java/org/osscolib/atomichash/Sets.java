@@ -33,18 +33,18 @@ final class Sets {
      */
 
 
-    final static class StoreEntrySet<K,V> extends AbstractSet<Map.Entry<K,V>> {
+    final static class MapEntrySet<K,V> extends AbstractSet<Map.Entry<K,V>> {
 
         private final AtomicHashStore<K,V> store;
 
-        StoreEntrySet(final AtomicHashStore<K,V> store) {
+        MapEntrySet(final AtomicHashStore<K,V> store) {
             super();
             this.store = store;
         }
 
         @Override
         public Iterator<Map.Entry<K, V>> iterator() {
-            return new Iterators.EntryIterator<>(this.store.root);
+            return new Iterators.MapEntryIterator<>(this.store.root);
         }
 
         @Override
@@ -60,18 +60,18 @@ final class Sets {
             }
             final Map.Entry<?,?> entry = (Map.Entry<?,?>) o;
             final Object key = entry.getKey();
-            final Entry<?,?> candidate = AtomicHashStore.getEntry(key, this.store.root);
+            final HashEntry<?,?> candidate = AtomicHashStore.getEntry(key, this.store.root);
             return candidate != null && candidate.equals(entry);
         }
 
     }
 
 
-    final static class StoreKeySet<K,V> extends AbstractSet<K> {
+    final static class MapKeySet<K,V> extends AbstractSet<K> {
 
         private final AtomicHashStore<K,V> store;
 
-        StoreKeySet(final AtomicHashStore<K,V> store) {
+        MapKeySet(final AtomicHashStore<K,V> store) {
             super();
             this.store = store;
         }

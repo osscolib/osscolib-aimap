@@ -33,11 +33,11 @@ final class Collections {
 
 
 
-    final static class StoreValueCollection<K,V> extends AbstractCollection<V> {
+    final static class MapValueCollection<K,V> extends AbstractCollection<V> {
 
         private final AtomicHashStore<K,V> store;
 
-        StoreValueCollection(final AtomicHashStore<K,V> store) {
+        MapValueCollection(final AtomicHashStore<K,V> store) {
             super();
             this.store = store;
         }

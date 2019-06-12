@@ -23,7 +23,7 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 
-final class Entry<K,V> implements Map.Entry<K,V>, Serializable, Comparable<Entry<K,V>> {
+final class HashEntry<K,V> implements AtomicHashStore.Entry<K,V>, Serializable, Comparable<HashEntry<K,V>> {
 
     private static final long serialVersionUID = -4165737057742605795L;
 
@@ -42,7 +42,7 @@ final class Entry<K,V> implements Map.Entry<K,V>, Serializable, Comparable<Entry
 
 
 
-    Entry(final K key, final V value) {
+    HashEntry(final K key, final V value) {
         super();
         this.hash = hash(key);
         this.key = key;
@@ -72,6 +72,13 @@ final class Entry<K,V> implements Map.Entry<K,V>, Serializable, Comparable<Entry
         if (o == this) {
             return true;
         }
+        if (o instanceof HashEntry) {
+            final HashEntry<?,?> e = (HashEntry<?,?>)o;
+            if (Objects.equals(this.key, e.key) &&
+                    Objects.equals(this.value, e.value)) {
+                return true;
+            }
+        }
         if (o instanceof Map.Entry) {
             final Map.Entry<?,?> e = (Map.Entry<?,?>)o;
             if (Objects.equals(this.key, e.getKey()) &&
@@ -89,7 +96,7 @@ final class Entry<K,V> implements Map.Entry<K,V>, Serializable, Comparable<Entry
     }
 
     @Override
-    public int compareTo(final Entry<K, V> o) {
+    public int compareTo(final HashEntry<K, V> o) {
 
         // We will need to order in the same way that entries would be returned by an iterator (tree inorder)
         // NOTE this class therefore has a natural ordering that is inconsistent with equals()
