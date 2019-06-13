@@ -274,19 +274,19 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
 
     @Override
     public Set<Map.Entry<K,V>> entrySet() {
-        return new Sets.MapEntrySet<>(this.innerMap.get()); // TODO Correctly implement this
+        return new Sets.MapEntrySet<>(this.innerMap.get());
     }
 
 
     @Override
     public Set<K> keySet() {
-        return new Sets.MapKeySet<>(this.innerMap.get()); // TODO Correctly implement this
+        return new Sets.MapKeySet<>(this.innerMap.get());
     }
 
 
     @Override
     public Collection<V> values() {
-        return new Collections.MapValueCollection<>(this.innerMap.get()); // TODO Correctly implement this
+        return new Collections.MapValueCollection<>(this.innerMap.get());
     }
 
 
