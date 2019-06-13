@@ -180,18 +180,23 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
             return this;
         }
 
+        final Iterator<? extends Map.Entry<? extends K,? extends V>> mapIter = map.entrySet().iterator();
+
         if (mapSize == 1) {
-            final Map.Entry<? extends K, ? extends V> singleEntry = map.entrySet().iterator().next();
+            final Map.Entry<? extends K, ? extends V> singleEntry = mapIter.next();
             return put(singleEntry.getKey(), singleEntry.getValue());
         }
 
-        final HashEntry<K,V>[] orderedEntries =
-                map.entrySet().stream()
-                        .map(e -> new HashEntry<>(e.getKey(), e.getValue()))
-                        .sorted()
-                        .toArray(HashEntry[]::new);
+        Map.Entry<? extends K, ? extends V> mapEntry;
+        final HashEntry<K,V>[] entries = new HashEntry[mapSize];
+        for (int i = 0; i < entries.length; i++) {
+            mapEntry = mapIter.next();
+            entries[i] = new HashEntry<>(mapEntry.getKey(), mapEntry.getValue());
+        }
 
-        return putAll(orderedEntries);
+        Arrays.sort(entries);
+
+        return putAll(entries);
 
     }
 
