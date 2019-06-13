@@ -306,15 +306,45 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
             return true;
         }
 
-        if (!(o instanceof AtomicHashMap)) {
-            return false;
+        if (o instanceof AtomicHashMap) {
+
+            final AtomicHashMap<?,?> other = (AtomicHashMap<?,?>) o;
+
+            final AtomicHashStore<K,V> st = store();
+            final AtomicHashStore<?,?> ost = other.store();
+
+            return st.equals(ost);
+
         }
-        final AtomicHashMap<?,?> other = (AtomicHashMap<?,?>) o;
 
-        final AtomicHashStore<K,V> st = get();
-        final AtomicHashStore<?,?> ost = other.get();
+        if (o instanceof Map) { // Map#equals() requires being able to compare with any other Map implementation
 
-        return st.equals(ost);
+            final Map<?,?> m = (Map<?,?>)o;
+            final AtomicHashStore<K,V> st = store();
+
+            if (st.size() != m.size()) {
+                return false;
+            }
+
+            HashEntry<K,V> entry;
+            for (final AtomicHashStore.Entry<K, V> e : st) {
+                entry = (HashEntry<K,V>)e;
+                if (entry.value == null) {
+                    if (!(m.get(entry.key) == null && m.containsKey(entry.key))) {
+                        return false;
+                    }
+                } else {
+                    if (!entry.value.equals(m.get(entry.key))) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+
+        }
+
+        return false;
 
     }
 
