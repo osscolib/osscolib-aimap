@@ -141,4 +141,54 @@ public class AtomicHashMapMixedTest {
     }
 
 
+    @Test
+    public void test02() throws Exception {
+
+        final AtomicHashMap<String,Integer> map = new AtomicHashMap<>();
+        map.put("one", 1);
+        map.put("two", 2);
+        map.put("three", 3);
+        map.put("four", 4);
+        map.put("five", 5);
+        map.put("six", null);
+
+        final AtomicHashMap<String,Integer> map2 = new AtomicHashMap<>(map);
+
+        Assert.assertEquals(map, map2);
+
+        final HashMap<String,Integer> map3 = new HashMap<>();
+        map3.put("one", 1);
+        map3.put("two", 2);
+        map3.put("three", 3);
+        map3.put("four", 4);
+        map3.put("five", 5);
+        map3.put("six", null);
+
+        AtomicHashMap<String,Integer> map4 = new AtomicHashMap<>(map3);
+
+        Assert.assertEquals(map, map4);
+        Assert.assertEquals(map3, map4);
+        Assert.assertEquals(map4, map3);
+
+        map4.remove("five");
+
+        Assert.assertNotEquals(map, map4);
+        Assert.assertNotEquals(map3, map4);
+        Assert.assertNotEquals(map4, map3);
+
+        map4.put("five", 6);
+
+        Assert.assertNotEquals(map, map4);
+        Assert.assertNotEquals(map3, map4);
+        Assert.assertNotEquals(map4, map3);
+
+        map4.put("five", 5);
+
+        Assert.assertEquals(map, map4);
+        Assert.assertEquals(map3, map4);
+        Assert.assertEquals(map4, map3);
+
+    }
+
+
 }

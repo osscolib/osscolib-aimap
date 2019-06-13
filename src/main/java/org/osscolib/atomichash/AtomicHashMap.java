@@ -22,6 +22,7 @@ package org.osscolib.atomichash;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
@@ -41,6 +42,25 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
         super();
         this.innerMap = new AtomicReference<>();
         this.innerMap.set(AtomicHashStore.of());
+    }
+
+
+    public AtomicHashMap(final Map<? extends K, ? extends V> m) {
+
+        super();
+
+        Objects.requireNonNull(m);
+
+        this.innerMap = new AtomicReference<>();
+
+        if (m instanceof AtomicHashMap) {
+            final AtomicHashMap<? extends K, ? extends V> ahm = (AtomicHashMap<? extends K, ? extends V>)m;
+            this.innerMap.set((AtomicHashStore<K, V>) ahm.store());
+        } else {
+            final AtomicHashStore<K, V> store = AtomicHashStore.of();
+            this.innerMap.set(store.putAll(m));
+        }
+
     }
 
 
