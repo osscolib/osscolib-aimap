@@ -26,7 +26,7 @@ final class PrettyPrinter {
 
 
     static <K,V> String prettyPrint(final AtomicHashMap<K,V> map) {
-        return prettyPrint(map.get());
+        return prettyPrint(map.store());
     }
 
     static <K,V> String prettyPrint(final AtomicHashStore<K,V> store) {

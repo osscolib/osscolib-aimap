@@ -53,7 +53,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
 
 
 
-    AtomicHashStore<K,V> get() {
+    AtomicHashStore<K,V> store() {
         return this.innerMap.get();
     }
 
@@ -62,7 +62,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
 
     @Override
     public int size() {
-        return get().size();
+        return store().size();
     }
 
 
@@ -70,7 +70,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
 
     @Override
     public boolean isEmpty() {
-        return get().isEmpty();
+        return store().isEmpty();
     }
 
 
@@ -78,7 +78,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
 
     @Override
     public boolean containsKey(final Object key) {
-        return get().containsKey(key);
+        return store().containsKey(key);
     }
 
 
@@ -86,7 +86,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
 
     @Override
     public boolean containsValue(final Object value) {
-        return get().containsValue(value);
+        return store().containsValue(value);
     }
 
 
@@ -94,13 +94,13 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
 
     @Override
     public V get(final Object key) {
-        return get().get(key);
+        return store().get(key);
     }
 
 
     @Override
     public V getOrDefault(final Object key, final V defaultValue) {
-        return get().getOrDefault(key, defaultValue);
+        return store().getOrDefault(key, defaultValue);
     }
 
 
@@ -111,7 +111,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
         final ValueConsumer<V> vc = new ValueConsumer<>();
         AtomicHashStore<K,V> store;
         do {
-            store = get();
+            store = store();
         } while(!this.innerMap.compareAndSet(store, store.put(key, value, vc)));
         return vc.val;
     }
@@ -123,7 +123,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
     public void putAll(final Map<? extends K, ? extends V> m) {
         AtomicHashStore<K,V> store;
         do {
-            store = get();
+            store = store();
         } while(!this.innerMap.compareAndSet(store, store.putAll(m)));
     }
 
@@ -135,7 +135,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
         final ValueConsumer<V> vc = new ValueConsumer<>();
         AtomicHashStore<K,V> store;
         do {
-            store = get();
+            store = store();
         } while(!this.innerMap.compareAndSet(store, store.putIfAbsent(key, value, vc)));
         return vc.val;
     }
@@ -148,7 +148,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
         final ValueConsumer<V> vc = new ValueConsumer<>();
         AtomicHashStore<K,V> store;
         do {
-            store = get();
+            store = store();
         } while(!this.innerMap.compareAndSet(store, store.remove(key, vc)));
         return vc.val;
     }
@@ -159,7 +159,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
         final BooleanConsumer bc = new BooleanConsumer();
         AtomicHashStore<K,V> store;
         do {
-            store = get();
+            store = store();
         } while(!this.innerMap.compareAndSet(store, store.remove(key, value, bc)));
         return bc.val;
     }
@@ -169,7 +169,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
 
     @Override
     public void forEach(final BiConsumer<? super K, ? super V> action) {
-        get().forEach(action);
+        store().forEach(action);
     }
 
 
@@ -180,7 +180,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
         final ValueConsumer<V> vc = new ValueConsumer<>();
         AtomicHashStore<K,V> store;
         do {
-            store = get();
+            store = store();
         } while(!this.innerMap.compareAndSet(store, store.replace(key, value, vc)));
         return vc.val;
     }
@@ -191,7 +191,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
         final BooleanConsumer bc = new BooleanConsumer();
         AtomicHashStore<K,V> store;
         do {
-            store = get();
+            store = store();
         } while(!this.innerMap.compareAndSet(store, store.replace(key, oldValue, newValue, bc)));
         return bc.val;
     }
@@ -203,7 +203,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
     public void replaceAll(final BiFunction<? super K, ? super V, ? extends V> function) {
         AtomicHashStore<K,V> store;
         do {
-            store = get();
+            store = store();
         } while(!this.innerMap.compareAndSet(store, store.replaceAll(function)));
     }
 
@@ -215,7 +215,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
         final ValueConsumer<V> vc = new ValueConsumer<>();
         AtomicHashStore<K,V> store;
         do {
-            store = get();
+            store = store();
         } while(!this.innerMap.compareAndSet(store, store.computeIfAbsent(key, mappingFunction, vc)));
         return vc.val;
     }
@@ -228,7 +228,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
         final ValueConsumer<V> vc = new ValueConsumer<>();
         AtomicHashStore<K,V> store;
         do {
-            store = get();
+            store = store();
         } while(!this.innerMap.compareAndSet(store, store.computeIfPresent(key, remappingFunction, vc)));
         return vc.val;
     }
@@ -241,7 +241,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
         final ValueConsumer<V> vc = new ValueConsumer<>();
         AtomicHashStore<K,V> store;
         do {
-            store = get();
+            store = store();
         } while(!this.innerMap.compareAndSet(store, store.compute(key, remappingFunction, vc)));
         return vc.val;
     }
@@ -254,7 +254,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
         final ValueConsumer<V> vc = new ValueConsumer<>();
         AtomicHashStore<K,V> store;
         do {
-            store = get();
+            store = store();
         } while(!this.innerMap.compareAndSet(store, store.merge(key, value, remappingFunction, vc)));
         return vc.val;
     }
@@ -266,7 +266,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
     public void clear() {
         AtomicHashStore<K,V> store;
         do {
-            store = get();
+            store = store();
         } while(!this.innerMap.compareAndSet(store, store.clear()));
     }
 
@@ -293,7 +293,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
 
 
     public static <K, V> AtomicHashMap<K, V> copyOf(final AtomicHashMap<? extends K, ? extends V> map) {
-        return new AtomicHashMap<>((AtomicHashStore<K, V>) map.get());
+        return new AtomicHashMap<>((AtomicHashStore<K, V>) map.store());
     }
 
 
@@ -321,7 +321,7 @@ public class AtomicHashMap<K,V> implements Map<K,V>, Serializable {
 
     @Override
     public int hashCode() {
-        return get().hashCode();
+        return store().hashCode();
     }
 
 

@@ -64,7 +64,7 @@ public class AtomicHashMapMixedTest {
         Assert.assertEquals("THREE", map.get("three"));
         Assert.assertEquals("FOUR", map.get("four"));
 
-        Assert.assertEquals(map.get().hashCode(), map.hashCode());
+        Assert.assertEquals(map.store().hashCode(), map.hashCode());
 
         Assert.assertTrue(map.containsKey("one"));
         Assert.assertFalse(map.containsKey("five"));
