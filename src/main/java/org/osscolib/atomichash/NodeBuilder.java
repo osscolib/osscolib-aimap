@@ -19,7 +19,6 @@
  */
 package org.osscolib.atomichash;
 
-import java.util.Arrays;
 import java.util.function.Consumer;
 
 final class NodeBuilder {
@@ -44,8 +43,7 @@ final class NodeBuilder {
             newChild = new Node<>(new NodeData<>(newEntry));
         }
 
-        final Node<K,V>[] newChildren =
-                (childrenMutable? children : Arrays.copyOf(children, children.length));
+        final Node<K,V>[] newChildren = (childrenMutable? children : children.clone());
         newChildren[newEntryPos] = newChild;
 
         return newChildren;
@@ -80,8 +78,7 @@ final class NodeBuilder {
             newChild = tempChild.putAll(level.next, newEntries, start + 1, end);
         }
 
-        final Node<K,V>[] newChildren =
-                (childrenMutable? children : Arrays.copyOf(children, children.length));
+        final Node<K,V>[] newChildren = (childrenMutable? children : children.clone());
         newChildren[newEntryPos] = newChild;
 
         return newChildren;

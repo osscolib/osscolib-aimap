@@ -20,7 +20,6 @@
 package org.osscolib.atomichash;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.function.Consumer;
 
 final class Node<K,V> implements Serializable {
@@ -214,7 +213,7 @@ final class Node<K,V> implements Serializable {
             }
 
             // Note newChild can still be null here
-            final Node<K,V>[] newChildren = Arrays.copyOf(this.children, this.children.length);
+            final Node<K,V>[] newChildren = this.children.clone();
             newChildren[pos] = newChild;
 
             return new Node<>(newChildren);

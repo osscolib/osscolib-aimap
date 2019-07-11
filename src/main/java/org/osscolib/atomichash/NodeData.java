@@ -115,7 +115,7 @@ final class NodeData<K,V> implements Serializable {
                 return this;
             }
 
-            final HashEntry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length);
+            final HashEntry<K,V>[] newEntries = this.entries.clone();
             newEntries[pos] = newEntry;
 
             // We will keep this array sorted in order to ease searches in large multi-valued nodes
