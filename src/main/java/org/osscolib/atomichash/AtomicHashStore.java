@@ -76,7 +76,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
         // Using an iterator here is actually not a bad-performing option, as we cannot do random access on values
         final Iterators.ValueIterator valueIterator = new Iterators.ValueIterator(this.root);
         while (valueIterator.hasNext()) {
-            if (Objects.equals(valueIterator.next(), value)) {
+            if (eq(valueIterator.next(), value)) {
                 return true;
             }
         }
@@ -121,13 +121,13 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
 
         final HashEntry<K,V> e = data.entry;
         if (e != null) {
-            return Objects.equals(e.key, key) ? e : null;
+            return eq(e.key, key) ? e : null;
         }
 
         final HashEntry<K,V>[] es = data.entries;
         for (int i = 0; i < es.length; i++) {
             // TODO Performance degradation with large number of collisions -> adopt some kind of tree?
-            if (Objects.equals(es[i].key, key)) {
+            if (eq(es[i].key, key)) {
                 return es[i];
             }
         }
@@ -259,7 +259,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
     public AtomicHashStore<K,V> remove(final Object key, final Object value, final Consumer<Boolean> successConsumer) {
 
         final HashEntry<K,V> entry = getEntry(key, this.root);
-        if (entry == null || !Objects.equals(entry.value, value)) {
+        if (entry == null || !eq(entry.value, value)) {
             if (successConsumer != null) {
                 successConsumer.accept(Boolean.FALSE);
             }
@@ -317,7 +317,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
 
     public AtomicHashStore<K,V> replace(final K key, final V oldValue, final V newValue, final Consumer<Boolean> successConsumer) {
         final HashEntry<K,V> entry = getEntry(key, this.root);
-        if (entry == null || !Objects.equals(entry.value, oldValue)) {
+        if (entry == null || !eq(entry.value, oldValue)) {
             if (successConsumer != null) {
                 successConsumer.accept(Boolean.FALSE);
             }
@@ -517,6 +517,20 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
 
 
 
+    /**
+     * Equivalent to Objects.equals(), but by being called only from
+     * HashEntry we might benefit from runtime profile information on the
+     * type of o1. See java.util.AbstractMap#eq().
+     *
+     * Do not replace with Object.equals until JDK-8015417 is resolved.
+     */
+    private static boolean eq(final Object o1, final Object o2) {
+        return o1 == null ? o2 == null : o1.equals(o2);
+    }
+
+
+
+
     @Override
     public boolean equals(final Object o) {
 
@@ -550,7 +564,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
                 return false;
             }
 
-            if (!Objects.equals(thisEntry.key, otherEntry.key) || !Objects.equals(thisEntry.value, otherEntry.value)) {
+            if (!eq(thisEntry.key, otherEntry.key) || !eq(thisEntry.value, otherEntry.value)) {
                 return false;
             }
 

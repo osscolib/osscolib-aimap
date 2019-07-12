@@ -72,7 +72,7 @@ final class NodeData<K,V> implements Serializable {
                 return this;
             }
 
-            if (Objects.equals(this.entry.key, newEntry.key)) {
+            if (eq(this.entry.key, newEntry.key)) {
                 // We are replacing the previous value for a new one
                 if (oldValueConsumer != null) {
                     oldValueConsumer.accept(this.entry.value);
@@ -98,7 +98,7 @@ final class NodeData<K,V> implements Serializable {
 
         int pos = -1;
         for (int i = 0; i < this.entries.length; i++) {
-            if (Objects.equals(this.entries[i].key, newEntry.key)) {
+            if (eq(this.entries[i].key, newEntry.key)) {
                 pos = i;
                 break;
             }
@@ -147,7 +147,7 @@ final class NodeData<K,V> implements Serializable {
         if (this.entry != null) {
             // This is single-valued
 
-            if (Objects.equals(this.entry.key,key)) {
+            if (eq(this.entry.key,key)) {
                 if (oldValueConsumer != null) {
                     oldValueConsumer.accept(this.entry.value);
                 }
@@ -163,7 +163,7 @@ final class NodeData<K,V> implements Serializable {
 
         int pos = -1;
         for (int i = 0; i < this.entries.length; i++) {
-            if (Objects.equals(this.entries[i].key, key)) {
+            if (eq(this.entries[i].key, key)) {
                 pos = i;
                 break;
             }
@@ -196,5 +196,18 @@ final class NodeData<K,V> implements Serializable {
         return this;
 
     }
+
+
+    /**
+     * Equivalent to Objects.equals(), but by being called only from
+     * HashEntry we might benefit from runtime profile information on the
+     * type of o1. See java.util.AbstractMap#eq().
+     *
+     * Do not replace with Object.equals until JDK-8015417 is resolved.
+     */
+    private static boolean eq(final Object o1, final Object o2) {
+        return o1 == null ? o2 == null : o1.equals(o2);
+    }
+
 
 }

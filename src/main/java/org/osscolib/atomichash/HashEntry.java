@@ -66,33 +66,39 @@ final class HashEntry<K,V> implements AtomicHashStore.Entry<K,V>, Serializable, 
         throw new UnsupportedOperationException("Setting values is forbidden in this implementation");
     }
 
+
+
+
+    /**
+     * Equivalent to Objects.equals(), but by being called only from
+     * HashEntry we might benefit from runtime profile information on the
+     * type of o1. See java.util.AbstractMap#eq().
+     *
+     * Do not replace with Object.equals until JDK-8015417 is resolved.
+     */
+    private static boolean eq(final Object o1, final Object o2) {
+        return o1 == null ? o2 == null : o1.equals(o2);
+    }
+
+
     @Override
     public boolean equals(final Object o) {
         // Implemented according to the java.util.Map.Entry specification
-        if (o == this) {
+        if (this == o) {
             return true;
         }
-        if (o instanceof HashEntry) {
-            final HashEntry<?,?> e = (HashEntry<?,?>)o;
-            if (Objects.equals(this.key, e.key) &&
-                    Objects.equals(this.value, e.value)) {
-                return true;
-            }
+        if (!(o instanceof Map.Entry)) {
+            return false;
         }
-        if (o instanceof Map.Entry) {
-            final Map.Entry<?,?> e = (Map.Entry<?,?>)o;
-            if (Objects.equals(this.key, e.getKey()) &&
-                    Objects.equals(this.value, e.getValue())) {
-                return true;
-            }
-        }
-        return false;
+        final Map.Entry<?,?> e = (Map.Entry<?,?>)o;
+        return eq(this.key, e.getKey()) && eq(this.value, e.getValue());
     }
 
     @Override
     public int hashCode() {
         // Implemented according to the java.util.Map.Entry specification
-        return Objects.hashCode(this.key) ^ Objects.hashCode(this.value);
+        return (this.key == null ? 0 : this.key.hashCode()) ^
+                (this.value == null ? 0 : this.value.hashCode());
     }
 
     @Override
