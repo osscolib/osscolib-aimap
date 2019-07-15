@@ -22,9 +22,9 @@ package org.osscolib.atomichash;
 import java.io.Serializable;
 import java.util.Map;
 
-final class HashEntry<K,V> implements AtomicHashStore.Entry<K,V>, Serializable, Comparable<HashEntry<K,V>> {
+final class DataEntry<K,V> implements AtomicHashStore.Entry<K,V>, Serializable, Comparable<DataEntry<K,V>> {
 
-    private static final long serialVersionUID = -4165737057742605795L;
+    private static final long serialVersionUID = -1875639058871605087L;
 
     final int hash;
     final K key;
@@ -33,19 +33,11 @@ final class HashEntry<K,V> implements AtomicHashStore.Entry<K,V>, Serializable, 
 
 
 
-    static int hash(final Object key) {
-        int h;
-        return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
-    }
-
-
-
-
-    HashEntry(final DataEntry<K,V> dataEntry) {
+    DataEntry(final K key, final V value) {
         super();
-        this.hash = dataEntry.hash;
-        this.key = dataEntry.key;
-        this.value = dataEntry.value;
+        this.hash = HashEntry.hash(key);
+        this.key = key;
+        this.value = value;
     }
 
 
@@ -64,8 +56,6 @@ final class HashEntry<K,V> implements AtomicHashStore.Entry<K,V>, Serializable, 
         // (Not) implemented, allowed at the java.util.Map.Entry specification
         throw new UnsupportedOperationException("Setting values is forbidden in this implementation");
     }
-
-
 
 
     /**
@@ -90,7 +80,7 @@ final class HashEntry<K,V> implements AtomicHashStore.Entry<K,V>, Serializable, 
             return false;
         }
         final Map.Entry<?,?> e = (Map.Entry<?,?>)o;
-        return eq(this.key, e.getKey()) && eq(this.value, e.getValue());
+        return eq(key, e.getKey()) && eq(value, e.getValue());
     }
 
     @Override
@@ -101,7 +91,7 @@ final class HashEntry<K,V> implements AtomicHashStore.Entry<K,V>, Serializable, 
     }
 
     @Override
-    public int compareTo(final HashEntry<K, V> o) {
+    public int compareTo(final DataEntry<K, V> o) {
 
         // We will need to order in the same way that entries would be returned by an iterator (tree inorder)
         // NOTE this class therefore has a natural ordering that is inconsistent with equals()

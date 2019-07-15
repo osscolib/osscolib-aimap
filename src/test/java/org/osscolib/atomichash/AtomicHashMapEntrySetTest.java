@@ -59,7 +59,7 @@ public class AtomicHashMapEntrySetTest {
         Assert.assertEquals(kvs.length, entrySet.size());
 
         for (int i = 0; i < kvs.length; i++) {
-            Assert.assertTrue(entrySet.contains(new HashEntry(kvs[i].getKey(), kvs[i].getValue())));
+            Assert.assertTrue(entrySet.contains(new DataEntry(kvs[i].getKey(), kvs[i].getValue())));
         }
 
         final int oldSize = entrySet.size();

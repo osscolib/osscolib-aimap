@@ -34,7 +34,15 @@ final class NodeData<K,V> implements Serializable {
 
 
 
-    NodeData(final HashEntry<K,V> entry) {
+    NodeData(final DataEntry<K,V> dataEntry) {
+        super();
+        this.hash = dataEntry.hash;
+        this.entry = new HashEntry<>(dataEntry);
+        this.entries = null;
+    }
+
+
+    private NodeData(final HashEntry<K,V> entry) {
         super();
         this.hash = entry.hash;
         this.entry = entry;
@@ -42,7 +50,7 @@ final class NodeData<K,V> implements Serializable {
     }
 
 
-    NodeData(final HashEntry<K,V>[] entries) {
+    private NodeData(final HashEntry<K,V>[] entries) {
         super();
         this.hash = entries[0].hash;
         this.entry = null;
@@ -59,7 +67,7 @@ final class NodeData<K,V> implements Serializable {
 
 
 
-    NodeData<K,V> put(final HashEntry<K,V> newEntry, final Consumer<V> oldValueConsumer) {
+    NodeData<K,V> put(final DataEntry<K,V> newEntry, final Consumer<V> oldValueConsumer) {
 
         if (this.entry != null) {
             // This is single-valued
@@ -85,7 +93,7 @@ final class NodeData<K,V> implements Serializable {
             }
 
             // There is an hash collision, but this is a different slot, so we need to go multi value
-            final HashEntry<K,V>[] newEntries = new HashEntry[] { this.entry, newEntry};
+            final HashEntry<K,V>[] newEntries = new HashEntry[] { this.entry, new HashEntry<>(newEntry)};
 
             // We will keep this array sorted in order to ease searches in large multi-valued nodes
             Arrays.sort(newEntries);
@@ -116,7 +124,7 @@ final class NodeData<K,V> implements Serializable {
             }
 
             final HashEntry<K,V>[] newEntries = this.entries.clone();
-            newEntries[pos] = newEntry;
+            newEntries[pos] = new HashEntry<>(newEntry);
 
             // We will keep this array sorted in order to ease searches in large multi-valued nodes
             Arrays.sort(newEntries);
@@ -130,7 +138,7 @@ final class NodeData<K,V> implements Serializable {
         }
 
         final HashEntry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length + 1);
-        newEntries[this.entries.length] = newEntry;
+        newEntries[this.entries.length] = new HashEntry<>(newEntry);
 
         // We will keep this array sorted in order to ease searches in large multi-valued nodes
         Arrays.sort(newEntries);

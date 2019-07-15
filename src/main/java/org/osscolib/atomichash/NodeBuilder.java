@@ -26,7 +26,7 @@ final class NodeBuilder {
 
     static <K,V> Node<K,V>[] addChild(final Node<K,V>[] children, final boolean childrenMutable,
                                       final Level level,
-                                      final int newEntryPos, final HashEntry<K,V> newEntry,
+                                      final int newEntryPos, final DataEntry<K,V> newEntry,
                                       final Consumer<V> valueConsumer) {
 
         // Check the current status of the position to be used
@@ -53,7 +53,7 @@ final class NodeBuilder {
 
     static <K,V> Node<K,V>[] addChildren(final Node<K,V>[] children, final boolean childrenMutable,
                                          final Level level,
-                                         final int newEntryPos, final HashEntry<K,V>[] newEntries, final int start, final int end) {
+                                         final int newEntryPos, final DataEntry<K,V>[] newEntries, final int start, final int end) {
 
         // ASSERTION: We know for sure that (end - start) > 1. We would have been re-routed to a simple "put" if not.
 

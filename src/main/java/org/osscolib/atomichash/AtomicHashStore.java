@@ -145,7 +145,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
 
     public AtomicHashStore<K,V> put(final K key, final V value, final Consumer<V> oldValueConsumer) {
 
-        final HashEntry<K,V> entry = new HashEntry(key, value);
+        final DataEntry<K,V> entry = new DataEntry(key, value);
 
         final Node<K,V> newRoot;
         if (this.root == null) {
@@ -188,10 +188,10 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
         }
 
         Map.Entry<? extends K, ? extends V> mapEntry;
-        final HashEntry<K,V>[] entries = new HashEntry[mapSize];
+        final DataEntry<K,V>[] entries = new DataEntry[mapSize];
         for (int i = 0; i < entries.length; i++) {
             mapEntry = mapIter.next();
-            entries[i] = new HashEntry<>(mapEntry.getKey(), mapEntry.getValue());
+            entries[i] = new DataEntry<>(mapEntry.getKey(), mapEntry.getValue());
         }
 
         Arrays.sort(entries);
@@ -201,7 +201,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
     }
 
 
-    private AtomicHashStore<K,V> putAll(final HashEntry<K,V>[] orderedEntries) {
+    private AtomicHashStore<K,V> putAll(final DataEntry<K,V>[] orderedEntries) {
 
         if (orderedEntries.length == 0) {
             return this;
@@ -343,10 +343,10 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
 
         // The newly created array will still be considered to be ordered because keys won't change, and Entry
         // ordering (Entry#compareTo()) is based entirely on keys.
-        final HashEntry<K,W>[] newOrderedEntries = new HashEntry[size()];
+        final DataEntry<K,W>[] newOrderedEntries = new DataEntry[size()];
         for (int i = 0; i < newOrderedEntries.length; i++) {
             entry = (HashEntry<K,V>) iter.next();
-            newOrderedEntries[i] = new HashEntry<>(entry.key, function.apply(entry.key, entry.value));
+            newOrderedEntries[i] = new DataEntry<>(entry.key, function.apply(entry.key, entry.value));
         }
 
         final AtomicHashStore<K,W> store = of();
@@ -606,9 +606,9 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
     public static <K,V> AtomicHashStore<K, V> of(
             final K k1, final V v1, final K k2, final V v2) {
 
-        final HashEntry<K,V>[] entries = new HashEntry[2];
-        entries[0] = new HashEntry<>(k1,v1);
-        entries[1] = new HashEntry<>(k2,v2);
+        final DataEntry<K,V>[] entries = new DataEntry[2];
+        entries[0] = new DataEntry<>(k1,v1);
+        entries[1] = new DataEntry<>(k2,v2);
 
         Arrays.sort(entries);
 
@@ -621,10 +621,10 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
     public static <K,V> AtomicHashStore<K, V> of(
             final K k1, final V v1, final K k2, final V v2, final K k3, final V v3) {
 
-        final HashEntry<K,V>[] entries = new HashEntry[3];
-        entries[0] = new HashEntry<>(k1,v1);
-        entries[1] = new HashEntry<>(k2,v2);
-        entries[2] = new HashEntry<>(k3,v3);
+        final DataEntry<K,V>[] entries = new DataEntry[3];
+        entries[0] = new DataEntry<>(k1,v1);
+        entries[1] = new DataEntry<>(k2,v2);
+        entries[2] = new DataEntry<>(k3,v3);
 
         Arrays.sort(entries);
 
@@ -637,11 +637,11 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
     public static <K,V> AtomicHashStore<K, V> of(
             final K k1, final V v1, final K k2, final V v2, final K k3, final V v3, final K k4, final V v4) {
 
-        final HashEntry<K,V>[] entries = new HashEntry[4];
-        entries[0] = new HashEntry<>(k1,v1);
-        entries[1] = new HashEntry<>(k2,v2);
-        entries[2] = new HashEntry<>(k3,v3);
-        entries[3] = new HashEntry<>(k4,v4);
+        final DataEntry<K,V>[] entries = new DataEntry[4];
+        entries[0] = new DataEntry<>(k1,v1);
+        entries[1] = new DataEntry<>(k2,v2);
+        entries[2] = new DataEntry<>(k3,v3);
+        entries[3] = new DataEntry<>(k4,v4);
 
         Arrays.sort(entries);
 
@@ -655,12 +655,12 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
             final K k1, final V v1, final K k2, final V v2, final K k3, final V v3, final K k4, final V v4,
             final K k5, final V v5) {
 
-        final HashEntry<K,V>[] entries = new HashEntry[5];
-        entries[0] = new HashEntry<>(k1,v1);
-        entries[1] = new HashEntry<>(k2,v2);
-        entries[2] = new HashEntry<>(k3,v3);
-        entries[3] = new HashEntry<>(k4,v4);
-        entries[4] = new HashEntry<>(k5,v5);
+        final DataEntry<K,V>[] entries = new DataEntry[5];
+        entries[0] = new DataEntry<>(k1,v1);
+        entries[1] = new DataEntry<>(k2,v2);
+        entries[2] = new DataEntry<>(k3,v3);
+        entries[3] = new DataEntry<>(k4,v4);
+        entries[4] = new DataEntry<>(k5,v5);
 
         Arrays.sort(entries);
 
@@ -674,13 +674,13 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
             final K k1, final V v1, final K k2, final V v2, final K k3, final V v3, final K k4, final V v4,
             final K k5, final V v5, final K k6, final V v6) {
 
-        final HashEntry<K,V>[] entries = new HashEntry[6];
-        entries[0] = new HashEntry<>(k1,v1);
-        entries[1] = new HashEntry<>(k2,v2);
-        entries[2] = new HashEntry<>(k3,v3);
-        entries[3] = new HashEntry<>(k4,v4);
-        entries[4] = new HashEntry<>(k5,v5);
-        entries[5] = new HashEntry<>(k6,v6);
+        final DataEntry<K,V>[] entries = new DataEntry[6];
+        entries[0] = new DataEntry<>(k1,v1);
+        entries[1] = new DataEntry<>(k2,v2);
+        entries[2] = new DataEntry<>(k3,v3);
+        entries[3] = new DataEntry<>(k4,v4);
+        entries[4] = new DataEntry<>(k5,v5);
+        entries[5] = new DataEntry<>(k6,v6);
 
         Arrays.sort(entries);
 
@@ -694,14 +694,14 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
             final K k1, final V v1, final K k2, final V v2, final K k3, final V v3, final K k4, final V v4,
             final K k5, final V v5, final K k6, final V v6, final K k7, final V v7) {
 
-        final HashEntry<K,V>[] entries = new HashEntry[7];
-        entries[0] = new HashEntry<>(k1,v1);
-        entries[1] = new HashEntry<>(k2,v2);
-        entries[2] = new HashEntry<>(k3,v3);
-        entries[3] = new HashEntry<>(k4,v4);
-        entries[4] = new HashEntry<>(k5,v5);
-        entries[5] = new HashEntry<>(k6,v6);
-        entries[6] = new HashEntry<>(k7,v7);
+        final DataEntry<K,V>[] entries = new DataEntry[7];
+        entries[0] = new DataEntry<>(k1,v1);
+        entries[1] = new DataEntry<>(k2,v2);
+        entries[2] = new DataEntry<>(k3,v3);
+        entries[3] = new DataEntry<>(k4,v4);
+        entries[4] = new DataEntry<>(k5,v5);
+        entries[5] = new DataEntry<>(k6,v6);
+        entries[6] = new DataEntry<>(k7,v7);
 
         Arrays.sort(entries);
 
@@ -715,15 +715,15 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
             final K k1, final V v1, final K k2, final V v2, final K k3, final V v3, final K k4, final V v4,
             final K k5, final V v5, final K k6, final V v6, final K k7, final V v7, final K k8, final V v8) {
 
-        final HashEntry<K,V>[] entries = new HashEntry[8];
-        entries[0] = new HashEntry<>(k1,v1);
-        entries[1] = new HashEntry<>(k2,v2);
-        entries[2] = new HashEntry<>(k3,v3);
-        entries[3] = new HashEntry<>(k4,v4);
-        entries[4] = new HashEntry<>(k5,v5);
-        entries[5] = new HashEntry<>(k6,v6);
-        entries[6] = new HashEntry<>(k7,v7);
-        entries[7] = new HashEntry<>(k8,v8);
+        final DataEntry<K,V>[] entries = new DataEntry[8];
+        entries[0] = new DataEntry<>(k1,v1);
+        entries[1] = new DataEntry<>(k2,v2);
+        entries[2] = new DataEntry<>(k3,v3);
+        entries[3] = new DataEntry<>(k4,v4);
+        entries[4] = new DataEntry<>(k5,v5);
+        entries[5] = new DataEntry<>(k6,v6);
+        entries[6] = new DataEntry<>(k7,v7);
+        entries[7] = new DataEntry<>(k8,v8);
 
         Arrays.sort(entries);
 
@@ -738,16 +738,16 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
             final K k5, final V v5, final K k6, final V v6, final K k7, final V v7, final K k8, final V v8,
             final K k9, final V v9) {
 
-        final HashEntry<K,V>[] entries = new HashEntry[9];
-        entries[0] = new HashEntry<>(k1,v1);
-        entries[1] = new HashEntry<>(k2,v2);
-        entries[2] = new HashEntry<>(k3,v3);
-        entries[3] = new HashEntry<>(k4,v4);
-        entries[4] = new HashEntry<>(k5,v5);
-        entries[5] = new HashEntry<>(k6,v6);
-        entries[6] = new HashEntry<>(k7,v7);
-        entries[7] = new HashEntry<>(k8,v8);
-        entries[8] = new HashEntry<>(k9,v9);
+        final DataEntry<K,V>[] entries = new DataEntry[9];
+        entries[0] = new DataEntry<>(k1,v1);
+        entries[1] = new DataEntry<>(k2,v2);
+        entries[2] = new DataEntry<>(k3,v3);
+        entries[3] = new DataEntry<>(k4,v4);
+        entries[4] = new DataEntry<>(k5,v5);
+        entries[5] = new DataEntry<>(k6,v6);
+        entries[6] = new DataEntry<>(k7,v7);
+        entries[7] = new DataEntry<>(k8,v8);
+        entries[8] = new DataEntry<>(k9,v9);
 
         Arrays.sort(entries);
 
@@ -762,17 +762,17 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
             final K k5, final V v5, final K k6, final V v6, final K k7, final V v7, final K k8, final V v8,
             final K k9, final V v9, final K k10, final V v10) {
 
-        final HashEntry<K,V>[] entries = new HashEntry[10];
-        entries[0] = new HashEntry<>(k1,v1);
-        entries[1] = new HashEntry<>(k2,v2);
-        entries[2] = new HashEntry<>(k3,v3);
-        entries[3] = new HashEntry<>(k4,v4);
-        entries[4] = new HashEntry<>(k5,v5);
-        entries[5] = new HashEntry<>(k6,v6);
-        entries[6] = new HashEntry<>(k7,v7);
-        entries[7] = new HashEntry<>(k8,v8);
-        entries[8] = new HashEntry<>(k9,v9);
-        entries[9] = new HashEntry<>(k10,v10);
+        final DataEntry<K,V>[] entries = new DataEntry[10];
+        entries[0] = new DataEntry<>(k1,v1);
+        entries[1] = new DataEntry<>(k2,v2);
+        entries[2] = new DataEntry<>(k3,v3);
+        entries[3] = new DataEntry<>(k4,v4);
+        entries[4] = new DataEntry<>(k5,v5);
+        entries[5] = new DataEntry<>(k6,v6);
+        entries[6] = new DataEntry<>(k7,v7);
+        entries[7] = new DataEntry<>(k8,v8);
+        entries[8] = new DataEntry<>(k9,v9);
+        entries[9] = new DataEntry<>(k10,v10);
 
         Arrays.sort(entries);
 
@@ -792,14 +792,14 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
             return of(entries[0].getKey(), entries[0].getValue());
         }
 
-        final HashEntry<K,V>[] entriesArr = new HashEntry[entries.length];
+        final DataEntry<K,V>[] entriesArr = new DataEntry[entries.length];
         Entry<? extends K,? extends V> entry;
         for (int i = 0; i < entries.length; i++) {
             entry = entries[i];
-            if (entry instanceof HashEntry) {
-                entriesArr[i] = (HashEntry<K,V>) entry;
+            if (entry instanceof DataEntry) {
+                entriesArr[i] = (DataEntry<K, V>) entry;
             } else {
-                entriesArr[i] = new HashEntry<>(entry.getKey(), entry.getValue());
+                entriesArr[i] = new DataEntry<>(entry.getKey(), entry.getValue());
             }
         }
 
@@ -814,7 +814,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
 
 
     public static <K,V> Entry<K,V> entry(final K key, final V value) {
-        return new HashEntry<>(key, value);
+        return new DataEntry<>(key, value);
     }
 
 
