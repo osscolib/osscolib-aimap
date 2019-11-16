@@ -100,6 +100,10 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
 
     static <K,V> HashEntry<K,V> getEntry(final Object key, final Node<K,V> root) {
 
+        if (root == null) {
+            return null;
+        }
+
         final int hash = HashEntry.hash(key);
 
         Node<K,V> node = root;
