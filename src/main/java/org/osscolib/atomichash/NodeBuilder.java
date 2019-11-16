@@ -40,7 +40,7 @@ final class NodeBuilder {
                 return children;
             }
         } else {
-            newChild = new Node<>(new NodeData<>(newEntry));
+            newChild = new Node<>(newEntry);
         }
 
         final Node<K,V>[] newChildren = (childrenMutable? children : children.clone());
@@ -74,7 +74,7 @@ final class NodeBuilder {
         } else {
             // We create a temporary node that only contains data, and execute a putAll on it.
             // Note the NodeData object will be reused (the temporary Node won't, but it's lightweight).
-            final Node<K,V> tempChild = new Node<>(new NodeData<>(newEntries[start]));
+            final Node<K,V> tempChild = new Node<>(newEntries[start]);
             newChild = tempChild.putAll(level.next, newEntries, start + 1, end);
         }
 

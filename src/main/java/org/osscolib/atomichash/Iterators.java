@@ -148,10 +148,10 @@ abstract class Iterators<K,V> {
 
 
     private void extractData(final Node<K,V> dataNode) {
-        if (dataNode.data.entry != null) {
-            this.entry = dataNode.data.entry;
+        if (dataNode.entry != null) {
+            this.entry = dataNode.entry;
         } else {
-            this.entries = dataNode.data.entries;
+            this.entries = dataNode.entries;
             this.entriesPos = 0;
             this.entry = this.entries[0];
         }

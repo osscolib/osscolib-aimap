@@ -187,7 +187,7 @@ public final class TestUtils {
 
     private static <K,V> void validateNodesWellFormed(final Level level, final int[] poslevels, final int poslevelsi, final Node<K,V> node) {
 
-        if (node.data != null) {
+        if (node.children == null) {
 
             if (node.children != null) {
                 throw new IllegalStateException("Node has both data and children");
@@ -196,23 +196,23 @@ public final class TestUtils {
             int n = 0;
             Level l = Level.LEVEL0;
             while (n < poslevelsi) {
-                if (poslevels[n] != l.pos(node.data.hash)) {
+                if (poslevels[n] != l.pos(node.hash)) {
                     throw new IllegalStateException("Node data position does not match");
                 }
                 n++;
                 l = l.next;
             }
 
-            if (node.data.entry != null) {
-                if (node.data.entries != null) {
+            if (node.entry != null) {
+                if (node.entries != null) {
                     throw new IllegalStateException("Node data has both single and multiple entry data");
                 }
-                if (node.data.hash != node.data.entry.hash) {
+                if (node.hash != node.entry.hash) {
                     throw new IllegalStateException("Node data hash does not correspond with hash in its single entry");
                 }
-            } else if (node.data.entries != null) {
-                for (int i = 0; i < node.data.entries.length; i++) {
-                    if (node.data.hash != node.data.entries[i].hash) {
+            } else if (node.entries != null) {
+                for (int i = 0; i < node.entries.length; i++) {
+                    if (node.hash != node.entries[i].hash) {
                         throw new IllegalStateException("Node data hash does not correspond with hash in one of the multivalued entries");
                     }
                 }

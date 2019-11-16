@@ -113,22 +113,16 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
             node = children[level.pos(hash)];
         }
 
-        if (node == null) {
+        if (node == null || node.hash != hash) {
             return null;
         }
 
-        final NodeData<K,V> data = node.data;
-
-        if (data.hash != hash) {
-            return null;
-        }
-
-        final HashEntry<K,V> e = data.entry;
+        final HashEntry<K,V> e = node.entry;
         if (e != null) {
             return eq(e.key, key) ? e : null;
         }
 
-        final HashEntry<K,V>[] es = data.entries;
+        final HashEntry<K,V>[] es = node.entries;
         for (int i = 0; i < es.length; i++) {
             // TODO Performance degradation with large number of collisions -> adopt some kind of tree?
             if (eq(es[i].key, key)) {
@@ -154,8 +148,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
         final Node<K,V> newRoot;
         if (this.root == null) {
 
-            final NodeData<K,V> newData = new NodeData<>(entry);
-            newRoot = new Node<>(newData);
+            newRoot = new Node<>(entry);
 
         } else {
 
@@ -215,8 +208,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
         Node<K,V> newRoot = this.root;
 
         if (newRoot == null) {
-            final NodeData<K,V> newData = new NodeData<>(orderedEntries[0]);
-            newRoot = new Node<>(newData);
+            newRoot = new Node<>(orderedEntries[0]);
             start = 1;
         }
 

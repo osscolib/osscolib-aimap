@@ -33,7 +33,7 @@ final class PrettyPrinter {
         final StringBuilder stringBuilder = new StringBuilder();
         if (store.root != null) {
             if (store.root.children == null) {
-                printData(0, Level.LEVEL0, stringBuilder, store.root.data.hash, store.root.data.entry, store.root.data.entries);
+                printData(0, Level.LEVEL0, stringBuilder, store.root.hash, store.root.entry, store.root.entries);
             } else {
                 printNode(0, Level.LEVEL0, stringBuilder, store.root.children);
             }
@@ -74,7 +74,7 @@ final class PrettyPrinter {
                 final Node<K,V> child = children[i];
                 if (child != null) {
                     if (child.children == null) {
-                        printData(levelidx + 1, level.next, stringBuilder, child.data.hash, child.data.entry, child.data.entries);
+                        printData(levelidx + 1, level.next, stringBuilder, child.hash, child.entry, child.entries);
                     } else {
                         printNode(levelidx + 1, level.next, stringBuilder, child.children);
                     }

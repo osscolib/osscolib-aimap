@@ -20,28 +20,54 @@
 package org.osscolib.atomichash;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.function.Consumer;
 
 final class Node<K,V> implements Serializable {
 
     private static final long serialVersionUID = 6914544628900109073L;
 
-    final NodeData<K,V> data;
     final Node<K,V>[] children; // can contain many nulls
+
+    final int hash;
+    final HashEntry<K,V> entry;
+    final HashEntry<K,V>[] entries;
 
 
 
     Node(final Node<K,V>[] children) {
         super();
         this.children = children;
-        this.data = null;
+        this.hash = -1; // This is actually a valid hash value, but it will not be used when node has children
+        this.entry = null;
+        this.entries = null;
     }
 
 
-    Node(final NodeData<K,V> data) {
+    Node(final DataEntry<K,V> dataEntry) {
         super();
         this.children = null;
-        this.data = data;
+        this.hash = dataEntry.hash;
+        this.entry = new HashEntry<>(dataEntry);
+        this.entries = null;
+    }
+
+
+    private Node(final HashEntry<K,V> entry) {
+        super();
+        this.children = null;
+        this.hash = entry.hash;
+        this.entry = entry;
+        this.entries = null;
+    }
+
+
+    private Node(final HashEntry<K,V>[] entries) {
+        super();
+        this.children = null;
+        this.hash = entries[0].hash;
+        this.entry = null;
+        this.entries = entries;
     }
 
 
@@ -49,8 +75,8 @@ final class Node<K,V> implements Serializable {
 
     int size() {
 
-        if (this.data != null) {
-            return this.data.size();
+        if (this.children == null) {
+            return (this.entry == null) ? this.entries.length : 1;
         }
 
         Node<K,V>[] children = this.children;
@@ -71,23 +97,16 @@ final class Node<K,V> implements Serializable {
 
     Node<K,V> put(final Level level, final DataEntry<K, V> entry, final Consumer<V> oldValueConsumer) {
 
-        final NodeData<K,V> data = this.data;
-
-        // If possible, we will delegate to the NodeData
-        if (data != null && data.hash == entry.hash) {
-            final NodeData<K,V> newData = data.put(entry, oldValueConsumer);
-            if (newData == data) {
-                // Nothing was added because the entry already existed
-                return this;
-            }
-            return new Node<>(newData);
+        // Check if we simply need to add an additional entry to the ones already present
+        if (this.children == null && this.hash == entry.hash) {
+            return putData(entry, oldValueConsumer);
         }
 
         Node<K,V>[] newChildren = this.children;
         boolean newChildrenMutable = false;
         if (newChildren == null) {
             newChildren = new Node[level.mask + 1];
-            newChildren[level.pos(data.hash)] = new Node<>(data);
+            newChildren[level.pos(this.hash)] = this;
             newChildrenMutable = true;
         }
 
@@ -100,6 +119,88 @@ final class Node<K,V> implements Serializable {
         return new Node<>(newChildren);
 
     }
+
+
+    private Node<K,V> putData(final DataEntry<K,V> newEntry, final Consumer<V> oldValueConsumer) {
+
+        if (this.entry != null) {
+            // This is single-valued
+
+            if (this.entry.key == newEntry.key && this.entry.value == newEntry.value) {
+                // No need to perform any modifications, we might avoid a rewrite of a tree path!
+                if (oldValueConsumer != null) {
+                    oldValueConsumer.accept(this.entry.value);
+                }
+                return this;
+            }
+
+            if (eq(this.entry.key, newEntry.key)) {
+                // We are replacing the previous value for a new one
+                if (oldValueConsumer != null) {
+                    oldValueConsumer.accept(this.entry.value);
+                }
+                return new Node<>(newEntry);
+            }
+
+            if (oldValueConsumer != null) {
+                oldValueConsumer.accept(null);
+            }
+
+            // There is an hash collision, but this is a different slot, so we need to go multi value
+            final HashEntry<K,V>[] newEntries = new HashEntry[] { this.entry, new HashEntry<>(newEntry)};
+
+            // We will keep this array sorted in order to ease searches in large multi-valued nodes
+            Arrays.sort(newEntries);
+
+            return new Node<>(newEntries);
+
+        }
+
+        // TODO We should improve this to avoid linear performance depending on the amount of collisions. This was also fixed in HashMap in Java 8 to avoid DoS
+
+        int pos = -1;
+        for (int i = 0; i < this.entries.length; i++) {
+            if (eq(this.entries[i].key, newEntry.key)) {
+                pos = i;
+                break;
+            }
+        }
+        if (pos >= 0) {
+
+            if (oldValueConsumer != null) {
+                oldValueConsumer.accept(this.entries[pos].value);
+            }
+
+            if (this.entries[pos].key == newEntry.key && this.entries[pos].value == newEntry.value) {
+                // No need to perform any modifications, we might avoid a rewrite of a tree path!
+                // Note this will only happen if key and value are actually the same object, not by object equality
+                return this;
+            }
+
+            final HashEntry<K,V>[] newEntries = this.entries.clone();
+            newEntries[pos] = new HashEntry<>(newEntry);
+
+            // We will keep this array sorted in order to ease searches in large multi-valued nodes
+            Arrays.sort(newEntries);
+
+            return new Node<>(newEntries);
+
+        }
+
+        if (oldValueConsumer != null) {
+            oldValueConsumer.accept(null);
+        }
+
+        final HashEntry<K,V>[] newEntries = Arrays.copyOf(this.entries, this.entries.length + 1);
+        newEntries[this.entries.length] = new HashEntry<>(newEntry);
+
+        // We will keep this array sorted in order to ease searches in large multi-valued nodes
+        Arrays.sort(newEntries);
+
+        return new Node<>(newEntries);
+
+    }
+
 
 
 
@@ -122,24 +223,23 @@ final class Node<K,V> implements Serializable {
             // Unless all the entries we are adding have the same hash as the existing data entry, we will need to
             // turn that data entry into a Node.
 
-            final NodeData<K,V> data = this.data;
-            if (allHashesMatch(data.hash, entries, start, end)) {
+            if (allHashesMatch(this.hash, entries, start, end)) {
                 // All hashes match! so we need to delegate entirely to the NodeData
-                NodeData<K,V> newData = data;
+                Node<K,V> newNode = this;
                 for (int i = start; i < end; i++) {
-                    newData = newData.put(entries[i], null);
+                    newNode = newNode.putData(entries[i], null);
                 }
-                if (newData == data) {
+                if (newNode == this) {
                     // Nothing was added because all entries already existed -- this should actually never happen
                     return this;
                 }
-                return new Node<>(newData);
+                return newNode;
             }
 
             // Not all hashes matched (usual case), so given we have > 1 keys to be inserted in this node, we
             // are sure we will need to turn this Node's data into a nested node
             newChildren = new Node[level.mask + 1];
-            newChildren[level.pos(data.hash)] = new Node<>(data);
+            newChildren[level.pos(this.hash)] = this;
             newChildrenMutable = true;
 
         }
@@ -192,7 +292,7 @@ final class Node<K,V> implements Serializable {
 
     Node<K,V> remove(final Level level, final int hash, final Object key, final Consumer<V> oldValueConsumer) {
 
-        if (this.data == null) {
+        if (this.children != null) {
 
             final int pos = level.pos(hash);
             final Node<K,V> child = this.children[pos];
@@ -222,24 +322,67 @@ final class Node<K,V> implements Serializable {
 
         // Not a branch -- this is a Node with data
 
-        if (this.data.hash != hash) {
+        if (this.hash != hash) {
             return this;
         }
 
-        final NodeData<K,V> newData = this.data.remove(key, oldValueConsumer);
+        return this.removeData(key, oldValueConsumer);
 
-        if (newData == this.data) {
-            // No changes needed (key not found)
+    }
+
+
+    private Node<K,V> removeData(final Object key, final Consumer<V> oldValueConsumer) {
+
+        if (this.entry != null) {
+            // This is single-valued
+
+            if (eq(this.entry.key,key)) {
+                if (oldValueConsumer != null) {
+                    oldValueConsumer.accept(this.entry.value);
+                }
+                return null;
+            }
+
+            if (oldValueConsumer != null) {
+                oldValueConsumer.accept(null);
+            }
             return this;
+
         }
 
-        if (newData != null) {
-            // There is still data at the node - we need a new container node
-            return new Node<>(newData);
+        int pos = -1;
+        for (int i = 0; i < this.entries.length; i++) {
+            if (eq(this.entries[i].key, key)) {
+                pos = i;
+                break;
+            }
         }
 
-        // All data removed -> should remove this container too
-        return null;
+        if (pos >= 0) {
+
+            if (oldValueConsumer != null) {
+                oldValueConsumer.accept(this.entries[pos].value);
+            }
+
+            if (this.entries.length == 2) {
+                // There are only two items in the multi value, and we are removing one, so now its single value
+                final HashEntry<K,V> remainingEntry = this.entries[pos == 0? 1 : 0];
+                return new Node<>(remainingEntry);
+            }
+
+            final HashEntry<K,V>[] newEntries = new HashEntry[this.entries.length - 1];
+            System.arraycopy(this.entries, 0, newEntries, 0, pos);
+            System.arraycopy(this.entries, pos + 1, newEntries, pos, (this.entries.length - (pos + 1)));
+
+            return new Node<>(newEntries);
+
+        }
+
+        if (oldValueConsumer != null) {
+            oldValueConsumer.accept(null);
+        }
+
+        return this;
 
     }
 
@@ -257,6 +400,18 @@ final class Node<K,V> implements Serializable {
             }
         }
         return true;
+    }
+
+
+    /**
+     * Equivalent to Objects.equals(), but by being called only from
+     * HashEntry we might benefit from runtime profile information on the
+     * type of o1. See java.util.AbstractMap#eq().
+     *
+     * Do not replace with Object.equals until JDK-8015417 is resolved.
+     */
+    private static boolean eq(final Object o1, final Object o2) {
+        return o1 == null ? o2 == null : o1.equals(o2);
     }
 
 
