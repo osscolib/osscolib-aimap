@@ -160,15 +160,15 @@ public final class TestUtils {
                             System.identityHashCode(o2.getKey()));
             }
 
-            Level level = Level.LEVEL0;
+            int level = 0;
             while (true) {
-                final int s1 = level.pos(h1);
-                final int s2 = level.pos(h2);
+                final int s1 = AtomicHashStore.pos(level, h1);
+                final int s2 = AtomicHashStore.pos(level, h2);
                 final int comp = Integer.compare(s1, s2);
                 if (comp != 0) {
                     return comp;
                 }
-                level = level.next;
+                level++;
             }
 
         }
@@ -182,10 +182,10 @@ public final class TestUtils {
         if (store.root == null) {
             return;
         }
-        validateNodesWellFormed(Level.LEVEL0, new int[Level.LEVEL_COUNT], 0, store.root);
+        validateNodesWellFormed(0, new int[AtomicHashStore.LEVEL_COUNT], 0, store.root);
     }
 
-    private static <K,V> void validateNodesWellFormed(final Level level, final int[] poslevels, final int poslevelsi, final Node<K,V> node) {
+    private static <K,V> void validateNodesWellFormed(final int level, final int[] poslevels, final int poslevelsi, final Node<K,V> node) {
 
         if (node.children == null) {
 
@@ -194,13 +194,13 @@ public final class TestUtils {
             }
 
             int n = 0;
-            Level l = Level.LEVEL0;
+            int l = 0;
             while (n < poslevelsi) {
-                if (poslevels[n] != l.pos(node.hash)) {
+                if (poslevels[n] != AtomicHashStore.pos(l, node.hash)) {
                     throw new IllegalStateException("Node data position does not match");
                 }
                 n++;
-                l = l.next;
+                l++;
             }
 
             if (node.entry != null) {
@@ -222,7 +222,7 @@ public final class TestUtils {
 
         } else if (node.children != null) {
 
-            if (node.children.length != (level.mask + 1)) {
+            if (node.children.length != (AtomicHashStore.MASKS[level] + 1)) {
                 throw new IllegalStateException("Node children array has the incorrect size");
             }
             boolean allNull = true;
@@ -230,7 +230,7 @@ public final class TestUtils {
                 if (node.children[i] != null) {
                     allNull = false;
                     poslevels[poslevelsi] = i;
-                    validateNodesWellFormed(level.next, poslevels, poslevelsi + 1, node.children[i]);
+                    validateNodesWellFormed(level + 1, poslevels, poslevelsi + 1, node.children[i]);
                 }
             }
             if (allNull) {

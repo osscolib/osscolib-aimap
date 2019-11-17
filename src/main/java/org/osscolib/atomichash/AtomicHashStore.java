@@ -35,6 +35,11 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
     private static final long serialVersionUID = 6362537038828380833L;
     private static final AtomicHashStore INSTANCE = new AtomicHashStore<>();
 
+    static final int LEVEL_COUNT = 6;
+    static final int[] MASKS =  new int[] {  0x7,  0xF, 0x1F, 0x3F, 0x3F, 0xFF };
+    static final int[] SHIFTS = new int[] {    0,    3,    7,   12,   18,   24 };
+
+
     final Node<K,V> root;
 
 
@@ -48,6 +53,14 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
         super();
         this.root = root;
     }
+
+
+
+
+    static int pos(final int level, final int hash) {
+        return (hash >>> SHIFTS[level]) & MASKS[level];
+    }
+
 
 
 
@@ -100,20 +113,8 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
 
     static <K,V> HashEntry<K,V> getEntry(final Object key, final Node<K,V> root) {
 
-        if (root == null) {
-            return null;
-        }
-
-        final int hash = HashEntry.hash(key);
-
-        Node<K,V> node = root;
-        Node<K,V>[] children;
-
-        for (Level level = Level.LEVEL0; node != null && (children = node.children) != null; level = level.next) {
-            node = children[level.pos(hash)];
-        }
-
-        if (node == null || node.hash != hash) {
+        final Node<K,V> node = getNode(key, root);
+        if (node == null) {
             return null;
         }
 
@@ -135,6 +136,32 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
     }
 
 
+    static <K,V> Node<K,V> getNode(final Object key, final Node<K,V> root) {
+
+        if (root == null) {
+            return null;
+        }
+
+        final int hash = HashEntry.hash(key);
+
+        Node<K,V> node = root;
+        Node<K,V>[] children;
+
+        int level = 0;
+        while (node != null && (children = node.children) != null) {
+            node = children[pos(level, hash)];
+            level++;
+        }
+
+        if (node == null || node.hash != hash) {
+            return null;
+        }
+
+        return node;
+
+    }
+
+
 
     public AtomicHashStore<K,V> put(final K key, final V value) {
         return put(key, value, null);
@@ -152,7 +179,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
 
         } else {
 
-            newRoot = this.root.put(Level.LEVEL0, entry, oldValueConsumer);
+            newRoot = this.root.put(0, entry, oldValueConsumer);
             if (this.root == newRoot) {
                 return this;
             }
@@ -212,7 +239,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
             start = 1;
         }
 
-        newRoot = newRoot.putAll(Level.LEVEL0, orderedEntries, start, orderedEntries.length);
+        newRoot = newRoot.putAll(0, orderedEntries, start, orderedEntries.length);
         return new AtomicHashStore<>(newRoot);
 
     }
@@ -231,7 +258,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
             return this;
         }
 
-        final Node newRoot = this.root.remove(Level.LEVEL0, HashEntry.hash(key), key, oldValueConsumer);
+        final Node newRoot = this.root.remove(0, HashEntry.hash(key), key, oldValueConsumer);
         if (this.root == newRoot) {
             return this;
         }

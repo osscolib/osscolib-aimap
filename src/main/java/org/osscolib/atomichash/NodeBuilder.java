@@ -25,7 +25,7 @@ final class NodeBuilder {
 
 
     static <K,V> Node<K,V>[] addChild(final Node<K,V>[] children, final boolean childrenMutable,
-                                      final Level level,
+                                      final int level,
                                       final int newEntryPos, final DataEntry<K,V> newEntry,
                                       final Consumer<V> valueConsumer) {
 
@@ -35,7 +35,7 @@ final class NodeBuilder {
         // There is something in the selected pos, so we need to delegate
         final Node<K,V> newChild;
         if (childInPos != null) {
-            newChild = childInPos.put(level.next, newEntry, valueConsumer);
+            newChild = childInPos.put(level + 1, newEntry, valueConsumer);
             if (childInPos == newChild) {
                 return children;
             }
@@ -52,7 +52,7 @@ final class NodeBuilder {
 
 
     static <K,V> Node<K,V>[] addChildren(final Node<K,V>[] children, final boolean childrenMutable,
-                                         final Level level,
+                                         final int level,
                                          final int newEntryPos, final DataEntry<K,V>[] newEntries, final int start, final int end) {
 
         // ASSERTION: We know for sure that (end - start) > 1. We would have been re-routed to a simple "put" if not.
@@ -67,7 +67,7 @@ final class NodeBuilder {
         // There is something in the selected pos, so we need to delegate
         final Node<K,V> newChild;
         if (childInPos != null) {
-            newChild = childInPos.putAll(level.next, newEntries, start, end);
+            newChild = childInPos.putAll(level + 1, newEntries, start, end);
             if (childInPos == newChild) {
                 return children;
             }
@@ -75,7 +75,7 @@ final class NodeBuilder {
             // We create a temporary node that only contains data, and execute a putAll on it.
             // Note the NodeData object will be reused (the temporary Node won't, but it's lightweight).
             final Node<K,V> tempChild = new Node<>(newEntries[start]);
-            newChild = tempChild.putAll(level.next, newEntries, start + 1, end);
+            newChild = tempChild.putAll(level + 1, newEntries, start + 1, end);
         }
 
         final Node<K,V>[] newChildren = (childrenMutable? children : children.clone());

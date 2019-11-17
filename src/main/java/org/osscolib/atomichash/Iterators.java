@@ -54,7 +54,7 @@ abstract class Iterators<K,V> {
 
         } else {
 
-            this.stack = new Node[Level.LEVEL_COUNT]; // max possible node nesting level
+            this.stack = new Node[AtomicHashStore.LEVEL_COUNT]; // max possible node nesting level
             Arrays.fill(this.stack, null);
             this.currentChild = new int[this.stack.length];
             Arrays.fill(this.currentChild, -1);

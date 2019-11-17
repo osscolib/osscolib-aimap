@@ -109,13 +109,13 @@ final class DataEntry<K,V> implements AtomicHashStore.Entry<K,V>, Serializable, 
         }
 
         int comp;
-        Level level = Level.LEVEL0;
+        int level = 0;
         do {
-            comp = Integer.compare(level.pos(h1), level.pos(h2));
+            comp = Integer.compare(AtomicHashStore.pos(level, h1), AtomicHashStore.pos(level, h2));
             if (comp != 0) {
                 return comp;
             }
-            level = level.next;
+            level++;
         } while (true);
 
     }

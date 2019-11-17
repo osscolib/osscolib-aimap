@@ -27,11 +27,14 @@ final class Node<K,V> implements Serializable {
 
     private static final long serialVersionUID = 6914544628900109073L;
 
+
     final Node<K,V>[] children; // can contain many nulls
 
     final int hash;
     final HashEntry<K,V> entry;
     final HashEntry<K,V>[] entries;
+
+
 
 
 
@@ -95,7 +98,7 @@ final class Node<K,V> implements Serializable {
 
 
 
-    Node<K,V> put(final Level level, final DataEntry<K, V> entry, final Consumer<V> oldValueConsumer) {
+    Node<K,V> put(final int level, final DataEntry<K, V> entry, final Consumer<V> oldValueConsumer) {
 
         // Check if we simply need to add an additional entry to the ones already present
         if (this.children == null && this.hash == entry.hash) {
@@ -105,12 +108,12 @@ final class Node<K,V> implements Serializable {
         Node<K,V>[] newChildren = this.children;
         boolean newChildrenMutable = false;
         if (newChildren == null) {
-            newChildren = new Node[level.mask + 1];
-            newChildren[level.pos(this.hash)] = this;
+            newChildren = new Node[AtomicHashStore.MASKS[level] + 1];
+            newChildren[AtomicHashStore.pos(level, this.hash)] = this;
             newChildrenMutable = true;
         }
 
-        final int newEntryPos = level.pos(entry.hash);
+        final int newEntryPos = AtomicHashStore.pos(level, entry.hash);
         newChildren = NodeBuilder.addChild(newChildren, newChildrenMutable, level, newEntryPos, entry, oldValueConsumer);
         if (newChildren == this.children){
             return this;
@@ -204,7 +207,7 @@ final class Node<K,V> implements Serializable {
 
 
 
-    Node<K,V> putAll(final Level level, final DataEntry<K, V>[] entries, final int start, final int end) {
+    Node<K,V> putAll(final int level, final DataEntry<K, V>[] entries, final int start, final int end) {
 
         if (start == end) {
             return this;
@@ -238,8 +241,8 @@ final class Node<K,V> implements Serializable {
 
             // Not all hashes matched (usual case), so given we have > 1 keys to be inserted in this node, we
             // are sure we will need to turn this Node's data into a nested node
-            newChildren = new Node[level.mask + 1];
-            newChildren[level.pos(this.hash)] = this;
+            newChildren = new Node[AtomicHashStore.MASKS[level] + 1];
+            newChildren[AtomicHashStore.pos(level, this.hash)] = this;
             newChildrenMutable = true;
 
         }
@@ -249,7 +252,7 @@ final class Node<K,V> implements Serializable {
         int i = start;
         int x;
 
-        int ipos = level.pos(entries[i].hash);
+        int ipos = AtomicHashStore.pos(level, entries[i].hash);
         int currentPos;
 
         while (i < end) {
@@ -257,7 +260,7 @@ final class Node<K,V> implements Serializable {
             x = i;
             currentPos = ipos;
             while (ipos == currentPos && ++i < end) {
-                ipos = level.pos(entries[i].hash);
+                ipos = AtomicHashStore.pos(level, entries[i].hash);
             }
 
             // We determined that entries[x..i) corresponds to children[currentPos]
@@ -290,11 +293,11 @@ final class Node<K,V> implements Serializable {
 
 
 
-    Node<K,V> remove(final Level level, final int hash, final Object key, final Consumer<V> oldValueConsumer) {
+    Node<K,V> remove(final int level, final int hash, final Object key, final Consumer<V> oldValueConsumer) {
 
         if (this.children != null) {
 
-            final int pos = level.pos(hash);
+            final int pos = AtomicHashStore.pos(level, hash);
             final Node<K,V> child = this.children[pos];
 
             if (child == null) {
@@ -302,7 +305,7 @@ final class Node<K,V> implements Serializable {
                 return this;
             }
 
-            final Node<K,V> newChild = child.remove(level.next, hash, key, oldValueConsumer);
+            final Node<K,V> newChild = child.remove(level + 1, hash, key, oldValueConsumer);
             if (newChild == child) {
                 return this;
             }
