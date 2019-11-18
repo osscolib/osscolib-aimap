@@ -35,7 +35,7 @@ final class DataEntry<K,V> implements AtomicHashStore.Entry<K,V>, Serializable, 
 
     DataEntry(final K key, final V value) {
         super();
-        this.hash = HashEntry.hash(key);
+        this.hash = AtomicHashStore.hash(key);
         this.key = key;
         this.value = value;
     }

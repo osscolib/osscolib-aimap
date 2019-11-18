@@ -60,7 +60,7 @@ final class Sets {
             }
             final Map.Entry<?,?> entry = (Map.Entry<?,?>) o;
             final Object key = entry.getKey();
-            final HashEntry<?,?> candidate = AtomicHashStore.getEntry(key, this.store.root);
+            final HashEntry<?,?> candidate = this.store.getEntry(AtomicHashStore.hash(key), key);
             return candidate != null && candidate.equals(entry);
         }
 

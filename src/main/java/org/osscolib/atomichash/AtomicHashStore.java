@@ -44,6 +44,19 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
 
 
 
+
+    static int hash(final Object key) {
+        int h;
+        return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+    }
+
+    static int pos(final int level, final int hash) {
+        return (hash >>> SHIFTS[level]) & MASKS[level];
+    }
+
+
+
+
     public AtomicHashStore() {
         this(null);
     }
@@ -52,13 +65,6 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
     private AtomicHashStore(final Node<K,V> root) {
         super();
         this.root = root;
-    }
-
-
-
-
-    static int pos(final int level, final int hash) {
-        return (hash >>> SHIFTS[level]) & MASKS[level];
     }
 
 
@@ -81,7 +87,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
 
 
     public boolean containsKey(final Object key) {
-        return getEntry(key, this.root) != null;
+        return getEntry(hash(key), key) != null;
     }
 
 
@@ -99,36 +105,37 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
 
 
     public V get(final Object key) {
-        final HashEntry<K,V> entry = getEntry(key, this.root);
-        return entry != null ? entry.value : null;
+        final HashEntry<K,V> entry;
+        return (entry = getEntry(hash(key), key)) != null ? entry.value : null;
     }
 
 
     public V getOrDefault(final Object key, final V defaultValue) {
-        final HashEntry<K,V> entry = getEntry(key, this.root);
-        return entry != null ? entry.value : defaultValue;
+        final HashEntry<K,V> entry;
+        return (entry = getEntry(hash(key), key)) != null ? entry.value : defaultValue;
     }
 
 
 
-    static <K,V> HashEntry<K,V> getEntry(final Object key, final Node<K,V> root) {
+    final HashEntry<K,V> getEntry(final int hash, final Object key) {
 
-        final Node<K,V> node = getNode(key, root);
-        if (node == null) {
-            return null;
-        }
+        Node<K,V> node;
+        if (this.root != null && (node = getNode(hash)) != null && node.hash == hash) {
 
-        final HashEntry<K,V> e = node.entry;
-        if (e != null) {
-            return eq(e.key, key) ? e : null;
-        }
-
-        final HashEntry<K,V>[] es = node.entries;
-        for (int i = 0; i < es.length; i++) {
-            // TODO Performance degradation with large number of collisions -> adopt some kind of tree?
-            if (eq(es[i].key, key)) {
-                return es[i];
+            HashEntry<K,V> e = node.entry;
+            if (e != null) {
+                return eq(e.key, key) ? e : null;
             }
+
+            final HashEntry<K,V>[] es = node.entries;
+            for (int i = 0; i < es.length; i++) {
+                // TODO Performance degradation with large number of collisions -> adopt some kind of tree?
+                e = es[i];
+                if (eq(e.key, key)) {
+                    return e;
+                }
+            }
+
         }
 
         return null;
@@ -136,13 +143,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
     }
 
 
-    static <K,V> Node<K,V> getNode(final Object key, final Node<K,V> root) {
-
-        if (root == null) {
-            return null;
-        }
-
-        final int hash = HashEntry.hash(key);
+    private final Node<K,V> getNode(final int hash) {
 
         Node<K,V> node = root;
         Node<K,V>[] children;
@@ -151,10 +152,6 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
         while (node != null && (children = node.children) != null) {
             node = children[pos(level, hash)];
             level++;
-        }
-
-        if (node == null || node.hash != hash) {
-            return null;
         }
 
         return node;
@@ -258,7 +255,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
             return this;
         }
 
-        final Node newRoot = this.root.remove(0, HashEntry.hash(key), key, oldValueConsumer);
+        final Node newRoot = this.root.remove(0, hash(key), key, oldValueConsumer);
         if (this.root == newRoot) {
             return this;
         }
@@ -281,7 +278,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
 
     public AtomicHashStore<K,V> remove(final Object key, final Object value, final Consumer<Boolean> successConsumer) {
 
-        final HashEntry<K,V> entry = getEntry(key, this.root);
+        final HashEntry<K,V> entry = getEntry(hash(key), key);
         if (entry == null || !eq(entry.value, value)) {
             if (successConsumer != null) {
                 successConsumer.accept(Boolean.FALSE);
@@ -320,7 +317,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
 
 
     public AtomicHashStore<K,V> replace(final K key, final V value, final Consumer<V> oldValueConsumer) {
-        final HashEntry<K,V> entry = getEntry(key, this.root);
+        final HashEntry<K,V> entry = getEntry(hash(key), key);
         if (entry == null) {
             if (oldValueConsumer != null) {
                 oldValueConsumer.accept(null);
@@ -339,7 +336,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
 
 
     public AtomicHashStore<K,V> replace(final K key, final V oldValue, final V newValue, final Consumer<Boolean> successConsumer) {
-        final HashEntry<K,V> entry = getEntry(key, this.root);
+        final HashEntry<K,V> entry = getEntry(hash(key), key);
         if (entry == null || !eq(entry.value, oldValue)) {
             if (successConsumer != null) {
                 successConsumer.accept(Boolean.FALSE);
@@ -471,7 +468,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
 
         Objects.requireNonNull(remappingFunction);
 
-        final HashEntry<K,V> entry = getEntry(key, this.root);
+        final HashEntry<K,V> entry = getEntry(hash(key), key);
         final V oldValue = (entry != null) ? entry.value : null;
 
         final V newValue = remappingFunction.apply(key, oldValue);
@@ -581,7 +578,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
         while (thisIter.hasNext()) {
 
             thisEntry = (HashEntry<K,V>) thisIter.next();
-            otherEntry = getEntry(thisEntry.key, other.root);
+            otherEntry = other.getEntry(hash(thisEntry.key), thisEntry.key);
 
             if (otherEntry == null) {
                 return false;

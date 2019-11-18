@@ -33,14 +33,6 @@ final class HashEntry<K,V> implements AtomicHashStore.Entry<K,V>, Serializable, 
 
 
 
-    static int hash(final Object key) {
-        int h;
-        return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
-    }
-
-
-
-
     HashEntry(final DataEntry<K,V> dataEntry) {
         super();
         this.hash = dataEntry.hash;
