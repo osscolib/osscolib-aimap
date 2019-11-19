@@ -153,10 +153,8 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
         Node<K,V> node = root;
         Node<K,V>[] children;
 
-        int level = 0;
-        while (node != null && (children = node.children) != null) {
+        for (int level = 0; node != null && (children = node.children) != null; level++) {
             node = children[pos(level, hash)];
-            level++;
         }
 
         return node;
