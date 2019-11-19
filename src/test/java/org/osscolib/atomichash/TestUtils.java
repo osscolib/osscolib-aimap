@@ -222,7 +222,7 @@ public final class TestUtils {
 
         } else if (node.children != null) {
 
-            if (node.children.length != (AtomicHashStore.MASKS[level] + 1)) {
+            if (node.children.length != (AtomicHashStore.childrenSizeFor(level))) {
                 throw new IllegalStateException("Node children array has the incorrect size");
             }
             boolean allNull = true;

@@ -35,14 +35,26 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
     private static final long serialVersionUID = 6362537038828380833L;
     private static final AtomicHashStore INSTANCE = new AtomicHashStore<>();
 
-    static final int[] MASKS =  new int[] {  0x7,  0xF, 0x1F, 0x3F, 0x3F, 0xFF };
-    static final int[] SHIFTS = new int[] {    0,    3,    7,   12,   18,   24 };
+    private static final int[] MASKS = new int[] {  0x7,  0xF, 0x1F, 0x3F, 0x3F, 0xFF };
+    private static final int[] SHIFTS = new int[] {    0,    3,    7,   12,   18,   24 };
     static final int LEVEL_COUNT = MASKS.length;
 
 
     final Node<K,V> root;
 
 
+
+    static int maskFor(final int level) {
+        return MASKS[level];
+    }
+
+    static int shiftFor(final int level) {
+        return SHIFTS[level];
+    }
+
+    static int childrenSizeFor(final int level) {
+        return MASKS[level] + 1;
+    }
 
 
     static int hash(final Object key) {

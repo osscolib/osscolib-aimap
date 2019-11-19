@@ -65,7 +65,7 @@ final class PrettyPrinter {
         stringBuilder.append(
                 String.format("[%2d | %032d] {",
                         levelidx,
-                        new BigInteger(Integer.toBinaryString(AtomicHashStore.MASKS[level] << AtomicHashStore.SHIFTS[level]))));
+                        new BigInteger(Integer.toBinaryString(AtomicHashStore.maskFor(level) << AtomicHashStore.shiftFor(level)))));
         if (children.length == 0) {
             stringBuilder.append("}");
         } else {
@@ -96,7 +96,7 @@ final class PrettyPrinter {
         stringBuilder.append(
                 String.format("[%2d | %032d] {\n",
                         levelidx,
-                        (level < AtomicHashStore.LEVEL_COUNT? new BigInteger(Integer.toBinaryString(AtomicHashStore.MASKS[level] << AtomicHashStore.SHIFTS[level])) : 0)));
+                        (level < AtomicHashStore.LEVEL_COUNT? new BigInteger(Integer.toBinaryString(AtomicHashStore.maskFor(level) << AtomicHashStore.shiftFor(level))) : 0)));
 
         printEntries(levelidx + 1, stringBuilder, hash, entry, entries);
         stringBuilder.append('\n');

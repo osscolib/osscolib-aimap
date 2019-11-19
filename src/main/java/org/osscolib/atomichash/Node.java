@@ -108,7 +108,7 @@ final class Node<K,V> implements Serializable {
         Node<K,V>[] newChildren = this.children;
         boolean newChildrenMutable = false;
         if (newChildren == null) {
-            newChildren = new Node[AtomicHashStore.MASKS[level] + 1];
+            newChildren = new Node[AtomicHashStore.childrenSizeFor(level)];
             newChildren[AtomicHashStore.pos(level, this.hash)] = this;
             newChildrenMutable = true;
         }
@@ -241,7 +241,7 @@ final class Node<K,V> implements Serializable {
 
             // Not all hashes matched (usual case), so given we have > 1 keys to be inserted in this node, we
             // are sure we will need to turn this Node's data into a nested node
-            newChildren = new Node[AtomicHashStore.MASKS[level] + 1];
+            newChildren = new Node[AtomicHashStore.childrenSizeFor(level)];
             newChildren[AtomicHashStore.pos(level, this.hash)] = this;
             newChildrenMutable = true;
 
