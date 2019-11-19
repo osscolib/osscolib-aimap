@@ -35,9 +35,9 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
     private static final long serialVersionUID = 6362537038828380833L;
     private static final AtomicHashStore INSTANCE = new AtomicHashStore<>();
 
-    static final int LEVEL_COUNT = 6;
     static final int[] MASKS =  new int[] {  0x7,  0xF, 0x1F, 0x3F, 0x3F, 0xFF };
     static final int[] SHIFTS = new int[] {    0,    3,    7,   12,   18,   24 };
+    static final int LEVEL_COUNT = MASKS.length;
 
 
     final Node<K,V> root;
@@ -106,21 +106,26 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
 
     public V get(final Object key) {
         final HashEntry<K,V> entry;
-        return (entry = getEntry(hash(key), key)) != null ? entry.value : null;
+        return (entry = getEntry(hash(key), key, this.root)) != null ? entry.value : null;
     }
 
 
     public V getOrDefault(final Object key, final V defaultValue) {
         final HashEntry<K,V> entry;
-        return (entry = getEntry(hash(key), key)) != null ? entry.value : defaultValue;
+        return (entry = getEntry(hash(key), key, this.root)) != null ? entry.value : defaultValue;
     }
 
 
 
     final HashEntry<K,V> getEntry(final int hash, final Object key) {
+        return getEntry(hash, key, this.root);
+    }
+
+
+    static <K,V> HashEntry<K,V> getEntry(final int hash, final Object key, final Node<K,V> root) {
 
         Node<K,V> node;
-        if (this.root != null && (node = getNode(hash)) != null && node.hash == hash) {
+        if (root != null && (node = getNode(hash, root)) != null && node.hash == hash) {
 
             HashEntry<K,V> e = node.entry;
             if (e != null) {
@@ -143,7 +148,7 @@ public class AtomicHashStore<K,V> implements Iterable<AtomicHashStore.Entry<K,V>
     }
 
 
-    private final Node<K,V> getNode(final int hash) {
+    private static <K,V> Node<K,V> getNode(final int hash, final Node<K,V> root) {
 
         Node<K,V> node = root;
         Node<K,V>[] children;
