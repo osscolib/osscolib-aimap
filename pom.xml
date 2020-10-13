@@ -99,7 +99,7 @@
         <!-- NOTE we cannot use ${project.artifactId} here because it contains '-', a forbidden char          -->
         <module.name>osscolib.atomichash</module.name>
         <errorprone.core.version>2.3.3</errorprone.core.version>
-        <test.junit.version>4.12</test.junit.version>
+        <test.junit.version>4.13.1</test.junit.version>
         <test.commons-lang3.version>3.8.1</test.commons-lang3.version>
     </properties>
 
